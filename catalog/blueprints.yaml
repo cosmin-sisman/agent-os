@@ -1,0 +1,524 @@
+# Reference stacks by complexity level (1 simple .. 5 complex), in two families:
+# typescript (one language end to end) and polyglot (each language where it fits).
+# /kickoff proposes one of these; `agent-os stack new --from <id>` turns it into a stack.yaml.
+# A row has either `tech` (an id from technologies.yaml) or a free `detail` with language and provider ids.
+
+- id: brochure-site
+  level: 1
+  family: typescript
+  name:
+    en: "Brochure site"
+    ro: "Site de prezentare"
+  description:
+    en: "Presentation site with a menu and a contact form"
+    ro: "Site de prezentare cu meniu si formular de contact"
+  takeaway:
+    en: "No backend and no database. Built in one or two days, costs almost nothing per month."
+    ro: "Fara backend si fara baza de date. Se face in 1-2 zile, cost aproape zero pe luna."
+  layers:
+    - layer: public-frontend
+      tech: astro
+      detail: "Astro + Tailwind; Astro Actions for the form"
+    - layer: email-notifications
+      tech: resend
+      detail: "Sends the contact form email"
+    - layer: storage
+      detail: "Images in the repository, served by the CDN"
+      language: none
+      provider: vercel
+    - layer: ci-cd
+      tech: vercel-auto-deploy
+      detail: "Deploy on every push"
+
+- id: booking-app
+  level: 2
+  family: typescript
+  name:
+    en: "Booking app"
+    ro: "Aplicatie de programari"
+  description:
+    en: "Public site, online booking and an admin panel"
+    ro: "Site public, programari online si panou de administrare"
+  takeaway:
+    en: "No backend of your own: the BaaS takes its place. Fast and cheap, with limited control."
+    ro: "Nu ai backend propriu, Supabase ii tine locul. Rapid si ieftin, dar control limitat."
+  layers:
+    - layer: public-frontend
+      tech: astro
+    - layer: internal-frontend
+      tech: vite-react-tanstack-router
+      detail: "Vite + React + shadcn admin"
+    - layer: internal-api
+      tech: supabase-direct-supabase-js-rls
+    - layer: backend-services
+      tech: supabase-edge-functions
+      detail: "Booking confirmations"
+    - layer: background-workers
+      tech: pg-cron
+      detail: "Reminder one day before"
+    - layer: data-layer
+      detail: "Supabase Postgres"
+      language: sql
+      provider: supabase
+      runtime: "Managed"
+    - layer: storage
+      tech: supabase-storage
+    - layer: auth
+      tech: supabase-auth
+    - layer: ci-cd
+      tech: github-actions
+      detail: "GitHub + Supabase CLI for migrations"
+
+- id: b2b-saas
+  level: 3
+  family: typescript
+  name:
+    en: "B2B SaaS"
+    ro: "SaaS B2B"
+  description:
+    en: "B2B invoicing SaaS with subscriptions"
+    ro: "SaaS B2B de facturare, cu abonamente"
+  takeaway:
+    en: "Your own backend and workers appear. The reference TypeScript stack."
+    ro: "Apare backend-ul propriu si workerii. Stack-ul TypeScript de referinta."
+  layers:
+    - layer: public-frontend
+      tech: astro
+      detail: "Landing, pricing, blog"
+    - layer: internal-frontend
+      tech: vite-react-tanstack-router
+      detail: "Vite + TanStack Router + shadcn"
+    - layer: internal-api
+      tech: hono-trpc
+    - layer: public-api-webhooks
+      detail: "Incoming Stripe webhooks"
+      language: typescript
+      provider: railway
+      runtime: "Node.js"
+    - layer: backend-services
+      tech: modular-monolith-node
+      detail: "Invoices, customers, subscriptions"
+    - layer: background-workers
+      tech: pg-boss
+      detail: "PDFs, emails, reports"
+    - layer: data-layer
+      tech: drizzle-supabase-postgres
+    - layer: storage
+      tech: supabase-storage
+      detail: "Invoice PDFs"
+    - layer: auth
+      tech: supabase-auth
+    - layer: payments
+      tech: stripe
+      detail: "Subscriptions"
+    - layer: ci-cd
+      tech: github-actions
+      detail: "Staging and production"
+    - layer: infrastructure
+      tech: turborepo-pnpm
+    - layer: monitoring
+      tech: sentry
+
+- id: marketplace
+  level: 4
+  family: typescript
+  name:
+    en: "Marketplace with live tracking"
+    ro: "Marketplace cu tracking live"
+  description:
+    en: "Customers, restaurants and couriers, with live tracking"
+    ro: "Clienti, restaurante si curieri, cu tracking live"
+  takeaway:
+    en: "Mobile apps, a public API, realtime and many more providers appear."
+    ro: "Apar mobile, API public, realtime si mai multi furnizori."
+  layers:
+    - layer: public-frontend
+      tech: astro
+      detail: "Restaurant pages, local SEO"
+      provider: cloudflare
+      runtime: "Edge"
+    - layer: internal-frontend
+      tech: vite-react-tanstack-router
+      detail: "Restaurant panel + admin"
+      provider: cloudflare
+    - layer: mobile
+      tech: expo-react-native
+      detail: "Two apps: customer and courier"
+    - layer: internal-api
+      tech: hono-trpc
+    - layer: public-api-webhooks
+      tech: hono-zod-openapi
+      detail: "REST for POS systems; Stripe webhooks in, restaurant webhooks out"
+    - layer: backend-services
+      tech: modular-monolith-node
+      detail: "Orders, courier dispatch, payments, fees"
+    - layer: background-workers
+      tech: trigger-dev
+      detail: "Dispatch, push, settlements"
+    - layer: realtime
+      tech: supabase-realtime
+      detail: "Live courier position"
+    - layer: data-layer
+      tech: drizzle-supabase-postgres
+      detail: "With PostGIS"
+    - layer: cache-queue
+      tech: upstash-redis
+      detail: "Rate limiting, dispatch sessions"
+    - layer: storage
+      tech: supabase-storage
+    - layer: auth
+      tech: supabase-auth
+      detail: "Roles: customer, courier, restaurant, admin"
+    - layer: payments
+      tech: stripe
+    - layer: ci-cd
+      tech: github-actions
+      detail: "Monorepo, EAS builds, three environments"
+    - layer: monitoring
+      tech: sentry
+      detail: "Sentry + Better Stack"
+
+- id: enterprise-platform
+  level: 5
+  family: typescript
+  name:
+    en: "Enterprise logistics platform"
+    ro: "Platforma enterprise de logistica"
+  description:
+    en: "Fleets, warehouses and ERP integration for a corporate client"
+    ro: "Flote, depozite si integrare ERP pentru un client corporate"
+  takeaway:
+    en: "Several languages, each where it belongs; self-hosting and integration with legacy systems."
+    ro: "Mai multe limbaje, fiecare unde isi are rostul; self-hosting si integrare cu sisteme vechi."
+  layers:
+    - layer: public-frontend
+      tech: next-js
+      detail: "Multilingual, 200+ pages"
+    - layer: cms
+      tech: sanity
+    - layer: internal-frontend
+      tech: vite-react-tanstack-router
+      detail: "Dispatch, maps, reports"
+      provider: hetzner
+      runtime: "Ubuntu (Nginx)"
+    - layer: mobile
+      tech: expo-react-native
+      detail: "Driver app: offline, barcode scanning, signatures; corporate MDM"
+    - layer: internal-api
+      tech: hono-trpc
+      provider: hetzner
+      runtime: "Ubuntu, Docker, k3s"
+    - layer: public-api-webhooks
+      tech: hono-zod-openapi
+      detail: "Versioned REST, OAuth client credentials, API gateway"
+      provider: hetzner
+    - layer: integration-service
+      tech: net-connector
+      detail: "Connector to the client's SAP / Dynamics ERP"
+    - layer: backend-services
+      tech: modular-monolith-node
+      detail: "Fleets, orders, billing, SLAs"
+      provider: hetzner
+    - layer: ai-ml
+      tech: fastapi-pytorch
+      detail: "Route optimization, document OCR, forecasts"
+    - layer: background-workers
+      tech: bullmq
+      detail: "ERP syncs, reports, alerts"
+    - layer: data-layer
+      tech: postgresql-self-hosted
+      detail: "With TimescaleDB for GPS, read replicas"
+    - layer: cache-queue
+      tech: redis-self-hosted
+    - layer: storage
+      tech: hetzner-object-storage
+      detail: "Documents, delivery photos"
+    - layer: auth
+      tech: microsoft-entra-id-sso
+      detail: "Corporate SSO + Keycloak"
+    - layer: infrastructure
+      tech: kubernetes-k3s
+      detail: "Terraform + k3s"
+    - layer: ci-cd
+      tech: github-actions
+    - layer: monitoring
+      tech: grafana-prometheus
+      detail: "Grafana + Prometheus, Sentry, backups, audit"
+
+- id: cms-site
+  level: 1
+  family: polyglot
+  name:
+    en: "CMS site with bookings"
+    ro: "Site CMS cu rezervari"
+  description:
+    en: "Presentation site with online booking and payment"
+    ro: "Site de prezentare cu rezervari online si plata"
+  takeaway:
+    en: "PHP and WordPress run a huge part of the web. Good for clients who edit their own content."
+    ro: "PHP si WordPress tin o parte uriasa din web. Bun pentru clienti care isi editeaza singuri continutul."
+  layers:
+    - layer: public-frontend
+      tech: wordpress
+      detail: "Custom theme"
+    - layer: internal-frontend
+      tech: wp-admin
+    - layer: public-api-webhooks
+      detail: "Stripe webhooks through the WooCommerce plugin"
+      language: php
+      provider: digitalocean
+      runtime: "Ubuntu"
+    - layer: backend-services
+      detail: "WooCommerce + booking plugin"
+      language: php
+      provider: digitalocean
+      runtime: "PHP-FPM"
+    - layer: background-workers
+      detail: "WP-Cron for confirmation emails"
+      language: php
+      provider: digitalocean
+      runtime: "Ubuntu"
+    - layer: data-layer
+      tech: mysql
+    - layer: storage
+      tech: do-spaces
+      detail: "Local disk + backups in Spaces"
+    - layer: infrastructure
+      detail: "Cloudflare CDN + SSL, daily backups"
+      language: none
+      provider: cloudflare
+
+- id: membership-monolith
+  level: 2
+  family: polyglot
+  name:
+    en: "Membership monolith"
+    ro: "Monolit pentru abonamente"
+  description:
+    en: "Gym memberships, QR check-in and a front-desk panel"
+    ro: "Abonamente, check-in cu QR si panou pentru receptie"
+  takeaway:
+    en: "A full-stack monolith with no separate frontend. One developer ships very fast."
+    ro: "Monolit full-stack, fara frontend separat. Un singur developer livreaza foarte repede."
+  layers:
+    - layer: public-frontend
+      tech: rails-hotwire
+    - layer: internal-frontend
+      tech: rails-hotwire-admin
+      detail: "Front desk, admin"
+    - layer: public-api-webhooks
+      detail: "Stripe webhooks for subscriptions"
+      language: ruby
+      provider: render
+      runtime: "Docker"
+    - layer: backend-services
+      tech: rails-services
+    - layer: background-workers
+      tech: sidekiq
+      detail: "Renewals, emails"
+    - layer: data-layer
+      detail: "PostgreSQL (managed)"
+      language: sql
+      provider: render
+      runtime: "Managed"
+    - layer: cache-queue
+      detail: "Redis (managed)"
+      language: none
+      provider: render
+      runtime: "Managed"
+    - layer: storage
+      tech: aws-s3
+      detail: "Active Storage"
+    - layer: ci-cd
+      tech: github-actions
+
+- id: mobile-first-app
+  level: 3
+  family: polyglot
+  name:
+    en: "Mobile-first coaching app"
+    ro: "Aplicatie mobile-first de coaching"
+  description:
+    en: "Fitness app: plans, progress, chat with the coach"
+    ro: "Aplicatie mobila de fitness: planuri, progres, chat cu antrenorul"
+  takeaway:
+    en: "Mobile first. Flutter looks identical on iOS and Android; Django ships with an admin."
+    ro: "Mobile-first. Flutter arata identic pe iOS si Android; Django vine cu admin gata facut."
+  layers:
+    - layer: public-frontend
+      tech: hugo
+      provider: cloudflare
+      runtime: "Edge"
+    - layer: internal-frontend
+      tech: django-admin
+      detail: "For coaches"
+    - layer: mobile
+      tech: flutter
+      detail: "iOS + Android"
+    - layer: internal-api
+      tech: django-rest-framework
+    - layer: public-api-webhooks
+      detail: "RevenueCat webhooks (in-app subscriptions)"
+      language: python
+      provider: digitalocean
+      runtime: "Docker"
+    - layer: backend-services
+      tech: django-apps
+      detail: "Plans, progress, chat"
+    - layer: background-workers
+      tech: celery
+      detail: "Notifications, statistics"
+    - layer: realtime
+      tech: django-channels
+      detail: "Chat"
+    - layer: data-layer
+      detail: "PostgreSQL (managed)"
+      language: sql
+      provider: digitalocean
+      runtime: "Managed"
+    - layer: cache-queue
+      detail: "Redis (managed)"
+      language: none
+      provider: digitalocean
+      runtime: "Managed"
+    - layer: storage
+      tech: do-spaces
+      detail: "Exercise videos + CDN"
+    - layer: email-notifications
+      tech: firebase-cloud-messaging
+    - layer: ci-cd
+      tech: codemagic
+      detail: "Flutter builds; GitHub Actions"
+    - layer: monitoring
+      tech: sentry
+
+- id: fintech-wallet
+  level: 4
+  family: polyglot
+  name:
+    en: "Fintech wallet"
+    ro: "Portofel digital fintech"
+  description:
+    en: "Digital wallet: transfers, virtual cards, KYC"
+    ro: "Portofel digital: transferuri, carduri virtuale, KYC"
+  takeaway:
+    en: "Java and Kotlin dominate fintech; the mobile apps are fully native."
+    ro: "In fintech domina Java/Kotlin; aplicatiile mobile sunt native pure."
+  layers:
+    - layer: public-frontend
+      tech: next-js
+    - layer: internal-frontend
+      tech: angular
+      detail: "Back-office: compliance, support"
+    - layer: mobile
+      tech: swiftui-native-ios
+      detail: "Swift (iOS) + Kotlin (Android), fully native"
+    - layer: internal-api
+      tech: spring-boot
+      detail: "Kotlin BFF for mobile"
+    - layer: public-api-webhooks
+      tech: go-chi-gin
+      detail: "API gateway, Open Banking (PSD2)"
+      provider: aws
+    - layer: backend-services
+      tech: spring-boot-services
+      detail: "Core ledger, transfers, limits, anti-fraud"
+    - layer: background-workers
+      tech: kafka-consumers
+      detail: "Reconciliation, notifications"
+    - layer: ai-ml
+      detail: "KYC: document checks, risk scoring"
+      language: python
+      provider: aws
+      runtime: "Docker"
+    - layer: data-layer
+      tech: aurora-postgresql
+      detail: "Strict transactions"
+    - layer: cache-queue
+      detail: "Redis (ElastiCache)"
+      language: none
+      provider: aws
+      runtime: "Managed"
+    - layer: storage
+      tech: aws-s3
+      detail: "Encrypted KYC documents"
+    - layer: auth
+      tech: keycloak
+      detail: "2FA, biometrics"
+      provider: aws
+    - layer: infrastructure
+      tech: terraform
+    - layer: ci-cd
+      tech: argocd
+      detail: "Kubernetes GitOps"
+    - layer: monitoring
+      tech: datadog
+      detail: "Audit and compliance"
+
+- id: live-streaming-platform
+  level: 5
+  family: polyglot
+  name:
+    en: "Live streaming and games platform"
+    ro: "Platforma de streaming live si jocuri"
+  description:
+    en: "Live streaming and multiplayer games for millions of users"
+    ro: "Streaming live si jocuri multiplayer, milioane de utilizatori"
+  takeaway:
+    en: "Each language chosen for one role: Elixir for connections, Rust and C++ for video, Go for services, Python for ML."
+    ro: "Fiecare limbaj ales pentru un singur rol: Elixir conexiuni, Rust/C++ video, Go servicii, Python ML."
+  layers:
+    - layer: public-frontend
+      tech: sveltekit
+      detail: "Channel pages, SEO"
+    - layer: internal-frontend
+      tech: vite-react-tanstack-router
+      detail: "Moderation, analytics, admin"
+      provider: cloudflare
+    - layer: mobile
+      tech: expo-react-native
+      detail: "With native video modules"
+    - layer: desktop-tv
+      tech: electron
+      detail: "Desktop; Kotlin for Android TV"
+    - layer: internal-api
+      tech: graphql-gateway-go
+      detail: "Federated gateway"
+    - layer: public-api-webhooks
+      tech: go-chi-gin
+      detail: "REST for streamers, bots, OBS"
+      provider: hetzner
+    - layer: realtime
+      tech: phoenix-channels
+      detail: "Chat and presence, millions of WebSocket connections"
+      provider: hetzner
+    - layer: video-media
+      tech: rust-ffmpeg
+      detail: "RTMP / WebRTC ingest, processing"
+    - layer: game-servers
+      tech: cpp-lua
+      detail: "Real-time multiplayer logic"
+    - layer: backend-services
+      tech: go-microservices
+      detail: "Accounts, payments, subscriptions"
+    - layer: ai-ml
+      tech: fastapi-pytorch
+      detail: "Personalized feed, automatic moderation"
+    - layer: background-workers
+      tech: kafka-consumers
+      detail: "Events, clips, notifications (Go / Rust)"
+      provider: hetzner
+    - layer: data-layer
+      tech: scylladb
+      detail: "ScyllaDB for chat volume + PostgreSQL for accounts"
+    - layer: analytics
+      tech: clickhouse
+    - layer: storage
+      tech: cloudflare-r2
+      detail: "VOD, clips + video CDN"
+    - layer: infrastructure
+      tech: kubernetes-k3s
+      detail: "Kubernetes, Terraform, Ansible"
+    - layer: monitoring
+      tech: grafana-prometheus
+      detail: "Prometheus + Grafana, OpenTelemetry"

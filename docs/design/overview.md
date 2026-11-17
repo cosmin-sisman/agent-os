@@ -152,6 +152,9 @@ Decision: [skills registry and slots](../decisions/2026-11-18-skill-registry-and
 | `/orchestrate` | optional: one session coordinates the other sessions on this laptop |
 | `/kickoff`, `/ingest-docs`, `/discover` | adoption per repository state (§11) |
 | `/lessons` | capture, recall, search and review lessons learned on demand (§10) |
+| `/stack` | shows, changes, detects and checks the project's stack map (§16) |
+| `/upstream` | proposes an improvement to agent-os itself as an issue on its public repository, privacy-filtered (§18) |
+| `/artifact` | creates, builds, verifies and links visual artifacts kept in the repository (§17) |
 | `/env` | checks that this laptop and the repository have the MCP servers, CLIs, auth scopes and variables the project needs (§15) |
 
 **Integration branch.** By default it is `development`, and init makes it the repository's **default branch**. GitHub closes an issue through `Closes #N` only when the PR merges into the default branch, so this keeps automatic closing working. The production branch (`main`) changes only through a release PR or a hotfix. Both names are configurable. Decision: [integration branch](../decisions/2026-11-18-integration-branch-is-default.md).
@@ -308,3 +311,136 @@ A project depends on more than its code: MCP servers (a database, a design tool,
 - **Drift:** a server installed locally but not declared, or declared but authenticated against the wrong account or project, is reported with the exact command that fixes it.
 
 It runs during `init`, as a fast offline subset at SessionStart (only what can be checked in under a second), in full on `/env`, and before `/release`. Results are personal, so they go to `.agent-os/cache/`, never into git. CI checks only the repository side. Decision: [environment check](../decisions/2026-11-18-environment-check.md).
+
+## 16. Stack map
+
+Every project is built in **layers**: public frontend, internal frontend, mobile, APIs, services, workers, data, storage, auth, payments, CI/CD, infrastructure, monitoring and more. agent-os makes those layers the backbone that connects everything else. Decision: [stack map](../decisions/2026-11-18-stack-map.md).
+
+### The catalog (shipped, extendable)
+
+[`catalog/`](../../catalog/) holds plain YAML that people can read and review in a PR:
+
+| File | Holds |
+|---|---|
+| `layers.yaml` | 24 layers in six groups (experience, interfaces, logic, data, platform, delivery) |
+| `technologies.yaml` | 126 technologies, each with its layer, language, default provider, runtime, `complexity` (1–5), `aiFriendly` (1–5) and a note |
+| `languages.yaml` | 20 languages with `performance`, `learningCurve`, `aiFriendly`, strength and typical use |
+| `providers.yaml` | 39 providers with `ease`, `cost`, `euRegions` (yes · global · verify) and `mcpHint` |
+| `runtimes.yaml` | OS and runtimes |
+| `blueprints.yaml` | 10 reference stacks, levels 1–5, in a TypeScript family and a polyglot family |
+
+Every text exists in `en` and in ASCII `ro`. A project adds its own entries in `.agent-os/catalog/*.yaml`, which are merged over the shipped catalog, without forking it.
+
+### `stack.yaml` (one file per project, committed)
+
+[`examples/stack.yaml`](../../examples/stack.yaml) shows the format. For each layer it records the technology, provider, status (chosen · evaluating · optional · rejected), **paths** in the repository, owners and a note. It is written in a strict, readable YAML subset that agent-os parses without dependencies: maps, lists, inline `{}` and `[]`, quoted or plain scalars, comments.
+
+### What the stack drives
+
+| Consumer | How it uses `stack.yaml` |
+|---|---|
+| Labels | `area:*` labels are generated from the layers in use, with names from the `labels` language dictionary |
+| Paths | layer `paths` map files to areas, which feeds `/next` familiarity, `overlap`, the AGENTS.md area map and optional CODEOWNERS |
+| Gate | suites are attached to layers (`data-layer` → migration tests); `gate` runs the layers the diff touches |
+| Environment | providers with `mcpHint` and technologies with known CLIs become proposed `requires` entries; `/env` checks them |
+| Lessons | cards are tagged with layers, so recall works by layer as well as by path |
+| Packs and slots | technologies suggest packs (a Postgres pack for a Postgres data layer) and external skills for slots |
+| Decisions | changing a layer's technology or status writes a decision record with the catalog's comparison (complexity, AI-friendliness, cost, EU regions) |
+| Agents | low `aiFriendly` scores make the layer's rules ask agents to read the docs first (through a docs MCP when one is configured) |
+
+### `agent-os stack`
+
+- `new --from <blueprint>`: write `stack.yaml` from a blueprint, then ask about each layer.
+- `show`: the stack as a table, with the summary: distinct languages and providers, average complexity, average AI-friendliness, average provider cost, the steepest learning curve, and the EU region check.
+- `set <layer> <tech>` and `status <layer> <status>`: change a layer, write the decision record, open the follow-up issues.
+- `detect`: infer layers and paths from an existing repository (`package.json`, lockfiles, Dockerfiles, `wrangler.toml`, `vercel.json`, framework configs, migration folders, workflows). Used by `/discover`.
+- `drift`: compare `stack.yaml` with the code (for example, the stack says Drizzle but the code imports Prisma) and report it in `doctor`.
+- `import <file.xlsx|csv>`: read a stack builder sheet (layer, technology, provider, status, notes) into `stack.yaml`.
+- `render`: build the stack map artifact (§17).
+
+`/stack` is the skill around these commands. `/kickoff` uses blueprints to propose a stack by level, and `/discover` uses `detect`.
+
+## 17. Artifacts: visual work that is versioned, verifiable and indexed
+
+Some outputs are read better as a page than as Markdown: a discovery report, an analysis, a stack map, a comparison of options, a release report, an architecture diagram, a retro board. agent-os treats them as **artifacts**, files in the repository with metadata. That way they are versioned by git, reviewed in PRs, linked from issues and readable by anyone with access to the project. Decision: [artifacts](../decisions/2026-11-18-artifacts-in-repo.md).
+
+```
+artifacts/
+  2026-11-18-stack-map/
+    artifact.yaml        # metadata: id, title, type, status, summary, refs, sources (with hashes), authors
+    index.html           # self-contained page: inline CSS and JS, data embedded, no external calls
+    data/…               # optional data files the page was built from
+```
+
+- **Types:** `discovery`, `analysis`, `stack-map`, `comparison`, `decision-support`, `release-report`, `retro`, `architecture`, `dashboard`.
+- **Kinds:** a *snapshot* is frozen once merged (a new date means a new artifact), and *living* artifacts are regenerated in place, with history in git.
+- **Viewing:** a generated GitHub Pages site serves every artifact plus an index (by type, date, area and linked issue). The index is built in CI from the `artifact.yaml` files and never committed. Private repositories use Pages with access control where the plan allows it, or the CI build attached to the PR.
+- **Verifiable:** `sources` list the files and GitHub items an artifact was built from, with content hashes. `agent-os artifact verify` rebuilds or rechecks them and marks the artifact *stale* when a source changed. `doctor` checks metadata, links, size budgets, and that the page loads nothing from outside.
+- **Linked:** `refs` point to issues, PRs and decisions. `/artifact link <id> <#N>` comments on the issue or PR with the link and the summary, in that thread's language. The PR template has an optional `## Artifacts` section, and journal entries reference artifacts by id.
+- **Chronology:** `agent-os artifact log <id>` shows the artifact's git history, and the chronicle (§10) lists artifacts with the issues and PRs they belong to.
+
+`/artifact` is the skill. It offers `new <type>` (from a template), `build`, `verify`, `link`, `list` and `publish`. `publish` can also mirror the page to an artifact host such as claude.ai, but those links are personal, so the repository copy stays the source of truth.
+
+The first artifact in this repository is the [stack map](../../artifacts/2026-11-18-stack-map/index.html), built from the catalog.
+
+## 18. Upstream: improving agent-os from the projects that use it
+
+The projects that install agent-os find its gaps first. `/upstream` turns what they find into issues on the public repository (`cosmin-sisman/agent-os`), without leaking anything private. Decision: [upstream feedback](../decisions/2026-11-18-upstream-feedback.md).
+
+- **Sources:**
+  - something you say ("the /pr skill should also …");
+  - a lesson that `/retro` marks as *generic*, meaning it is about agent-os rather than the project;
+  - a `doctor` finding that is caused by the package itself;
+  - a skill that failed in a way its contract did not expect.
+- **Privacy first:** the issue is drafted from a whitelist: agent-os version, profile, the skill or command involved, the configuration keys involved (not their values), OS and Node versions, and your description. Project names, paths, code, remotes, people and secrets are removed. You see the exact text before anything is sent.
+- **Duplicates:** it searches open and closed issues upstream and proposes a 👍 or a comment on an existing issue instead of a new one.
+- **Form:** the upstream *Improvement* issue form (type `feature` or `bug`, area labels from the package taxonomy), in English, whatever the project's languages are.
+- **Tracking:** the created issue's URL is written into the project's journal and, when it came from a lesson, into the lesson card (`upstream:`), so `/retro` can retire the local workaround once the fix ships in a new version. `agent-os update` lists the upstream issues that a new version closes.
+- **Opt-out:** `upstream.enabled: false` in `agent-os.json` for teams that must not contact external repositories. The skill then writes the draft to a file instead.
+
+## 19. Versions and safe updates
+
+Five people on five laptops must run the same agent-os, and a new version must never break a working project. Decision: [safe updates](../decisions/2026-11-18-versions-and-safe-updates.md).
+
+### One pinned version per project
+
+`agent-os.json` records `"version": "0.4.2"`, an exact version. Hooks and skills call that version: through the project's `devDependencies` when it has a `package.json`, otherwise through `npx -y @cosmin-sisman/agent-os@<version>`. `doctor` and the SessionStart hook warn when someone's local copy differs. Upgrading is a team decision made in a PR, never a side effect of someone's `npx` cache.
+
+### Semantic versioning, with a contract
+
+The package follows semver. A **breaking** change means any change that needs a person or a migration: a renamed command or flag, a config key whose meaning changed, a skill whose steps a team relies on, or a removed file. Breaking changes ship only in a major release (a minor one before 1.0), always with a migration and a changelog entry.
+
+### Lifecycle markers on everything that ships
+
+The package manifest (`manifest.json`, generated at release) lists every managed file, skill, rule, command, config key, catalog entry and hook handler, each with a lifecycle state:
+
+| State | Meaning | What users see |
+|---|---|---|
+| `new` | added in this version, may still change in the next minor | marked *new* in `update --plan`, `skills` and the docs |
+| `stable` | covered by the semver contract | — |
+| `deprecated` | still works; has `deprecatedIn`, `removeIn` and a `replacement` | `doctor` warns wherever it is used, with the replacement |
+| `legacy` | kept only for projects that opt in (`legacy: ["old-flow"]`) | absent unless enabled; `doctor` lists it as debt |
+| `removed` | gone; kept in the manifest so `update` can explain and migrate | `update` runs its migration or stops with instructions |
+
+The minimum path is `new` → `stable` → `deprecated` (at least one minor version) → `legacy` or `removed`. Nothing goes from `stable` to `removed` directly.
+
+### The update flow
+
+```
+agent-os update --plan        # read-only: what changes, grouped and explained
+agent-os update               # on a new branch chore/agent-os-<version>, opened as a PR
+```
+
+1. **Plan.** Compare the pinned version with the target and list the changelog entries in between, grouped as Breaking, New, Deprecated, Legacy, Removed, Fixes and Chore. Add the files that would change, the files with local edits (three-way merge), the migrations that will run, and the deprecated items this project still uses.
+2. **Preflight.** Require a clean working tree and a passing `doctor`, and check the minimum Node and Claude Code versions of the target release.
+3. **Branch.** All changes happen on `chore/agent-os-<version>`. Git is the backup, and rollback is closing the PR (or reverting it).
+4. **Migrate.** Versioned migrations (`migrations/<version>.mjs`) transform `agent-os.json`, registry entries, lesson and journal schemas and `stack.yaml`. Each one is idempotent and tested against fixture projects, and runs in order.
+5. **Apply.** Write the managed files through the lock rules (§3). Local edits are merged, and conflicts go to `.rej` files listed in the PR.
+6. **Verify.** Run `doctor`, `env` and the gate on the branch. The PR body carries the plan, the migration log, the conflicts and the results, plus a journal entry of type `release` for the upgrade.
+7. **Merge** like any other PR. Teammates get the new pinned version on their next pull.
+
+`agent-os update --channel next` tries pre-releases on a branch without changing the pin, which is useful for the agent-os maintainers and early adopters.
+
+### For this repository
+
+Releases of agent-os carry the same grouping in their GitHub Release notes, generated from the journal and from PR labels (`changelog:breaking`, `changelog:deprecation`, …). The manifest is produced in CI and checked: a removed entry without a migration, or a `deprecated` entry without `removeIn` and `replacement`, fails the release.

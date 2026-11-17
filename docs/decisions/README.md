@@ -17,3 +17,7 @@ Each record has: **Status** (proposed · accepted · superseded by …), **Conte
 | [init-profiles-and-retrofit](2026-11-18-init-profiles-and-retrofit.md) | four profiles; retrofit or forward-only for existing repos |
 | [lessons-learned-store](2026-11-18-lessons-learned-store.md) | lessons as files with a lifecycle; recalled automatically by area and path |
 | [environment-check](2026-11-18-environment-check.md) | declared MCP servers, CLIs, scopes and variables, checked locally and in the repo |
+| [stack-map](2026-11-18-stack-map.md) | a bilingual catalog and one `stack.yaml`; layers drive labels, gate, env, lessons |
+| [artifacts-in-repo](2026-11-18-artifacts-in-repo.md) | visual artifacts versioned in the repo, published to Pages, verified and indexed |
+| [upstream-feedback](2026-11-18-upstream-feedback.md) | `/upstream` files improvements on the public repo from any project, privacy-filtered |
+| [versions-and-safe-updates](2026-11-18-versions-and-safe-updates.md) | pinned version, lifecycle markers (new, stable, deprecated, legacy, removed), updates through a PR with migrations |

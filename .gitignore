@@ -3,3 +3,4 @@ node_modules/
 .agent-os/cache/
 *.rej
 .DS_Store
+_site/

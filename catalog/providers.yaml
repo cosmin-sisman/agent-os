@@ -1,0 +1,432 @@
+# Providers. ease: 5 = very simple. cost: 1 cheap .. 5 expensive (relative, indicative).
+# euRegions: yes | global | verify (confirm in the provider docs before strict GDPR work) | n/a
+# mcpHint: an MCP server is worth looking for; agent-os env verifies it, never assumes it.
+
+- id: vercel
+  name: "Vercel"
+  kind: "Frontend PaaS"
+  ease: 5
+  cost: 3
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Frontends (Astro, Next, Vite)"
+    ro: "Frontend-uri (Astro, Next, Vite)"
+
+- id: cloudflare
+  name: "Cloudflare"
+  kind: "Edge / CDN"
+  ease: 4
+  cost: 1
+  euRegions: global
+  mcpHint: true
+  role:
+    en: "Edge frontends, CDN, R2, Stream"
+    ro: "Frontend pe edge, CDN, R2, Stream"
+
+- id: netlify
+  name: "Netlify"
+  kind: "Frontend PaaS"
+  ease: 5
+  cost: 3
+  euRegions: verify
+  mcpHint: true
+  role:
+    en: "Static frontends"
+    ro: "Frontend-uri statice"
+
+- id: railway
+  name: "Railway"
+  kind: "PaaS"
+  ease: 5
+  cost: 2
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Managed backends and workers"
+    ro: "Backend si workeri, managed"
+
+- id: render
+  name: "Render"
+  kind: "PaaS"
+  ease: 5
+  cost: 2
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Backends, workers, managed Postgres"
+    ro: "Backend, workeri, Postgres managed"
+
+- id: fly-io
+  name: "Fly.io"
+  kind: "PaaS"
+  ease: 4
+  cost: 2
+  euRegions: "yes"
+  mcpHint: false
+  role:
+    en: "Apps close to users"
+    ro: "Aplicatii aproape de utilizatori"
+
+- id: digitalocean
+  name: "DigitalOcean"
+  kind: "IaaS / PaaS"
+  ease: 4
+  cost: 2
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "VPS, App Platform, managed DBs"
+    ro: "VPS, App Platform, DB managed"
+
+- id: hetzner
+  name: "Hetzner"
+  kind: "IaaS"
+  ease: 2
+  cost: 1
+  euRegions: "yes"
+  mcpHint: false
+  role:
+    en: "Cheap EU servers, self-hosting"
+    ro: "Servere ieftine in UE, self-hosting"
+
+- id: aws
+  name: "AWS"
+  kind: "Full cloud"
+  ease: 2
+  cost: 4
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Enterprise, fintech"
+    ro: "Enterprise, fintech"
+
+- id: azure
+  name: "Azure"
+  kind: "Full cloud"
+  ease: 2
+  cost: 4
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Microsoft clients, corporate SSO"
+    ro: "Clienti Microsoft, SSO corporate"
+
+- id: supabase
+  name: "Supabase"
+  kind: "BaaS"
+  ease: 5
+  cost: 2
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Postgres, Auth, Storage, Realtime"
+    ro: "Postgres, Auth, Storage, Realtime"
+
+- id: firebase
+  name: "Firebase"
+  kind: "BaaS"
+  ease: 5
+  cost: 2
+  euRegions: verify
+  mcpHint: true
+  role:
+    en: "Mobile, push, NoSQL"
+    ro: "Mobile, push, NoSQL"
+
+- id: neon
+  name: "Neon"
+  kind: "Serverless DB"
+  ease: 5
+  cost: 2
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Serverless Postgres"
+    ro: "Postgres serverless"
+
+- id: mongodb-atlas
+  name: "MongoDB Atlas"
+  kind: "Managed DB"
+  ease: 4
+  cost: 3
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Managed MongoDB"
+    ro: "MongoDB managed"
+
+- id: upstash
+  name: "Upstash"
+  kind: "Serverless data"
+  ease: 5
+  cost: 1
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Serverless Redis and queues"
+    ro: "Redis / cozi serverless"
+
+- id: trigger-dev
+  name: "Trigger.dev"
+  kind: "Jobs"
+  ease: 5
+  cost: 2
+  euRegions: verify
+  mcpHint: true
+  role:
+    en: "Managed background jobs"
+    ro: "Background jobs managed"
+
+- id: inngest
+  name: "Inngest"
+  kind: "Jobs"
+  ease: 5
+  cost: 2
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "Event-driven workflows"
+    ro: "Workflow-uri pe evenimente"
+
+- id: resend
+  name: "Resend"
+  kind: "Email"
+  ease: 5
+  cost: 1
+  euRegions: verify
+  mcpHint: true
+  role:
+    en: "Transactional email"
+    ro: "Email tranzactional"
+
+- id: twilio
+  name: "Twilio"
+  kind: "SMS"
+  ease: 4
+  cost: 3
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "SMS, WhatsApp, voice"
+    ro: "SMS, WhatsApp, voce"
+
+- id: stripe
+  name: "Stripe"
+  kind: "Payments"
+  ease: 4
+  cost: 3
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Payments and subscriptions"
+    ro: "Plati si abonamente"
+
+- id: revenuecat
+  name: "RevenueCat"
+  kind: "Mobile payments"
+  ease: 4
+  cost: 2
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "In-app subscriptions"
+    ro: "Abonamente in-app"
+
+- id: netopia
+  name: "Netopia"
+  kind: "Payments"
+  ease: 3
+  cost: 2
+  euRegions: "yes"
+  mcpHint: false
+  role:
+    en: "Payments in Romania"
+    ro: "Plati in Romania"
+
+- id: clerk
+  name: "Clerk"
+  kind: "Auth"
+  ease: 5
+  cost: 3
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "Auth with ready-made UI"
+    ro: "Auth cu UI gata facut"
+
+- id: sanity
+  name: "Sanity"
+  kind: "CMS"
+  ease: 4
+  cost: 2
+  euRegions: verify
+  mcpHint: true
+  role:
+    en: "Headless CMS"
+    ro: "CMS headless"
+
+- id: anthropic
+  name: "Anthropic"
+  kind: "AI API"
+  ease: 5
+  cost: 3
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "Claude API"
+    ro: "Claude API"
+
+- id: ably
+  name: "Ably"
+  kind: "Realtime"
+  ease: 4
+  cost: 3
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "Managed realtime"
+    ro: "Realtime managed"
+
+- id: svix
+  name: "Svix"
+  kind: "Webhooks"
+  ease: 4
+  cost: 2
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "Outgoing webhooks"
+    ro: "Webhooks trimise"
+
+- id: mux
+  name: "Mux"
+  kind: "Video"
+  ease: 4
+  cost: 3
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "Managed video"
+    ro: "Video managed"
+
+- id: posthog
+  name: "PostHog"
+  kind: "Analytics"
+  ease: 5
+  cost: 2
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Product analytics"
+    ro: "Product analytics"
+
+- id: sentry
+  name: "Sentry"
+  kind: "Monitoring"
+  ease: 5
+  cost: 2
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Errors"
+    ro: "Erori"
+
+- id: better-stack
+  name: "Better Stack"
+  kind: "Monitoring"
+  ease: 5
+  cost: 2
+  euRegions: "yes"
+  mcpHint: false
+  role:
+    en: "Logs, uptime"
+    ro: "Loguri, uptime"
+
+- id: datadog
+  name: "Datadog"
+  kind: "Monitoring"
+  ease: 3
+  cost: 5
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Enterprise observability"
+    ro: "Observabilitate enterprise"
+
+- id: grafana-cloud
+  name: "Grafana Cloud"
+  kind: "Monitoring"
+  ease: 3
+  cost: 2
+  euRegions: "yes"
+  mcpHint: true
+  role:
+    en: "Metrics, tracing"
+    ro: "Metrici, tracing"
+
+- id: github
+  name: "GitHub"
+  kind: "Code / CI"
+  ease: 5
+  cost: 1
+  euRegions: "n/a"
+  mcpHint: true
+  role:
+    en: "Repositories, Actions"
+    ro: "Repo, Actions"
+
+- id: eas-expo
+  name: "EAS (Expo)"
+  kind: "Mobile CI"
+  ease: 5
+  cost: 2
+  euRegions: "n/a"
+  mcpHint: false
+  role:
+    en: "Expo builds and updates"
+    ro: "Build si update-uri Expo"
+
+- id: codemagic
+  name: "Codemagic"
+  kind: "Mobile CI"
+  ease: 4
+  cost: 2
+  euRegions: "n/a"
+  mcpHint: false
+  role:
+    en: "Flutter builds"
+    ro: "Build Flutter"
+
+- id: app-store-play
+  name: "App Store / Play"
+  kind: "Distribution"
+  ease: 3
+  cost: 2
+  euRegions: "n/a"
+  mcpHint: false
+  role:
+    en: "Publishing mobile apps"
+    ro: "Publicare aplicatii mobile"
+
+- id: webflow
+  name: "Webflow"
+  kind: "No-code"
+  ease: 5
+  cost: 3
+  euRegions: verify
+  mcpHint: false
+  role:
+    en: "No-code sites"
+    ro: "Site-uri no-code"
+
+- id: client-datacenter
+  name: "Client datacenter"
+  kind: "On-premise"
+  ease: 1
+  cost: 3
+  euRegions: "yes"
+  mcpHint: false
+  role:
+    en: "The client's own infrastructure"
+    ro: "Infrastructura clientului"

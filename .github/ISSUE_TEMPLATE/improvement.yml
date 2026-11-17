@@ -1,0 +1,27 @@
+name: Improvement from a project
+description: Something agent-os should do better, found while using it in a project. Usually filed by /upstream.
+labels: ["type:feature", "upstream"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for helping agent-os improve. Please keep project names, code, paths and secrets out of this issue."
+  - type: input
+    id: version
+    attributes: { label: agent-os version, placeholder: "0.3.1" }
+    validations: { required: true }
+  - type: dropdown
+    id: profile
+    attributes: { label: Profile, options: [greenfield, spec-first, active, maintenance, unknown] }
+  - type: input
+    id: where
+    attributes: { label: Skill or command, placeholder: "/pr, agent-os doctor, …" }
+  - type: textarea
+    id: what
+    attributes: { label: What happened or what is missing }
+    validations: { required: true }
+  - type: textarea
+    id: proposal
+    attributes: { label: Proposal }
+  - type: textarea
+    id: env
+    attributes: { label: Environment, description: "OS, Node version, relevant config keys (no values)." }
