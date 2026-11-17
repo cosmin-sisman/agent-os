@@ -511,3 +511,155 @@ export const issues = [
     in: [], out: [], ac: ['a decision record'], scenarios: [],
   }),
 ]
+
+// ── Added 2026-11-18: stack map, artifacts, safe updates, upstream ──────────
+const M9 = 'v0.8 Stack map and artifacts'
+labels.push(
+  ['area:stack', '0e8a16', 'Stack map, catalog, stack.yaml'],
+  ['area:artifacts', '0e8a16', 'Artifacts and the Pages site'],
+  ['area:updates', '0e8a16', 'Versions, manifest, migrations, update'],
+  ['upstream', 'fef2c0', 'Filed from a project through /upstream'],
+  ['changelog:breaking', 'b60205', 'Release notes: breaking change'],
+  ['changelog:new', '0e8a16', 'Release notes: new'],
+  ['changelog:deprecation', 'fbca04', 'Release notes: deprecation'],
+  ['changelog:legacy', 'c5def5', 'Release notes: moved to legacy'],
+  ['changelog:removed', 'd73a4a', 'Release notes: removed'],
+)
+milestones.push([M9, 'Catalog overlays, stack.yaml and /stack (show, set, detect, drift, import), stack-driven labels and env proposals; /artifact, artifact build and verify, the Pages site and templates.'])
+
+issues.push(
+  i('yaml', 'Zero-dependency YAML subset parser', M1, ['type:feature', 'area:cli', 'priority:p0', 'size:m'], 'E1', {
+    context: 'stack.yaml, the catalog and artifact.yaml are YAML for readability; the package has no runtime dependencies.',
+    goal: 'A strict, documented YAML subset (maps, lists, inline {} and [], quoted and plain scalars, comments) with precise errors, and a matching emitter.',
+    in: ['parser + emitter with round-trip tests on the catalog and examples', 'rejects anchors, tags, multi-docs and tabs with a clear message'],
+    out: ['full YAML 1.2'],
+    ac: ['parses every file in catalog/, examples/ and artifacts/', 'errors name file, line and column'],
+    scenarios: ['Given a tab-indented file, then the error says tabs are not allowed and where'],
+  }, ['cli']),
+
+  e('E11', 'Versions and safe updates', M2,
+    'Every teammate runs the same pinned version, every shipped item carries a lifecycle marker, and upgrades are reviewable PRs with migrations.',
+    'Five people on five laptops cannot drift, and a new release must never break a working project.', `${D} §19; ${ADR('versions-and-safe-updates')}`),
+  i('version-pin', 'Pinned version per project and mismatch warnings', M2, ['type:feature', 'area:updates', 'priority:p0', 'size:s'], 'E11', {
+    context: 'npx caches differ between laptops.',
+    goal: 'agent-os.json records an exact version; hooks and skills run it (devDependency or npx with the exact version); doctor and SessionStart warn on mismatch.',
+    in: [], out: [], ac: ['no hook runs an unpinned version'], scenarios: ['Given a teammate on 0.4.1 and a pin of 0.4.2, then SessionStart warns once with the fix'],
+  }, ['config', 'hooks']),
+  i('manifest', 'Lifecycle manifest: new, stable, deprecated, legacy, removed', M2, ['type:feature', 'area:updates', 'priority:p0', 'size:m'], 'E11', {
+    context: 'Users need warning long before anything disappears.',
+    goal: 'manifest.json generated at release lists every file, skill, rule, command, config key, catalog entry and hook with its state; release CI rejects a removal without migration or a deprecation without replacement and removeIn.',
+    in: ['doctor warns on deprecated items in use, with the replacement'], out: [],
+    ac: ['nothing goes from stable to removed directly'], scenarios: ['Given a deprecated flag used in a hook, then doctor names the replacement and the removal version'],
+  }, ['lock']),
+  i('migrations', 'Versioned, idempotent migrations with fixture tests', M2, ['type:feature', 'area:updates', 'priority:p0', 'size:m'], 'E11', {
+    context: 'Config, registry, journal, lessons and stack.yaml schemas will evolve.',
+    goal: 'migrations/<version>.mjs run in order on update, each idempotent and tested against fixture projects.',
+    in: [], out: [], ac: ['running a migration twice changes nothing'], scenarios: ['Given a project two minors behind, then both migrations run in order'],
+  }, ['config']),
+  i('update-flow', '`agent-os update --plan` and update as a PR', M2, ['type:feature', 'area:updates', 'priority:p0', 'size:l'], 'E11', {
+    context: `${D} §19.`,
+    goal: 'plan grouped as Breaking, New, Deprecated, Legacy, Removed, Fixes, Chore; preflight (clean tree, doctor, Node and Claude Code minimums); branch chore/agent-os-<version>; migrations; three-way merge; doctor, env and gate; PR with the plan, the migration log, conflicts and results; journal entry.',
+    in: ['--channel next for pre-releases without changing the pin'], out: [],
+    ac: ['rollback = closing the PR', 'update never touches the default branch directly'], scenarios: ['Given a local edit conflicting with the new version, then the PR lists the .rej file'],
+  }, ['lock', 'manifest', 'migrations', 'version-pin']),
+  i('legacy', 'Legacy opt-in and deprecation reporting', M2, ['type:feature', 'area:updates', 'priority:p1', 'size:s'], 'E11', {
+    context: 'Some teams need an old behaviour for a while.',
+    goal: '`legacy: [...]` in config re-enables items in the legacy state; doctor lists them as debt; skills show a deprecation note when a deprecated path runs.',
+    in: [], out: [], ac: ['legacy items are absent unless enabled'], scenarios: ['Given legacy: ["old-flow"], then the old skill is installed and doctor reports it as debt'],
+  }, ['manifest']),
+  i('changelog', 'Grouped release notes from labels and the journal', M2, ['type:feature', 'area:updates', 'area:ci', 'priority:p1', 'size:s'], 'E11', {
+    context: 'Users read release notes to decide when to upgrade.',
+    goal: 'Release notes grouped by changelog:* labels and journal entries, with migration notes for breaking items.',
+    in: [], out: [], ac: ['every breaking item links its migration'], scenarios: ['Given a PR labelled changelog:deprecation, then it appears under Deprecated with its replacement'],
+  }, ['manifest']),
+
+  i('upstream', '/upstream: propose improvements to agent-os from any project, privacy-filtered', M3, ['type:feature', 'area:loop', 'area:github', 'priority:p1', 'size:m'], 'E3', {
+    context: `${D} §18; ${ADR('upstream-feedback')}. Projects find the package's gaps first.`,
+    goal: 'Draft an issue for cosmin-sisman/agent-os from a user statement, a generic lesson, a doctor finding or a skill failure, using a whitelist of fields; search duplicates upstream; show the exact text; file it; record the URL in the journal and lesson card.',
+    in: ['Improvement issue form upstream', 'upstream.enabled: false writes drafts to a file', 'update reports which upstream issues a new version closes'],
+    out: [], ac: ['no project name, path, code, remote, person or secret ever leaves the project', 'the user approves the exact text'],
+    scenarios: ['Given a lesson mentioning a private path, then the draft does not contain it', 'Given an existing upstream issue, then it proposes a reaction or comment instead'],
+  }, ['lessons', 'tracker']),
+
+  e('E9', 'Stack map: layers as the backbone', M9,
+    'A shipped, bilingual catalog and one stack.yaml per project that drive labels, paths, the gate, the environment check, lessons and decisions.',
+    'The stack is the most important project-specific knowledge and it was not structured anywhere.', `${D} §16; ${ADR('stack-map')}`),
+  i('catalog', 'Catalog loading, project overlays and catalog CI', M9, ['type:feature', 'area:stack', 'priority:p0', 'size:m'], 'E9', {
+    context: 'catalog/*.yaml exists (24 layers, 126 technologies, 20 languages, 39 providers, 10 runtimes, 10 blueprints).',
+    goal: 'Load the catalog, merge project overlays from .agent-os/catalog/, and validate in CI: unique ids, valid references, both languages present, ASCII-only ro.',
+    in: ['a contributing guide for catalog entries'], out: [], ac: ['a broken reference fails CI with the file and id'],
+    scenarios: ['Given an overlay adding a technology, then stack show can use it'],
+  }, ['yaml']),
+  i('stack-file', 'stack.yaml schema, validation and `agent-os stack show`', M9, ['type:feature', 'area:stack', 'priority:p0', 'size:m'], 'E9', {
+    context: 'examples/stack.yaml shows the format.',
+    goal: 'Validate stack.yaml against the catalog; `stack show` renders the table and the summary (distinct languages and providers, average complexity, AI-friendliness and cost, steepest learning curve, EU check); `stack new --from <blueprint>`.',
+    in: [], out: [], ac: ['unknown ids are reported with the closest match'], scenarios: ['Given compliance.euOnly and a provider marked verify, then show flags it'],
+  }, ['catalog']),
+  i('stack-areas', 'Stack-driven areas: labels, paths, area map, overlap and /next', M9, ['type:feature', 'area:stack', 'area:github', 'priority:p1', 'size:m'], 'E9', {
+    context: 'area:* labels and the AGENTS.md area map were hand-made.',
+    goal: 'Generate area:* labels (in the labels language) from layers in use; map paths to layers for overlap, /next familiarity, gate selection, lessons recall and the area map check.',
+    in: ['optional CODEOWNERS block from layer owners'], out: [], ac: ['adding a layer adds its label through github setup'],
+    scenarios: ['Given a file under a layer path, then /pr labels the PR with that area'],
+  }, ['stack-file', 'gh-setup']),
+  i('stack-set', '`stack set` and `stack status`: changes as decisions', M9, ['type:feature', 'area:stack', 'area:knowledge', 'priority:p1', 'size:s'], 'E9', {
+    context: 'Changing a technology is an architecture decision.',
+    goal: 'Changing a layer writes a decision record with the catalog comparison and proposes follow-up issues.',
+    in: [], out: [], ac: ['the decision cites the old and new scores'], scenarios: ['Given set data-layer prisma-neon-postgres, then a decision record and a migration issue are proposed'],
+  }, ['stack-file', 'decisions']),
+  i('stack-detect', '`stack detect` and `stack drift`', M9, ['type:feature', 'area:stack', 'area:init', 'priority:p1', 'size:l'], 'E9', {
+    context: 'Existing repositories already have a stack; the file must not lie about the code.',
+    goal: 'Infer layers and paths from manifests and configs; report drift between stack.yaml and the code in doctor.',
+    in: ['package.json, lockfiles, Dockerfiles, wrangler.toml, vercel.json, framework configs, migrations, workflows'], out: [],
+    ac: ['each detection cites its evidence file'], scenarios: ['Given stack.yaml says drizzle and code imports prisma, then drift reports it'],
+  }, ['stack-file']),
+  i('stack-import', '`stack import` from a stack builder spreadsheet (xlsx, csv)', M9, ['type:feature', 'area:stack', 'priority:p2', 'size:m'], 'E9', {
+    context: 'Teams plan stacks in spreadsheets; scripts/bootstrap shows the format.',
+    goal: 'Read layer, technology, provider, status and notes from xlsx (zip + XML with node:zlib) or csv into stack.yaml, mapping names to catalog ids.',
+    in: [], out: [], ac: ['unknown technologies become overlay suggestions'], scenarios: ['Given a builder sheet with 15 layers, then stack.yaml has 15 layers with statuses'],
+  }, ['stack-file']),
+  i('stack-env', 'Stack-driven requirements for /env', M9, ['type:feature', 'area:stack', 'area:env', 'priority:p2', 'size:s'], 'E9', {
+    context: 'Providers with an MCP hint and technologies with CLIs imply requirements.',
+    goal: 'Propose requires entries (MCP servers, CLIs) from the stack; the user accepts them into agent-os.json.',
+    in: [], out: [], ac: ['never adds a requirement silently'], scenarios: ['Given a Sentry monitoring layer, then /env proposes checking for a Sentry MCP server'],
+  }, ['stack-file', 'env']),
+  i('stack-skill', '/stack skill and blueprint-based /kickoff', M9, ['type:feature', 'area:stack', 'area:skills', 'priority:p1', 'size:m'], 'E9', {
+    context: 'The commands need a conversational front end.',
+    goal: '/stack explains, compares and changes the stack; /kickoff proposes a blueprint by level and walks through each layer.',
+    in: ['low aiFriendly layers add a "read the docs first" rule'], out: [], ac: ['every recommendation cites catalog scores'],
+    scenarios: ['Given a level 2 product, then /kickoff proposes booking-app or membership-monolith and explains why'],
+  }, ['stack-file', 'kickoff']),
+
+  e('E10', 'Artifacts: versioned, verifiable, indexed', M9,
+    'Visual outputs (discovery, analysis, stack map, comparisons, release reports) kept in the repository, published to Pages, verified against their sources and linked from issues and PRs.',
+    'Pages kept in a personal workspace cannot be shared, have no history and cannot be checked.', `${D} §17; ${ADR('artifacts-in-repo')}`),
+  i('artifact-format', 'artifact.yaml schema and `agent-os artifact new|list|log`', M9, ['type:feature', 'area:artifacts', 'priority:p0', 'size:m'], 'E10', {
+    context: 'artifacts/2026-11-18-stack-map/ is the first example.',
+    goal: 'Schema (id, title, type, kind, status, summary, languages, authors, refs, build, sources with sha256), scaffolding by type, listing and git history.',
+    in: [], out: [], ac: ['id equals the folder name and starts with a date'], scenarios: ['Given new analysis "auth-options", then artifacts/<date>-auth-options/ is created'],
+  }, ['yaml']),
+  i('artifact-build', '`agent-os artifact build|verify`: hashes and staleness', M9, ['type:feature', 'area:artifacts', 'priority:p1', 'size:m'], 'E10', {
+    context: 'scripts/bootstrap/build_artifact.py is the prototype.',
+    goal: 'Build artifacts from templates and data, record source hashes, and mark artifacts stale when a source changes; living artifacts rebuild in CI.',
+    in: [], out: [], ac: ['verify exits 1 on a stale snapshot only when --strict'], scenarios: ['Given a catalog change, then the stack map shows as stale until rebuilt'],
+  }, ['artifact-format']),
+  i('artifact-pages', 'Pages site as an installable workflow', M9, ['type:feature', 'area:artifacts', 'area:ci', 'priority:p1', 'size:s'], 'E10', {
+    context: 'This repository already publishes artifacts with scripts/site/build.mjs and .github/workflows/pages.yml.',
+    goal: 'Ship the site builder in the package and install the workflow; index by type, date, area and issue; private repositories documented.',
+    in: [], out: [], ac: ['the index is never committed'], scenarios: ['Given two artifacts, then the index lists both with verification status'],
+  }, ['artifact-format', 'gh-actions']),
+  i('artifact-skill', '/artifact skill: create, link to issues and PRs, mirror', M9, ['type:feature', 'area:artifacts', 'area:skills', 'priority:p1', 'size:m'], 'E10', {
+    context: 'Artifacts must be easy to make and to mention.',
+    goal: '/artifact new <type>, build, verify, link <id> <#N> (comment with link and summary in the thread language), publish (optional mirror to an external host); PR template gets an Artifacts section.',
+    in: [], out: [], ac: ['links always point to the repository copy first'], scenarios: ['Given link on a ro issue, then the comment is in ASCII ro'],
+  }, ['artifact-format', 'comments']),
+  i('artifact-templates', 'Artifact templates: discovery, analysis, comparison, release report, retro', M9, ['type:feature', 'area:artifacts', 'priority:p2', 'size:l'], 'E10', {
+    context: 'Good defaults make artifacts consistent.',
+    goal: 'Self-contained, theme-aware, bilingual templates per type, fed by JSON data.',
+    in: [], out: [], ac: ['every template passes the doctor artifact checks'], scenarios: ['Given a release, then a release-report artifact can be built from the journal'],
+  }, ['artifact-build']),
+  i('artifact-doctor', 'Doctor checks for artifacts', M9, ['type:feature', 'area:artifacts', 'area:loop', 'priority:p2', 'size:s'], 'E10', {
+    context: 'Artifacts must stay trustworthy.',
+    goal: 'Check metadata, refs, size budget, that pages load nothing external, and staleness.',
+    in: [], out: [], ac: ['an external script tag fails the check'], scenarios: ['Given a page loading a CDN script, then doctor fails naming the URL'],
+  }, ['artifact-format', 'doctor']),
+)

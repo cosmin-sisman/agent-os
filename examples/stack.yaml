@@ -1,0 +1,73 @@
+# stack.yaml: what this project is built with, layer by layer.
+#
+# Every id comes from the agent-os catalog (catalog/*.yaml). Language and runtime are taken
+# from the technology unless you override them. One file, committed, owned by the team.
+#
+# status: chosen | evaluating | optional | rejected
+# paths:  where the layer lives in this repository; agent-os uses them for area:* labels,
+#         the gate, lessons recall, overlap warnings and the AGENTS.md area map.
+
+project: "Example B2B SaaS"
+level: 3                       # 1 simple .. 5 complex
+blueprint: b2b-saas            # the reference stack this started from (catalog/blueprints.yaml)
+
+compliance:
+  euOnly: true                 # providers whose EU regions are "verify" raise a needs-decision issue
+
+layers:
+  public-frontend:
+    tech: astro
+    provider: vercel
+    status: chosen
+    paths: ["apps/site/**"]
+    note: "Landing, pricing, blog"
+
+  internal-frontend:
+    tech: vite-react-tanstack-router
+    provider: vercel
+    status: chosen
+    paths: ["apps/web/**"]
+    note: "Customer dashboard"
+
+  mobile:
+    tech: expo-react-native
+    status: evaluating
+    note: "Phase 2"
+
+  internal-api:
+    tech: hono-trpc
+    provider: railway
+    status: chosen
+    paths: ["apps/api/src/routers/**"]
+
+  public-api-webhooks:
+    tech: hono-zod-openapi
+    provider: railway
+    status: optional
+    note: "Only if a partner needs it"
+
+  backend-services:
+    tech: modular-monolith-node
+    provider: railway
+    status: chosen
+    paths: ["packages/core/**"]
+
+  background-workers:
+    tech: pg-boss
+    provider: railway
+    status: chosen
+    paths: ["apps/worker/**"]
+    note: "PDFs, emails"
+
+  data-layer:
+    tech: drizzle-supabase-postgres
+    status: chosen
+    paths: ["packages/db/**", "supabase/migrations/**"]
+
+  storage:      { tech: supabase-storage, status: chosen }
+  auth:         { tech: supabase-auth, status: chosen, paths: ["packages/auth/**"] }
+  email-notifications: { tech: resend, status: chosen }
+  payments:     { tech: stripe, status: chosen, paths: ["packages/billing/**"], note: "Subscriptions" }
+  ci-cd:        { tech: github-actions, status: chosen, paths: [".github/workflows/**"] }
+  infrastructure: { tech: turborepo-pnpm, status: chosen, paths: ["turbo.json", "pnpm-workspace.yaml"] }
+  monitoring:   { tech: sentry, status: chosen }

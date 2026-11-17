@@ -82,7 +82,7 @@ const warnings = []
 for (const it of issues) {
   if (it.parent) {
     try { api(`repos/${repo}/issues/${byKey[it.parent]}/sub_issues`, [['sub_issue_id', idOf[it.key]]], 'POST') }
-    catch (err) { if (!String(err.stderr).includes('already')) warnings.push(`sub-issue #${byKey[it.key]} → #${byKey[it.parent]}: ${String(err.stderr).trim()}`) }
+    catch (err) { if (!String(err.stderr).match(/already|duplicate sub-issues/i)) warnings.push(`sub-issue #${byKey[it.key]} → #${byKey[it.parent]}: ${String(err.stderr).trim()}`) }
   }
   for (const dep of it.blockedBy ?? []) {
     try { api(`repos/${repo}/issues/${byKey[it.key]}/dependencies/blocked_by`, [['issue_id', idOf[dep]]], 'POST') }

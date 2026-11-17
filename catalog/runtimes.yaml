@@ -1,0 +1,71 @@
+# OS and runtimes, for the runtime field of a stack layer.
+
+- id: ubuntu
+  name: "Ubuntu"
+  kind: "Linux server"
+  when:
+    en: "~95% of servers, almost always with Docker"
+    ro: "~95% din servere, aproape mereu cu Docker"
+
+- id: debian
+  name: "Debian"
+  kind: "Linux server"
+  when:
+    en: "Stable alternative to Ubuntu"
+    ro: "Alternativa stabila la Ubuntu"
+
+- id: alpine
+  name: "Alpine"
+  kind: "Minimal Linux"
+  when:
+    en: "Small Docker images"
+    ro: "Imagini Docker mici"
+
+- id: windows-server
+  name: "Windows Server"
+  kind: "Windows"
+  when:
+    en: "Only for legacy .NET Framework, Active Directory or client requirements"
+    ro: "Doar .NET Framework vechi, Active Directory sau cerinte ale clientului"
+
+- id: serverless
+  name: "Serverless"
+  kind: "Managed"
+  when:
+    en: "Functions on demand; you do not manage the OS"
+    ro: "Functii la cerere (Vercel, Lambda) - nu administrezi OS-ul"
+
+- id: edge
+  name: "Edge"
+  kind: "Managed"
+  when:
+    en: "Runs in hundreds of locations"
+    ro: "Ruleaza in sute de locatii (Cloudflare Workers)"
+
+- id: static-cdn
+  name: "Static / CDN"
+  kind: "Managed"
+  when:
+    en: "Only HTML/JS/CSS files served from a CDN"
+    ro: "Doar fisiere HTML/JS/CSS servite din CDN"
+
+- id: managed
+  name: "Managed"
+  kind: "Managed"
+  when:
+    en: "The provider runs everything"
+    ro: "Furnizorul administreaza totul (DB, Auth, Storage)"
+
+- id: ios-android
+  name: "iOS / Android"
+  kind: "Mobile"
+  when:
+    en: "Apps installed on the phone"
+    ro: "Aplicatii instalate pe telefon"
+
+- id: jvm-beam-node-js-deno
+  name: "JVM / BEAM / Node.js / Deno"
+  kind: "Runtime"
+  when:
+    en: "Where the code runs, on top of the OS"
+    ro: "Mediul in care ruleaza codul, peste OS"
