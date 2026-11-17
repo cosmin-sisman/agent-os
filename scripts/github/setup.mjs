@@ -41,7 +41,8 @@ for (const [title, description] of milestones) {
 console.log(`milestones: ${milestones.length}`)
 
 // Issues.
-const existing = JSON.parse(gh(['issue', 'list', '--repo', repo, '--state', 'all', '--limit', '500', '--json', 'number,title']) || '[]')
+const listed = JSON.parse(gh(['issue', 'list', '--repo', repo, '--state', 'all', '--limit', '500', '--json', 'number,title']) || '[]')
+const existing = Array.isArray(listed) ? listed : []
 const byKey = {}
 const epicOf = (key) => issues.find((x) => x.key === key)
 
