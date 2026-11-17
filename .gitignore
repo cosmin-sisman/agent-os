@@ -1,0 +1,5 @@
+node_modules/
+.agent-os/local.json
+.agent-os/cache/
+*.rej
+.DS_Store

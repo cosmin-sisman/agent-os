@@ -1,0 +1,25 @@
+name: Feature
+description: A capability agent-os should have.
+labels: ["type:feature"]
+body:
+  - type: textarea
+    id: context
+    attributes: { label: Context, description: "What exists today and why it is not enough." }
+    validations: { required: true }
+  - type: textarea
+    id: goal
+    attributes: { label: Goal, description: "What is true when this is done, for the people using agent-os." }
+    validations: { required: true }
+  - type: textarea
+    id: scope
+    attributes: { label: Scope, value: "In:\n- \n\nOut:\n- " }
+  - type: textarea
+    id: acceptance
+    attributes: { label: Acceptance criteria, value: "- [ ] " }
+    validations: { required: true }
+  - type: textarea
+    id: scenarios
+    attributes: { label: Test scenarios, description: "Given / When / Then.", value: "- Given … when … then …" }
+  - type: textarea
+    id: refs
+    attributes: { label: References, description: "Design sections, decisions, related issues." }

@@ -1,0 +1,22 @@
+name: Bug
+description: Something agent-os does wrong.
+labels: ["type:bug"]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happens, description: "Exact output or error, in a code block." }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: What should happen }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: How to reproduce, value: "1. \n2. " }
+    validations: { required: true }
+  - type: input
+    id: env
+    attributes: { label: Environment, description: "agent-os version, Node version, OS." }
+  - type: textarea
+    id: scenarios
+    attributes: { label: Test scenarios, description: "The regression test that will prove the fix." }
