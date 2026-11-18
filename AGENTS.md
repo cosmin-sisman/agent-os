@@ -43,6 +43,6 @@ The top-level folders. The detail, one row per module, is in [docs/area-map.md](
 <!-- agent-os:begin agent-os -->
 ## agent-os
 
-This repository follows agent-os 0.0.0. Rules in `.claude/rules/`, skills in `.claude/skills/` (start with /next, /start, /pr and /ship), team settings in `agent-os.json`.
+This repository follows agent-os 0.1.1. Rules in `.claude/rules/`, skills in `.claude/skills/` (start with /next, /start, /pr and /ship), team settings in `agent-os.json`.
 Work goes to `development` through change requests; `main` changes only through /release. `agent-os doctor` checks the setup.
 <!-- agent-os:end agent-os -->
