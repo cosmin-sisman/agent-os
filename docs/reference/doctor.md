@@ -49,3 +49,7 @@ Each check that ran counts 1 when it passes, ½ when it only warns and 0 when it
 
 - `agent-os update` runs `doctor --ci` in its preflight and stops on any failure.
 - The CI loop check ([`agent-os/loop`](loop.md)) runs `doctor --ci` on every change request.
+
+## File headers and the map
+
+The `headers` check warns about each code file **added on this branch** that does not open with a 1–3 line header comment. Older files are never flagged. `agent-os map [path] [--budget 1500]` renders one area from those headers: each file's size, its covering test (by name convention) and its changes in the last 30 days, most recently changed first, trimmed to the token budget. File headers are cached in `.agent-os/cache/map.json` by size and modification time, so a repeated map of one folder reads almost nothing. Nothing is committed. Research: [file index](../research/file-index.md).
