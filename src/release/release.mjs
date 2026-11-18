@@ -50,6 +50,35 @@ export function releaseRisks(git, { from, head }) {
  * The plan for a release; it only reads.
  * @param {{ git: Function, tracker: object, cwd: string, config: object, vocab: object }} deps
  */
+/** The version in package.json, and in package-lock.json when there is one; null without a package.json. */
+export function packageVersions(cwd) {
+  const read = (f) => { try { return JSON.parse(readFileSync(join(cwd, f), 'utf8')) } catch { return null } }
+  const pkg = read('package.json')
+  if (!pkg?.version) return null
+  const lock = read('package-lock.json')
+  return { package: pkg.version, lock: lock ? lock.version ?? lock.packages?.['']?.version ?? null : null }
+}
+
+/**
+ * Sets package.json (and package-lock.json) to the released version, keeping each file's indentation. Returns the
+ * files it changed: they go into the release commit, so the tag and the package agree (#58).
+ */
+export function bumpPackage(cwd, version) {
+  const changed = []
+  for (const f of ['package.json', 'package-lock.json']) {
+    const file = join(cwd, f)
+    let text
+    try { text = readFileSync(file, 'utf8') } catch { continue }
+    const data = JSON.parse(text)
+    const indent = text.match(/^\{\r?\n([ \t]+)"/)?.[1] ?? '  '
+    let touched = false
+    if (data.version !== undefined && data.version !== version) { data.version = version; touched = true }
+    if (f === 'package-lock.json' && data.packages?.[''] && data.packages[''].version !== version) { data.packages[''].version = version; touched = true }
+    if (touched) { writeFileSync(file, `${JSON.stringify(data, null, indent)}\n`); changed.push(f) }
+  }
+  return changed
+}
+
 export function planRelease(deps, { version, hotfix = false }) {
   const { git, tracker, config } = deps
   if (!/^\d+\.\d+\.\d+$/.test(version ?? '')) throw new CliError('--version is required, as x.y.z')
@@ -65,13 +94,25 @@ export function planRelease(deps, { version, hotfix = false }) {
   if (lastTag && compareVersions(version, lastTag.replace(/^v/, '')) <= 0) problems.push(`${version} is not after the last release ${lastTag}`)
   const notes = releaseNotes(deps, { from, to: tagged ? tag : head, version })
   problems.push(...notes.problems)
+  // package.json lags behind until release open bumps it; after tagging, a mismatch means the tag will not publish.
+  const pkg = packageVersions(deps.cwd)
+  const warnings = []
+  if (tagged) {
+    // After tagging, what counts is the tagged commit's package.json: a mismatch there means the tag will not publish.
+    let atTag = null
+    try { atTag = JSON.parse(out(git(['show', `${tag}:package.json`])) ?? 'null')?.version ?? null } catch { /* no package.json at the tag */ }
+    if (atTag && atTag !== version) problems.push(`package.json at ${tag} is ${atTag}, not ${version}: the tag does not match the package, so it will not publish`)
+  } else {
+    if (pkg && pkg.package !== version) warnings.push(`package.json is at ${pkg.package}, not ${version}: release open sets it in the release commit`)
+    if (pkg?.lock && pkg.lock !== version) warnings.push(`package-lock.json is at ${pkg.lock}, not ${version}: release open sets it too`)
+  }
   const lang = languageFor(config, 'milestones')
   const rolling = tracker.milestones().filter((m) => m.state === 'open').map((m) => ({ m, n: Number(m.title.match(rollingPattern(lang))?.[1]) })).find((x) => x.n)
   const n = rolling?.n ?? 1
   return {
     version, tag, tagged: Boolean(tagged), hotfix, from, head, lastTag, branch: hotfix ? null : `release/${version}`,
     title: `release-${n}: ${version}`, milestone: rolling ? { number: rolling.m.number, title: rolling.m.title, n } : null,
-    notes, risks: releaseRisks(git, { from, head }), problems,
+    notes, risks: releaseRisks(git, { from, head }), problems, warnings, package: pkg,
     // /retro runs at every release: the plan says how many lessons wait (design §10).
     inbox: readLessons(deps.cwd).filter((c) => c.state === 'inbox').length,
   }
@@ -100,7 +141,7 @@ export function openRelease(deps, { version, author = 'agent-os', now = new Date
   const body = releaseBody(plan, vocab)
   const existing = tracker.findPullRequest({ head: plan.branch, base: production })
   const remote = ok(git(['rev-parse', '--verify', '--quiet', `refs/remotes/origin/${plan.branch}`]))
-  const steps = [remote ? `reuse ${plan.branch}` : `create ${plan.branch} from origin/${integration} with the changelog entry and a release journal entry`, existing ? `update ${vocab.cr} ${vocab.crRef}${existing.number}` : `open "${plan.title}" from ${plan.branch} into ${production}`]
+  const steps = [remote ? `reuse ${plan.branch}` : `create ${plan.branch} from origin/${integration} with the changelog entry, a release journal entry${plan.package && plan.package.package !== version ? ` and package.json at ${version}` : ''}`, existing ? `update ${vocab.cr} ${vocab.crRef}${existing.number}` : `open "${plan.title}" from ${plan.branch} into ${production}`]
   if (dryRun) return { opened: false, dryRun: true, plan, steps, body }
   if (!remote) {
     const start = must(git, ['rev-parse', '--abbrev-ref', 'HEAD'])
@@ -114,7 +155,8 @@ export function openRelease(deps, { version, author = 'agent-os', now = new Date
       writeFileSync(file, `${header ? `${header}\n` : ''}${stringify({ releases: [changelogEntry(plan.notes, { date: now.toISOString().slice(0, 10) }), ...releases] })}`)
       const entry = addEntry(cwd, { type: 'release', title: `Release ${version}`, areas: ['release'], refs: [], author, at: now, body: `${plan.from}..${plan.head}. ${Object.entries(plan.notes.groups).filter(([, l]) => l.length).map(([g, l]) => `${l.length} ${g}`).join(', ') || 'no change requests'}.${plan.risks.length ? ` Risks: ${plan.risks.map((r) => r.id).join(', ')}.` : ''}` })
       if (entry.problems) throw new CliError(`journal entry: ${entry.problems.join('; ')}`)
-      must(git, ['add', 'changelog.yaml', entry.path])
+      const bumped = bumpPackage(cwd, version)
+      must(git, ['add', 'changelog.yaml', entry.path, ...bumped])
       must(git, ['commit', '-m', `chore(release): ${version}`])
       must(git, ['push', '-u', 'origin', plan.branch])
     } finally { git(['switch', start]) }
