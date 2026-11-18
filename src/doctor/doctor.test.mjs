@@ -1,0 +1,147 @@
+// Tests for doctor: a fresh install has no failures, every finding names its fix, the registry/skills consistency
+// rule, links, commands, budgets, hooks, ro areas, the journal cutoff, --fix, platform checks and the score.
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { loadConfig } from '../config/config.mjs'
+import { installRoutes } from '../managed/install.mjs'
+import { report, runDoctor } from './doctor.mjs'
+
+const write = (root, files) => { for (const [p, c] of Object.entries(files)) { mkdirSync(join(root, p, '..'), { recursive: true }); writeFileSync(join(root, p), c) } }
+
+/** What init produces: the team config, .gitignore and the managed files for the platform. */
+function freshInstall(config = {}) {
+  const cwd = mkdtempSync(join(tmpdir(), 'aos-doctor-'))
+  write(cwd, { 'agent-os.json': JSON.stringify({ version: '0.0.0', platform: { type: 'github', project: 'acme/app' }, ...config }), '.gitignore': '.agent-os/local.json\n.agent-os/cache/\n' })
+  installRoutes(cwd, loadConfig(cwd).merged, { version: '0.0.0' })
+  return cwd
+}
+const doctor = (cwd, deps = {}, options = { offline: true }) => runDoctor({ cwd, config: loadConfig(cwd).merged, running: '0.0.0', ...deps }, options)
+const findings = (r, id) => r.checks.find((c) => c.id === id).findings.filter((f) => f.level !== 'ok')
+
+test('a fresh install has 0 FAIL, on GitHub and on GitLab, in en and ro', () => {
+  for (const config of [{}, { platform: { type: 'gitlab', project: 'team/app' } }, { languages: { issues: 'ro', prs: 'ro', journal: 'ro' } }]) {
+    const cwd = freshInstall(config)
+    try {
+      const r = doctor(cwd)
+      assert.equal(r.summary.fail, 0, report(r))
+    } finally { rmSync(cwd, { recursive: true, force: true }) }
+  }
+})
+
+test('given a skill folder without a registry entry, doctor fails naming it; an entry without a folder fails too', () => {
+  const cwd = freshInstall()
+  try {
+    write(cwd, { '.claude/skills/deploy/SKILL.md': '---\nname: deploy\ndescription: Deploy it.\n---\n', '.agent-os/registry/gone.json': '{"name":"gone","origin":"external"}', '.agent-os/registry/code-review.json': '{"name":"code-review","origin":"builtin"}' })
+    const r = doctor(cwd)
+    const f = findings(r, 'skills')
+    assert.deepEqual(f.map((x) => x.message), ['the skill folder .claude/skills/deploy has no registry entry', '.agent-os/registry/gone.json registers "gone", which has no folder in .claude/skills/'])
+    assert.match(f[0].fix, /\.agent-os\/registry\/deploy\.json/)
+    assert.equal(r.summary.fail > 0, true)
+    write(cwd, { '.agent-os/registry/deploy.json': '{"name":"deploy","origin":"local"}' })
+    rmSync(join(cwd, '.agent-os/registry/gone.json'))
+    assert.deepEqual(findings(doctor(cwd), 'skills'), [])
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('every finding names its fix', () => {
+  const cwd = freshInstall({ slots: { review: 'missing-skill' }, contextBudgets: { 'big.md': '1KB' } })
+  try {
+    write(cwd, {
+      'AGENTS.md': '# A\n\nSee [the guide](docs/nope.md) and run `x`. Use agent-os frobnicate and agent-os lessons.\n',
+      'big.md': 'x'.repeat(2000),
+      '.claude/skills/broken/SKILL.md': 'no front matter',
+      'x.md.rej': 'conflict',
+      'src/a.mjs': '',
+    })
+    writeFileSync(join(cwd, '.gitignore'), 'node_modules\n')
+    const r = doctor(cwd)
+    const all = r.checks.flatMap((c) => c.findings.filter((f) => f.level !== 'ok'))
+    assert.ok(all.length >= 8, report(r))
+    for (const f of all) assert.ok(f.fix && f.fix.length > 5, `no fix for: ${f.message}`)
+    const msgs = all.map((f) => f.message).join('\n')
+    assert.match(msgs, /AGENTS\.md: the link to docs\/nope\.md is broken/)
+    assert.match(msgs, /calls "agent-os frobnicate", which is not a command/)
+    assert.match(msgs, /calls "agent-os lessons", which is planned \(#24\)/)
+    assert.match(msgs, /big\.md is 2\.0 KB, over its 1KB budget/)
+    assert.match(msgs, /x\.md\.rej holds an unresolved update conflict/)
+    assert.match(msgs, /slot "review" is bound to "missing-skill"/)
+    assert.match(msgs, /does not mention src\//)
+    assert.match(msgs, /\.gitignore does not ignore/)
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('--fix repairs what is mechanical (.gitignore, diacritics in ro areas) and checks again', () => {
+  const cwd = freshInstall({ languages: { prs: 'ro' } })
+  try {
+    writeFileSync(join(cwd, '.gitignore'), 'node_modules')
+    writeFileSync(join(cwd, '.github/pull_request_template.md'), '## Lecții\n\nȘtiu.\n')
+    const before = doctor(cwd)
+    assert.match(findings(before, 'language')[0].message, /pull_request_template\.md:1:7: "ț" in a ro area \(prs\); 2 diacritic/)
+    const r = doctor(cwd, {}, { offline: true, fix: true })
+    assert.deepEqual(r.fixed.sort(), ['added .agent-os/local.json, .agent-os/cache/ to .gitignore', 'replaced 2 diacritic(s) in .github/pull_request_template.md'])
+    assert.equal(readFileSync(join(cwd, '.github/pull_request_template.md'), 'utf8'), '## Lectii\n\nStiu.\n')
+    assert.equal(readFileSync(join(cwd, '.gitignore'), 'utf8'), 'node_modules\n.agent-os/local.json\n.agent-os/cache/\n')
+    assert.equal(r.summary.fail, 0, report(r))
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('hooks that do not run the pinned version fail', () => {
+  const cwd = freshInstall()
+  try {
+    write(cwd, { '.claude/settings.json': JSON.stringify({ hooks: { SessionStart: [{ hooks: [{ type: 'command', command: 'npx -y @cosmin-sisman/agent-os hook SessionStart' }] }] } }) })
+    assert.match(findings(doctor(cwd), 'hooks')[0].message, /do not run the pinned version 0\.0\.0/)
+    write(cwd, { '.claude/settings.json': '{ nope' })
+    assert.match(findings(doctor(cwd), 'hooks')[0].message, /not valid JSON/)
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('journal entries before the adoption cutoff are left alone (forward-only)', () => {
+  const cwd = freshInstall({ adoption: { cutoff: '2026-11-01' } })
+  try {
+    write(cwd, { '.agent-os/journal/2026/10/2026-10-05T10-00-ana-old.md': 'no front matter', '.agent-os/journal/2026/11/2026-11-05T10-00-ana-new.md': 'no front matter' })
+    const f = findings(doctor(cwd), 'journal')
+    assert.equal(f.length, 1)
+    assert.match(f[0].message, /2026-11-05T10-00-ana-new\.md: no front matter/)
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('platform checks: issues without type, priority or milestone, a blocked label without a blocker, missing labels, PR titles', () => {
+  const cwd = freshInstall({ adoption: { cutoff: '2026-11-01' } })
+  try {
+    const tracker = {
+      openIssues: () => [
+        { number: 1, labels: ['type:bug', 'priority:p1'], milestone: { title: 'v1' }, createdAt: '2026-11-10T00:00:00Z' },
+        { number: 2, labels: [], milestone: null, createdAt: '2026-11-10T00:00:00Z' },
+        { number: 3, labels: ['type:bug', 'priority:p1', 'blocked'], milestone: { title: 'v1' }, createdAt: '2026-11-10T00:00:00Z' },
+        { number: 4, labels: [], milestone: null, createdAt: '2026-01-10T00:00:00Z' },
+        { number: 5, labels: ['type:epic'], milestone: { title: 'v1' }, createdAt: '2026-11-10T00:00:00Z' },
+      ],
+      blockers: () => [{ number: 9, state: 'closed' }],
+      labels: () => ['type:bug'],
+      pullRequests: () => [{ number: 40, title: 'Fix it.' }],
+      pullRequestStatus: () => ({ title: 'Fix it.', body: '' }),
+    }
+    const r = doctor(cwd, { tracker, caps: { dependencies: { value: true } }, me: 'ana' }, {})
+    assert.equal(r.mode, 'full')
+    assert.deepEqual(findings(r, 'issues').map((f) => f.message), ['#2 is missing a type label, a priority label and a milestone', '#3 has the blocked label but no open blocker'])
+    assert.match(findings(r, 'labels')[0].message, /convention label\(s\) are missing/)
+    assert.match(findings(r, 'titles')[0].message, /^Fix it\.: /)
+    const offline = doctor(cwd, { tracker }, { ci: true })
+    assert.deepEqual(offline.checks.filter((c) => c.skipped).map((c) => c.id), ['issues', 'labels', 'titles'])
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('the score counts ok as 1 and warn as half; a failing check that throws becomes a warning, not a crash', () => {
+  const cwd = freshInstall()
+  try {
+    const r = doctor(cwd, { tracker: { openIssues: () => { throw Object.assign(new Error('HTTP 401'), { hint: 'gh auth login' }) }, pullRequests: () => [] }, me: 'ana' }, {})
+    const issues = r.checks.find((c) => c.id === 'issues')
+    assert.equal(issues.level, 'warn')
+    assert.match(issues.findings[0].message, /could not run: HTTP 401/)
+    const n = r.summary.ok + r.summary.warn + r.summary.fail
+    assert.equal(r.score, Math.round((100 * (r.summary.ok + r.summary.warn / 2)) / n))
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})

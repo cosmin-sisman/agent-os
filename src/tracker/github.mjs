@@ -7,7 +7,7 @@ import { CliError } from '../cli/errors.mjs'
 const ALREADY = /already|duplicate sub-issues|already exists|has already been taken/i
 
 /** An issue from the REST API, in the tracker's shape. */
-const issueOf = (i) => ({ number: i.number, title: i.title, state: i.state, url: i.html_url, labels: (i.labels ?? []).map((l) => (typeof l === 'string' ? l : l.name)), milestone: i.milestone ? { title: i.milestone.title, dueOn: i.milestone.due_on ?? null } : null, assignees: (i.assignees ?? []).map((a) => a.login) })
+const issueOf = (i) => ({ number: i.number, title: i.title, state: i.state, url: i.html_url, labels: (i.labels ?? []).map((l) => (typeof l === 'string' ? l : l.name)), milestone: i.milestone ? { title: i.milestone.title, dueOn: i.milestone.due_on ?? null } : null, assignees: (i.assignees ?? []).map((a) => a.login), createdAt: i.created_at ?? null })
 
 const CONTEXTS = 'contexts(first:100){ nodes{ __typename ... on CheckRun { name status conclusion startedAt detailsUrl } ... on StatusContext { context state targetUrl createdAt } } }'
 
@@ -104,6 +104,17 @@ export class GitHubTracker {
     const q = `query($q:String!){ search(query:$q, type:ISSUE, first:50){ nodes{ ... on PullRequest { number title url isDraft reviewDecision commits(last:1){ nodes{ commit{ statusCheckRollup{ state ${CONTEXTS} } } } } } } } }`
     const nodes = this.gh.graphql(q, { q: `repo:${this.repo} is:pr is:open ${filter}` })?.search?.nodes ?? []
     return nodes.filter((n) => n?.number).map((n) => ({ number: n.number, title: n.title, url: n.url, draft: Boolean(n.isDraft), review: n.reviewDecision ?? null, checks: (() => { const r = n.commits?.nodes?.[0]?.commit?.statusCheckRollup; return r ? { success: 'SUCCESS', pending: 'PENDING', failure: 'FAILURE', none: null }[checksOf(r).overall] : null })() }))
+  }
+
+  /** The names of every label in the repository. */
+  labels() {
+    const out = []
+    for (let page = 1; page <= 10; page++) {
+      const batch = this.gh.rest('GET', `repos/${this.repo}/labels?per_page=100&page=${page}`) ?? []
+      out.push(...batch.map((l) => l.name))
+      if (batch.length < 100) break
+    }
+    return out
   }
 
   /** Open and closed issue counts per milestone (or one milestone by title). */

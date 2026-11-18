@@ -528,6 +528,11 @@
           "type": "string",
           "description": "Until this date (YYYY-MM-DD) guards only warn instead of refusing",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "cutoff": {
+          "type": "string",
+          "description": "Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD)",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
         }
       },
       "additionalProperties": false

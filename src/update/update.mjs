@@ -10,6 +10,7 @@ import { satisfies } from '../env/semver.mjs'
 import { resultsTable, runGate } from '../gate/gate.mjs'
 import { addEntry } from '../journal/journal.mjs'
 import { deprecatedInUse } from '../lifecycle/manifest.mjs'
+import { runDoctor } from '../doctor/doctor.mjs'
 import { installRoutes } from '../managed/install.mjs'
 import { readHooks } from '../managed/managed.mjs'
 import { compareVersions, listMigrations, MIGRATIONS_DIR, pendingMigrations, runMigrations } from '../migrations/runner.mjs'
@@ -122,8 +123,12 @@ export async function runUpdate(cwd, deps, { release = packageRelease(), templat
   const plan = await planUpdate(cwd, { release, templatesRoot, migrationsDir, channel })
   if (plan.upToDate) return { updated: false, upToDate: true, plan }
   const problems = preflight(plan, { git, release, claudeVersion })
-  if (problems.length) return { updated: false, problems, plan }
   const { merged, team } = loadConfig(cwd)
+  if (!problems.length) {
+    const d = runDoctor({ cwd, config: merged, running: plan.from ?? release.version }, { ci: true })
+    for (const c of d.checks) for (const f of c.findings.filter((x) => x.level === 'fail')) problems.push(`doctor [${c.id}]: ${f.message} (fix: ${f.fix})`)
+  }
+  if (problems.length) return { updated: false, problems, plan }
   const base = merged.branches.integration
   const branch = `chore/agent-os-${plan.to}`
   const start = must(git, ['rev-parse', '--abbrev-ref', 'HEAD'])
