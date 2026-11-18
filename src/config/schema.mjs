@@ -22,6 +22,10 @@ export const SCHEMA = obj({
     host: str('Base URL for GitHub Enterprise Server or GitLab self-managed; omit for github.com and gitlab.com', { pattern: '^https?://' }),
     project: str('owner/name (GitHub) or group/subgroup/name (GitLab)', { pattern: '^[^/\\s]+(/[^/\\s]+)+$' }),
     caFile: str('Private CA bundle for a self-managed host, relative to the repository'),
+    board: obj({
+      owner: str('The user or organization that owns the board'),
+      number: int('The board (GitHub Project) number', { minimum: 1 }),
+    }, 'The planning board (GitHub Projects v2) issues are placed on, when there is one'),
   }, 'Which platform and project agent-os talks to', { default: {} }),
   branches: obj({
     integration: str('Feature PRs and MRs target this branch; it is the default branch', { default: 'development' }),
