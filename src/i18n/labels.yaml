@@ -1,0 +1,96 @@
+# Core labels installed in every project, by stable id. The id never changes; the name follows the `labels`
+# language. On platforms with exclusive (scoped) labels, the first ":" becomes "::" (type::bug).
+# Area labels (area:*) are generated from the stack map (design §16) and are not listed here.
+
+- id: type:feature
+  color: 1f6feb
+  name: { en: "type:feature", ro: "tip:functionalitate" }
+  description: { en: "A new capability", ro: "O capabilitate noua" }
+- id: type:bug
+  color: d73a4a
+  name: { en: "type:bug", ro: "tip:bug" }
+  description: { en: "Something works wrong", ro: "Ceva functioneaza gresit" }
+- id: type:docs
+  color: 0075ca
+  name: { en: "type:docs", ro: "tip:documentatie" }
+  description: { en: "Documentation only", ro: "Doar documentatie" }
+- id: type:chore
+  color: bfdadc
+  name: { en: "type:chore", ro: "tip:mentenanta" }
+  description: { en: "Tooling, setup, maintenance", ro: "Unelte, configurare, mentenanta" }
+- id: type:epic
+  color: 5319e7
+  name: { en: "type:epic", ro: "tip:epic" }
+  description: { en: "Large work split into sub-issues", ro: "Lucru mare impartit in sub-issue-uri" }
+- id: type:research
+  color: c5def5
+  name: { en: "type:research", ro: "tip:cercetare" }
+  description: { en: "Investigation that ends in a decision", ro: "Investigatie care se incheie cu o decizie" }
+- id: priority:p0
+  color: b60205
+  name: { en: "priority:p0", ro: "prioritate:p0" }
+  description: { en: "Critical: blocks the milestone", ro: "Critic: blocheaza milestone-ul" }
+- id: priority:p1
+  color: d93f0b
+  name: { en: "priority:p1", ro: "prioritate:p1" }
+  description: { en: "High", ro: "Mare" }
+- id: priority:p2
+  color: fbca04
+  name: { en: "priority:p2", ro: "prioritate:p2" }
+  description: { en: "Normal", ro: "Normala" }
+- id: priority:p3
+  color: c2e0c6
+  name: { en: "priority:p3", ro: "prioritate:p3" }
+  description: { en: "Low", ro: "Mica" }
+- id: size:s
+  color: ededed
+  name: { en: "size:s", ro: "marime:s" }
+  description: { en: "Up to half a day", ro: "Pana la o jumatate de zi" }
+- id: size:m
+  color: d4c5f9
+  name: { en: "size:m", ro: "marime:m" }
+  description: { en: "One to two days", ro: "Una-doua zile" }
+- id: size:l
+  color: bfd4f2
+  name: { en: "size:l", ro: "marime:l" }
+  description: { en: "Three days or more; consider splitting", ro: "Trei zile sau mai mult; merita impartit" }
+- id: needs-decision
+  color: e99695
+  name: { en: "needs-decision", ro: "necesita-decizie" }
+  description: { en: "Waits for a decision before work starts", ro: "Asteapta o decizie inainte de lucru" }
+- id: blocked
+  color: 000000
+  name: { en: "blocked", ro: "blocat" }
+  description: { en: "Cannot move until another issue is done", ro: "Nu poate avansa pana nu se termina alt issue" }
+- id: good-first-issue
+  color: 7057ff
+  name: { en: "good first issue", ro: "bun pentru inceput" }
+  description: { en: "Small and well-scoped", ro: "Mic si bine delimitat" }
+- id: security
+  color: b60205
+  name: { en: "security", ro: "securitate" }
+  description: { en: "Hardening that reveals nothing exploitable", ro: "Intarire care nu dezvaluie nimic exploatabil" }
+- id: contract:breaking
+  color: b60205
+  name: { en: "contract:breaking", ro: "contract:incompatibil" }
+  description: { en: "Breaks an API or event contract; consumer owners must review", ro: "Strica un contract de API sau de evenimente; ownerii consumatorilor revizuiesc" }
+- id: changelog:breaking
+  color: b60205
+  name: { en: "changelog:breaking", ro: "changelog:incompatibil" }
+  description: { en: "Release notes: breaking change", ro: "Note de release: schimbare incompatibila" }
+- id: changelog:new
+  color: 0e8a16
+  name: { en: "changelog:new", ro: "changelog:nou" }
+  description: { en: "Release notes: new", ro: "Note de release: nou" }
+- id: changelog:deprecation
+  color: fbca04
+  name: { en: "changelog:deprecation", ro: "changelog:depreciere" }
+  description: { en: "Release notes: deprecation", ro: "Note de release: depreciere" }
+- id: changelog:legacy
+  color: c5def5
+  name: { en: "changelog:legacy", ro: "changelog:legacy" }
+  description: { en: "Release notes: moved to legacy", ro: "Note de release: mutat in legacy" }
+- id: changelog:removed
+  color: d73a4a
+  name: { en: "changelog:removed", ro: "changelog:eliminat" }
+  description: { en: "Release notes: removed", ro: "Note de release: eliminat" }

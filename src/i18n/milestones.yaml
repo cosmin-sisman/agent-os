@@ -1,0 +1,11 @@
+# Core milestone names, by stable id. {n} and {date} are filled in when the milestone is created or closed.
+
+- id: stage
+  title: { en: "Stage {n}", ro: "Etapa {n}" }
+  description: { en: "A stage of the roadmap", ro: "O etapa din roadmap" }
+- id: rolling-release
+  title: { en: "Stage 0 - Release {n} (in progress)", ro: "Etapa 0 - Release {n} (in lucru)" }
+  description: { en: "Work outside the roadmap stages that ships with the next release", ro: "Lucru din afara etapelor care pleaca la urmatorul release" }
+- id: closed-release
+  title: { en: "Release {n} - {date}", ro: "Release {n} - {date}" }
+  description: { en: "A shipped release", ro: "Un release livrat" }
