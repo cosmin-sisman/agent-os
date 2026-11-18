@@ -69,6 +69,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `requires.mcp[].name` | team | string |  | Server name as registered in Claude Code |
 | `requires.mcp[].scope` | team | string: `project`, `user` |  | Where the server is configured |
 | `requires.mcp[].transport` | team | string: `stdio`, `http`, `sse` |  | How the server is reached |
+| `requires.mcp[].url` | team | string |  | http/sse: the server URL, used in the fix command |
+| `requires.mcp[].command` | team | string |  | stdio: the command that starts the server, used in the fix command |
 | `requires.mcp[].optional` | team | boolean | `false` | A missing optional server is a warning, not a failure |
 | `requires.mcp[].why` | team | string |  | What needs it |
 | `requires.cli` | team | object | `{}` | Command-line tools and their versions |

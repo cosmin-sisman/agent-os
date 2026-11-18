@@ -26,7 +26,7 @@ export const COMMANDS = [
   { name: 'init', summary: 'Set up agent-os; --me sets only your personal settings (full init: #49)', status: 'new', issue: 99, load: () => import('../commands/init.mjs') },
   { name: 'config', summary: 'Read, change or validate agent-os.json and your personal settings', status: 'new', issue: 4, load: () => import('../commands/config.mjs') },
   { name: 'doctor', summary: 'Check the agent system and platform hygiene', status: 'planned', issue: 27 },
-  { name: 'env', summary: 'Check MCP servers, CLIs, token scopes and variables', status: 'planned', issue: 9 },
+  { name: 'env', summary: 'Check MCP servers, CLIs, token scopes and variables, on this laptop and in the repo', status: 'new', issue: 9, load: () => import('../commands/env.mjs') },
   { name: 'update', summary: 'Plan and apply an agent-os upgrade as a pull or merge request', status: 'planned', issue: 68 },
   { name: 'eject', summary: 'Stop managing a file and hand it to the project', status: 'planned', issue: 6 },
   { name: 'hook', summary: 'Run the Claude Code hook handlers for an event (called from .claude/settings.json)', status: 'new', issue: 8, load: () => import('../commands/hook.mjs') },

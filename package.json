@@ -12,6 +12,7 @@
     "src/",
     "catalog/",
     "schema/",
+    "templates/",
     "!**/*.test.mjs",
     "!**/__fixtures__/**"
   ],

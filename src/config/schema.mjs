@@ -48,6 +48,8 @@ export const SCHEMA = obj({
       name: str('Server name as registered in Claude Code'),
       scope: oneOf(['project', 'user'], 'Where the server is configured'),
       transport: oneOf(['stdio', 'http', 'sse'], 'How the server is reached'),
+      url: str('http/sse: the server URL, used in the fix command', { pattern: '^https?://' }),
+      command: str('stdio: the command that starts the server, used in the fix command'),
       optional: bool('A missing optional server is a warning, not a failure', { default: false }),
       why: str('What needs it'),
     }, 'One MCP server', { required: ['name', 'scope'] }), 'MCP servers the project needs', { default: [] }),
