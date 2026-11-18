@@ -7,13 +7,16 @@ import { loadConfig, validate, saveJson, TEAM_FILE } from '../config/config.mjs'
 import { detectPlatform, remoteUrl, loginCommand } from '../platform/detect.mjs'
 import { checkPlatformAuth } from '../env/checks.mjs'
 import { systemProbe } from '../env/probe.mjs'
+import { capabilitiesFor } from '../platform/probe.mjs'
+import { CAPABILITIES } from '../platform/capabilities.mjs'
 
-export const usage = 'agent-os platform [show | detect [--remote <url>] [--write] [--yes]]'
+export const usage = 'agent-os platform [show | detect [--remote <url>] [--write] [--yes] | probe [--refresh]]'
 
 export const options = {
   remote: { type: 'string', description: 'Detect from this URL instead of the "origin" remote' },
   write: { type: 'boolean', description: 'Save the detected platform to agent-os.json (asks first)' },
   yes: { type: 'boolean', short: 'y', description: 'Do not ask before writing' },
+  refresh: { type: 'boolean', description: 'probe: ask the platform again instead of using the cached map' },
 }
 
 /** @param {import('../cli/context.mjs').Context} ctx */
@@ -21,6 +24,7 @@ export async function run(ctx) {
   const [action = 'show'] = ctx.positionals
   if (action === 'show') return show(ctx)
   if (action === 'detect') return detect(ctx)
+  if (action === 'probe') return probe(ctx)
   throw new CliError(`unknown action "${action}"`, { hint: `usage: ${usage}` })
 }
 
@@ -61,4 +65,16 @@ async function detect(ctx) {
   saveJson(ctx.cwd, TEAM_FILE, next)
   ctx.output({ detected: true, ...result, written: true }, [...lines, `saved to ${TEAM_FILE}`].join('\n'))
   return EXIT.OK
+}
+
+async function probe(ctx) {
+  const { merged } = loadConfig(ctx.cwd)
+  if (!merged.platform.project) throw new CliError('platform.project is not set', { hint: 'run "agent-os platform detect --write" first' })
+  const map = await capabilitiesFor(merged, { cwd: ctx.cwd, refresh: Boolean(ctx.values.refresh), gh: ctx.io.gh, glab: ctx.io.glab })
+  const rows = Object.entries(map.capabilities).map(([id, c]) => {
+    const value = c.value === true ? 'yes' : c.value === false ? 'no' : c.value === null ? 'unknown' : String(c.value)
+    const missing = !c.value && CAPABILITIES[id] ? `  → fallback: ${CAPABILITIES[id].fallback}` : ''
+    return `${id.padEnd(18)} ${value.padEnd(20)} ${c.source.padEnd(8)} ${c.note ?? ''}${missing}`
+  })
+  ctx.output(map, [`${map.platform} ${map.host} ${map.project}${map.fromCache ? ` (cached ${map.probedAt}; --refresh to probe again)` : ''}`, ...rows].join('\n'))
 }
