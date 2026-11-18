@@ -5,7 +5,7 @@ Where each part of this repository lives. Linked from [AGENTS.md](../AGENTS.md);
 | Path | What |
 |---|---|
 | `bin/agent-os.mjs` | the executable; it only calls `src/cli/main.mjs` |
-| `src/cli/` | the runner (`main.mjs`), the command registry with lifecycle states (`registry.mjs`), global options, the `Context` every command receives, exit codes and `CliError` |
+| `src/cli/` | the runner (`main.mjs`), the command registry with lifecycle states (`registry.mjs`), global options, the `Context` every command receives, exit codes and `CliError`, questions (`prompt.mjs`) with menus on a real terminal (`menu.mjs`) |
 | `src/conventions/` | title and commit message conventions (`agent-os check`) |
 | `src/config/` | the configuration schema (one definition for validation, defaults and the published JSON Schemas) and the loader for `agent-os.json` + `.agent-os/local.json` |
 | `src/templates/` | the template engine (`engine.mjs`) and folder rendering with language variants (`tree.mjs`); test fixtures in `__fixtures__/` (not published) |

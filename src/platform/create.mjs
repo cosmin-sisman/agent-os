@@ -12,6 +12,7 @@ const first = (r) => String(r.stderr || r.stdout).trim().split('\n')[0].slice(0,
 export const PLATFORM_CREATE = {
   github: {
     cloud: 'github.com',
+    describe: 'github.com or GitHub Enterprise Server',
     cli: 'gh',
     runner: (io) => io.gh ?? systemGh,
     /** The login, or null when gh is missing or logged out. */
@@ -28,6 +29,7 @@ export const PLATFORM_CREATE = {
   },
   gitlab: {
     cloud: 'gitlab.com',
+    describe: 'gitlab.com, GitLab self-managed or Dedicated',
     cli: 'glab',
     runner: (io) => io.glab ?? systemGlab,
     whoami(io, hostName) {

@@ -11,7 +11,7 @@ import { LANGUAGES } from '../i18n/i18n.mjs'
 import { remoteUrl } from '../platform/detect.mjs'
 import { systemGit } from '../workflow/start.mjs'
 import { PLATFORM_CREATE, creatorFor } from '../platform/create.mjs'
-import { full, options as initOptions, personal } from './init.mjs'
+import { DESCRIBE, full, options as initOptions, personal } from './init.mjs'
 
 export const usage = 'agent-os install [any init flag: --profile, --platform github|gitlab --project <owner/name> [--host <url>], --lang, --solo|--team, --chat, --setup, --yes …]\n       (the bare `agent-os` runs it on a terminal in a folder without agent-os.json)'
 
@@ -31,7 +31,7 @@ export async function run(ctx) {
   const q = (question) => ask(ctx.io, question, { useDefaults: !interactive })
 
   // Personal first: the chat language, asked once for the whole flow.
-  v.chat ??= await q({ key: 'chat', kind: 'choice', choices: LANGUAGES, default: merged.languages.chat, text: 'Which language should the agent talk to you in?' })
+  v.chat ??= await q({ key: 'chat', kind: 'choice', choices: LANGUAGES, descriptions: DESCRIBE.language, default: merged.languages.chat, text: 'Which language should the agent talk to you in?' })
   const isRepo = git(['rev-parse', '--is-inside-work-tree']).status === 0
   const remote = isRepo ? (ctx.io.remote !== undefined ? ctx.io.remote : remoteUrl(ctx.cwd)) : null
   const needPlatform = !remote && !(v.platform && v.project)
@@ -70,7 +70,7 @@ export async function run(ctx) {
 async function choosePlatform(ctx, q) {
   const v = ctx.values
   const steps = []
-  v.platform ??= await q({ key: 'platform', kind: 'choice', choices: Object.keys(PLATFORM_CREATE), default: 'github', text: 'There is no origin remote. Which platform hosts this project?' })
+  v.platform ??= await q({ key: 'platform', kind: 'choice', choices: Object.keys(PLATFORM_CREATE), descriptions: Object.fromEntries(Object.entries(PLATFORM_CREATE).map(([k, c]) => [k, c.describe])), default: 'github', text: 'There is no origin remote. Which platform hosts this project?' })
   const creator = creatorFor(v.platform)
   if (v.host === undefined) {
     const host = await q({ key: 'host', kind: 'text', pattern: /^(|https?:\/\/[\w.-]+(:\d+)?\/?)$/, default: '', text: `Self-managed host (https://…), or empty for ${creator.cloud}?` })
