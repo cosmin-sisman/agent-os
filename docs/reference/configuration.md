@@ -53,6 +53,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `branches.requiredChecks` | team | array | `[]` | Checks that must pass before merging into either branch |
 | `branches.requiredApprovals` | team | integer | `0` | Approving reviews required on pull or merge requests |
 | `branches.mergeMethod` | team | string: `squash`, `merge`, `rebase` | `"squash"` | How /ship merges change requests into the integration branch |
+| `branches.prefixes` | team | object | `{}` | Branch prefixes by issue type (feature, bug, docs, chore, research), when the team uses its own (feature/, bugfix/); /discover proposes them |
+| `branches.prefixes.<name>` | team | string |  | The branch prefix for this issue type |
 | `languages` | team | object | `{}` | Language per area |
 | `languages.chat` | personal | string: `en`, `ro` | `"en"` | Language the agent talks to you in (en, or ro written without diacritics) |
 | `languages.issues` | team | string: `en`, `ro` | `"en"` | Issue titles, bodies and comments the agent starts (en, or ro written without diacritics) |

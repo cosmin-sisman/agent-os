@@ -291,7 +291,7 @@ export class GitLabTracker {
 
   /** Every merge request, open and closed (at most `max`): the same shape as the GitHub adapter's. */
   allPullRequests({ max = 2000 } = {}) {
-    return this.pages(this.p('merge_requests?state=all&order_by=created_at&sort=desc'), Math.ceil(max / 100)).slice(0, max).map((m) => ({ number: m.iid, title: m.title, body: m.description ?? '', state: m.state === 'opened' ? 'open' : 'closed', merged: m.state === 'merged', mergedAt: m.merged_at ?? null, createdAt: m.created_at ?? null, labels: m.labels ?? [], author: m.author?.username ?? null, url: m.web_url }))
+    return this.pages(this.p('merge_requests?state=all&order_by=created_at&sort=desc'), Math.ceil(max / 100)).slice(0, max).map((m) => ({ number: m.iid, title: m.title, body: m.description ?? '', state: m.state === 'opened' ? 'open' : 'closed', merged: m.state === 'merged', mergedAt: m.merged_at ?? null, createdAt: m.created_at ?? null, labels: m.labels ?? [], author: m.author?.username ?? null, url: m.web_url, head: m.source_branch ?? null }))
   }
 
   /** Every issue, open and closed (at most `max`). */

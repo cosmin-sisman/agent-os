@@ -33,6 +33,7 @@ export const SCHEMA = obj({
     requiredChecks: list(str('A check name, such as ci'), 'Checks that must pass before merging into either branch', { default: [] }),
     requiredApprovals: int('Approving reviews required on pull or merge requests', { minimum: 0, maximum: 10, default: 0 }),
     mergeMethod: oneOf(['squash', 'merge', 'rebase'], 'How /ship merges change requests into the integration branch', { default: 'squash' }),
+    prefixes: map({ type: 'string', pattern: '^[a-z0-9][a-z0-9._-]*$', description: 'The branch prefix for this issue type' }, 'Branch prefixes by issue type (feature, bug, docs, chore, research), when the team uses its own (feature/, bugfix/); /discover proposes them', { default: {} }),
   }, 'Branch roles', { default: {} }),
   languages: obj({
     chat: lang('Language the agent talks to you in'),

@@ -64,6 +64,7 @@ export const COMMANDS = [
   { name: 'skills', summary: 'The skill index: core, external and local skills, with what each does', status: 'new', issue: 41, load: () => import('../commands/skills.mjs') },
   { name: 'skill', summary: 'Vendor, update, remove, scaffold and register skills; check the registry', status: 'new', issue: 39, load: () => import('../commands/skill.mjs') },
   { name: 'retrofit', summary: 'Plan and apply history into the system for an existing repository', status: 'new', issue: 50, load: () => import('../commands/retrofit.mjs') },
+  { name: 'discover', summary: 'Infer the conventions an active repository follows, each with its evidence; apply only the accepted ones', status: 'new', issue: 52, load: () => import('../commands/discover.mjs') },
   { name: 'audit', summary: 'Plan an audit (subject, lenses, a brief per lens) and merge the lenses\' findings', status: 'new', issue: 105, load: () => import('../commands/audit.mjs') },
   { name: 'sbom', summary: 'Generate a software bill of materials (CycloneDX) from the lockfiles', status: 'new', issue: 108, load: () => import('../commands/sbom.mjs') },
   { name: 'security', summary: 'Watch the advisories that touch the dependencies (OSV, GHSA, KEV); keep the Security digest', status: 'new', issue: 108, load: () => import('../commands/security.mjs') },

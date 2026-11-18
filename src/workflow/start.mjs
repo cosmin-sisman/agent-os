@@ -33,11 +33,11 @@ export function slugFor(title, maxWords = 5) {
   return words.slice(0, maxWords).join('-') || 'work'
 }
 
-/** The branch name for an issue: <type>/<n>-<slug>, or hotfix/<n>-<slug>. */
-export function branchFor(issue, { hotfix = false } = {}) {
+/** The branch name for an issue: <prefix>/<n>-<slug>, or hotfix/<n>-<slug>; branches.prefixes overrides a type's prefix. */
+export function branchFor(issue, { hotfix = false, prefixes = {} } = {}) {
   const type = typeOf(issue.labels)
   if (type === 'epic') throw new CliError(`#${issue.number} is an epic; start one of its sub-issues`, { hint: `agent-os issue children ${issue.number}` })
-  const prefix = hotfix ? 'hotfix' : TYPE_PREFIX[type] ?? 'chore'
+  const prefix = hotfix ? 'hotfix' : prefixes[type ?? 'chore'] ?? TYPE_PREFIX[type] ?? 'chore'
   return `${prefix}/${issue.number}-${slugFor(issue.title)}`
 }
 
@@ -59,7 +59,7 @@ export function startIssue({ tracker, caps, config, git, cwd }, { number, hotfix
   if (openParts.length) {
     return { started: false, reason: 'parts', parts: openParts, message: `#${number} is done in parts: start one of its open sub-issues (${openParts.map((c) => `#${c.number}`).join(', ')}). One change request closes one issue.` }
   }
-  const branch = branchFor(issue, { hotfix })
+  const branch = branchFor(issue, { hotfix, prefixes: config.branches?.prefixes ?? {} })
   const base = hotfix ? config.branches.production : config.branches.integration
   const steps = []
   const run = (what, fn) => { steps.push(what); if (!dryRun) fn() }
