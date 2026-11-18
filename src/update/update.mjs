@@ -64,7 +64,7 @@ export async function planUpdate(cwd, { release = packageRelease(), templatesRoo
   if (isPre(to) && channel !== 'next') problems.push(`${to} is a pre-release: pass --channel next to try it (the pin stays ${from ?? 'unset'})`)
   if (from && compareVersions(to, from) < 0) problems.push(`${to} is older than the pinned ${from}: run the update with the version you want (npx -y @cosmin-sisman/agent-os@<version> update)`)
   const target = { ...merged, version: channel === 'next' ? from : to }
-  const files = installRoutes(cwd, target, { version: to, dryRun: true, templatesRoot }).results.filter((r) => r.action !== 'unchanged')
+  const files = installRoutes(cwd, target, { version: to, dryRun: true, templatesRoot }).results.filter((r) => r.action !== 'unchanged' && r.action !== 'ejected')
   const migrations = pendingMigrations(from, to, listMigrations(migrationsDir))
   let settings = {}
   try { settings = JSON.parse(readFileSync(join(cwd, '.claude', 'settings.json'), 'utf8')) } catch { /* none */ }
@@ -140,7 +140,7 @@ export async function runUpdate(cwd, deps, { release = packageRelease(), templat
     const log = await runMigrations(cwd, { from: plan.from, to: plan.to, dir: migrationsDir })
     if (channel !== 'next') saveJson(cwd, TEAM_FILE, { ...loadConfig(cwd).team, version: plan.to })
     const config = loadConfig(cwd).merged
-    const applied = installRoutes(cwd, config, { version: plan.to, templatesRoot }).results.filter((r) => r.action !== 'unchanged')
+    const applied = installRoutes(cwd, config, { version: plan.to, templatesRoot }).results.filter((r) => r.action !== 'unchanged' && r.action !== 'ejected')
     const conflicts = applied.filter((r) => r.action === 'conflict')
     const entry = addEntry(cwd, {
       type: 'release', title: `agent-os ${plan.to}`, areas: ['agent-os'], refs: [], author: author ?? 'agent-os', at: now,

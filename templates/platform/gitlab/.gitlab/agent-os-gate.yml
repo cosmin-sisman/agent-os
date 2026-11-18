@@ -1,3 +1,4 @@
+{{#if ci.gate}}
 # The gate (agent-os): the same suites the diff needs locally (`agent-os gate`), selected from "gate" and "gatePaths"
 # in agent-os.json. Include it from .gitlab-ci.yml:
 #   include:
@@ -24,3 +25,4 @@ agent-os/gate:
     - if [ -f package-lock.json ]; then npm ci; fi
   script:
     - {{{runner.npx}}} gate --from-ci
+{{/if}}

@@ -136,6 +136,27 @@ test('eject stops managing a file and leaves its content; updates no longer touc
     assert.equal(read(dir, RULE), 'a\n')
     assert.deepEqual(eject(dir, 'AGENTS.md'), ['AGENTS.md#core'])
     assert.throws(() => eject(dir, 'nope.md'), /not managed by agent-os/)
+    const again = applyManaged(dir, [{ key: RULE, content: 'b\n' }, { key: 'AGENTS.md#core', content: 'd' }], { version: '0.2.0' })
+    assert.deepEqual(again.map((r) => r.action), ['ejected', 'ejected'], 'an ejected path is never re-adopted or rewritten')
+    assert.equal(read(dir, RULE), 'a\n')
+    assert.deepEqual(readLock(dir).ejected, ['.claude/rules/git.md', 'AGENTS.md'])
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('a file the project kept at install (a conflict with a .rej) can be ejected: its version stays for good', () => {
+  const dir = project()
+  try {
+    mkdirSync(join(dir, '.github'), { recursive: true })
+    write(dir, '.github/pull_request_template.md', '# ours\n')
+    const first = applyManaged(dir, [{ key: '.github/pull_request_template.md', content: '# agent-os\n' }], { version: '0.1.0' })
+    assert.equal(first[0].action, 'conflict')
+    assert.ok(existsSync(join(dir, '.github/pull_request_template.md.rej')))
+    assert.deepEqual(eject(dir, '.github/pull_request_template.md'), ['.github/pull_request_template.md'])
+    assert.equal(existsSync(join(dir, '.github/pull_request_template.md.rej')), false, 'the .rej is resolved by keeping ours')
+    const next = applyManaged(dir, [{ key: '.github/pull_request_template.md', content: '# agent-os 2\n' }], { version: '0.2.0' })
+    assert.equal(next[0].action, 'ejected')
+    assert.equal(read(dir, '.github/pull_request_template.md'), '# ours\n')
+    assert.equal(existsSync(join(dir, '.github/pull_request_template.md.rej')), false, 'no new conflict on update')
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 
@@ -169,4 +190,14 @@ test('a CRLF checkout of an unmodified file does not count as a local edit', () 
     write(dir, RULE, 'a\r\nb\r\n')
     assert.equal(applyManaged(dir, [{ key: RULE, content: 'a\nb\nc\n' }], { version: '0.2.0' })[0].action, 'replaced')
   } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+
+test("the hooks of agent-os's own repository (node bin/agent-os.mjs hook …) are managed entries too", async () => {
+  const { hooksContent, writeHooks } = await import('./managed.mjs')
+  const { settingsHooks } = await import('../hooks/runner.mjs')
+  const content = hooksContent(settingsHooks('node bin/agent-os.mjs'))
+  assert.match(content, /"command": "node bin\/agent-os\.mjs hook SessionStart"/)
+  const settings = writeHooks({ hooks: { Stop: [{ hooks: [{ type: 'command', command: 'echo mine' }] }] } }, content)
+  assert.equal(settings.hooks.Stop.length, 2, 'the team hook stays, the managed one is added')
+  assert.deepEqual(JSON.parse(hooksContent(writeHooks(settings, content).hooks)), JSON.parse(content), 'rewriting replaces only the managed entries')
 })

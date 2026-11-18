@@ -99,3 +99,12 @@ test('dry-run installs nothing and records nothing', () => {
     assert.deepEqual(readdirSync(dir), [])
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
+
+test('a project whose own CI already runs the loop and the gate can leave out those jobs, and the retro schedule', () => {
+  for (const type of ['github', 'gitlab']) {
+    const keys = (ci) => planInstall(withDefaults(SCHEMA, { platform: { type, project: 'acme/shop' }, ci })).items.map((i) => i.key).filter((k) => /agent-os-(loop|gate|retro)\.yml$/.test(k))
+    assert.equal(keys({}).length, 3, `${type}: installed by default`)
+    assert.deepEqual(keys({ loop: false, gate: false, retro: false }), [], `${type}: left out when turned off`)
+    assert.deepEqual(keys({ retro: false }).map((k) => k.split('/').pop()), ['agent-os-gate.yml', 'agent-os-loop.yml'])
+  }
+})

@@ -28,6 +28,8 @@ export const pinnedVersion = (config) => config.version ?? runningVersion()
  * otherwise npx with the exact version. Never a bare, unpinned `npx agent-os`.
  */
 export function hookCommand(config, { cwd } = {}) {
+  // agent-os's own repository runs its own executable: the code being developed, and no network (#61).
+  if (cwd && readJson(join(cwd, 'package.json'))?.name === PACKAGE && existsSync(join(cwd, 'bin/agent-os.mjs'))) return 'node bin/agent-os.mjs'
   const { spec } = cwd ? projectInstall(cwd) : { spec: null }
   // An exact version, or a tarball vendored into the repository (air-gapped installs): the project's own copy, which
   // never touches the network.

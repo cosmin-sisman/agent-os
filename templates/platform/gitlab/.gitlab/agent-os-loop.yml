@@ -1,3 +1,4 @@
+{{#if ci.loop}}
 # The self-improvement loop, enforced on every merge request (agent-os, design §10). Include it from .gitlab-ci.yml:
 #   include:
 #     - local: .gitlab/agent-os-loop.yml
@@ -21,3 +22,4 @@ agent-os/loop:
   script:
     # The description, author and target branch come from GitLab's merge request variables.
     - {{{runner.npx}}} check loop --from-ci
+{{/if}}

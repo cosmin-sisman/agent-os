@@ -1,3 +1,4 @@
+{{#if ci.loop}}
 # The self-improvement loop, enforced on every pull request (agent-os, design §10). It passes when doctor --ci has no
 # failure, the Lessons section says something, and a lesson or decision has its journal entry. `agent-os setup` makes
 # "agent-os/loop" a required check. Managed by agent-os: change it through agent-os.json, not by hand.
@@ -37,3 +38,4 @@ jobs:
           node-version: 22
       # The description, author and base branch are read from the event file, never interpolated into the script.
       - run: {{{runner.npx}}} check loop --from-ci
+{{/if}}

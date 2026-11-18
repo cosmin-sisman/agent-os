@@ -43,18 +43,34 @@ export function buildConfig(a) {
   return { team, local }
 }
 
+/**
+ * An existing agent-os.json completed with init's answers: the team's own keys stay (ci, gate, packs…), and each
+ * answered section is merged into the one already there, so init never drops what the team set (#61).
+ */
+export function completeTeam(existing, team) {
+  const out = { ...(existing ?? {}) }
+  for (const [k, v] of Object.entries(team)) {
+    const cur = out[k]
+    out[k] = v && cur && typeof v === 'object' && typeof cur === 'object' && !Array.isArray(v) && !Array.isArray(cur) ? { ...cur, ...v } : v
+  }
+  return out
+}
+
 /** What init would do, without doing it. */
-export function planInit({ cwd, team, local, version }) {
+export function planInit({ cwd, team: answers, local, version }) {
+  const team = completeTeam(loadConfig(cwd).team, answers)
   const problems = [...validate(team, { personal: false, file: TEAM_FILE }), ...validate(local, { personal: true, file: LOCAL_FILE })]
   const existing = existsSync(join(cwd, TEAM_FILE))
-  const merged = { ...loadConfig(cwd).merged, ...team, branches: { ...loadConfig(cwd).merged.branches, ...team.branches }, languages: { ...loadConfig(cwd).merged.languages, ...team.languages, ...local.languages } }
+  const base = completeTeam(loadConfig(cwd).merged, team)
+  const merged = { ...base, languages: { ...base.languages, ...local.languages } }
   const files = problems.length ? [] : installRoutes(cwd, merged, { version, dryRun: true }).results
   const ignore = (() => { const text = existsSync(join(cwd, '.gitignore')) ? readFileSync(join(cwd, '.gitignore'), 'utf8') : ''; const lines = text.split(/\r?\n/).map((l) => l.trim()); return TEAM_IGNORES.filter((e) => !lines.includes(e)) })()
   return { problems, existing, files, ignore, merged }
 }
 
 /** Writes the plan: configuration, .gitignore, managed files; then runs doctor (offline). */
-export function applyInit({ cwd, team, local, version, plan, baseline = null }) {
+export function applyInit({ cwd, team: answers, local, version, plan, baseline = null }) {
+  const team = completeTeam(loadConfig(cwd).team, answers)
   saveJson(cwd, TEAM_FILE, team)
   saveJson(cwd, LOCAL_FILE, local)
   if (plan.ignore.length) {

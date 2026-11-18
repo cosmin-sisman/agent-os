@@ -1,0 +1,10 @@
+{
+  "name": "system",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Draft and keep up the system map (system.yaml) - components, where they live, what they expose and consume - from the repository's workspaces and manifests, asking where the code cannot tell."
+}

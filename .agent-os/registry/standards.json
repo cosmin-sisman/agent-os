@@ -1,0 +1,10 @@
+{
+  "name": "standards",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Apply the project's coding standards - review a file or a diff against them, explain a rule, or choose between several ways to implement something and implement only the chosen one."
+}

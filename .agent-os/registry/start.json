@@ -1,0 +1,10 @@
+{
+  "name": "start",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Start work on an issue the way the team can see it."
+}

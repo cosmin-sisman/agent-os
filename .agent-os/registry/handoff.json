@@ -1,0 +1,10 @@
+{
+  "name": "handoff",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "End a session or a day so someone else (or you tomorrow) can continue - a status comment on each issue you hold with work in flight and one handoff journal entry."
+}

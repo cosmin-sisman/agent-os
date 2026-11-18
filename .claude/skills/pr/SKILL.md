@@ -1,0 +1,72 @@
+---
+name: pr
+description: Open a pull request for the current branch only when it is ready (the gate passed on this exact commit, a journal entry, a non-empty Lessons section, a title in convention), then watch its checks and answer review threads. Use when a change is done, or when someone asks to open, update or follow a pull request.
+argument-hint: "[issue number]"
+---
+
+# /pr: a pull request that is ready
+
+Issue: $ARGUMENTS
+
+pull requests are written in **en**; the journal in **en**. Never open one with a failing check: the CLI refuses, and you never work around it.
+
+## 1. Review before the reviewers
+
+- Read the whole diff against `origin/development`. Remove debugging leftovers, unrelated changes and commented-out code.
+- Run /standards review on the diff, and record any choice between solutions with `agent-os standards choice`.
+- Run the `code-review` skill on the diff and address its findings.
+- Run the security pass: `agent-os security pass`. Fix every FAIL (each names the checklist item, the fix and the reason), and go through the items it lists to check by hand for the layers you touched. Then run the `security-review` skill on the diff.
+- If the diff touches the user interface, say in the description that no ui-design skill is bound and the UI was reviewed by hand; continue.
+- Check the issue's test scenarios: each one has a test in this branch, or the body says why not.
+
+## 2. Journal entry and commit
+
+```
+agent-os journal add --type decision --title "<what was decided>" --area <area> --ref "#<n>" --body-file <file> --thread "#<n>"
+```
+
+The entry says what was decided and why, and what was left out. `--thread` quotes, verbatim, the decisions made in the issue's comments. Commit it with the work. Commit messages follow the convention (`agent-os check commit`).
+
+## 3. Gate
+
+```
+agent-os gate
+```
+
+It runs the suites the diff needs (`gate` and `gatePaths` in agent-os.json) on a clean tree. Run `agent-os test gaps` too: every changed source file needs a test, or a line saying why not. After opening, `agent-os test pr` writes the results table into the description. If a suite fails, fix it and run the gate again. Put its results table in **How it was tested**, with any extra checks you ran by hand.
+
+## 4. Title and body
+
+- Title: `type(scope): summary [#<n>]`, at most 72 characters with the suffix.
+- Body: the project's template, filled in: What, Why (`Closes #<n>`), How it was tested (real results), **Lessons** (a lesson for the rules, or `None: <why>`; never empty), Notes for reviewers.
+- Write it to a file in the scratchpad, then:
+
+```
+agent-os pr preflight --title "<title>" --body-file <file>
+```
+
+Fix every problem it lists. It suggests a corrected title when it can.
+
+## 5. Open
+
+```
+agent-os pr create --title "<title>" --body-file <file> [--draft]
+```
+
+It pushes, opens the pull request into `development`, copies the issue's type and area labels and records it on the issue. Report the link, and refer to it as `#N` from then on.
+
+## 6. Checks and review
+
+```
+agent-os pr status --watch
+agent-os pr threads
+agent-os pr reply <thread-id> --body-file <file> [--resolve]
+```
+
+- A failing check: read its log, fix it in a new commit, run the gate again and push. Never re-run a red check hoping it turns green without understanding it.
+- Review threads: answer **in the language of the comment** (`pr reply` refuses another language and drops ro diacritics), briefly, with what you changed or why not. Resolve a thread only when the change is pushed or the reviewer agreed.
+- A decision made in a thread goes, quoted, into the journal entry.
+
+## 7. Learn
+
+If something here went wrong or took long (a check you did not expect, a review comment that a rule could have prevented), propose a lesson in the Lessons section and with `/lessons`.

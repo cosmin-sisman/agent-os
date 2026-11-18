@@ -138,6 +138,9 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `ci` | team | object | `{}` | How generated CI jobs run: image and runners |
 | `ci.image` | team | string |  | The container image generated CI jobs run in, e.g. from the internal registry (default node:22) |
 | `ci.tags` | team | array | `[]` | Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels) |
+| `ci.loop` | team | boolean | `true` | Install the agent-os/loop job (turn it off only when the project's own CI already runs agent-os check loop) |
+| `ci.gate` | team | boolean | `true` | Install the agent-os/gate job (turn it off only when the project's own CI already runs agent-os gate) |
+| `ci.retro` | team | boolean | `true` | Install the weekly scheduled job that keeps the Retro issue current |
 | `ci.labels` | team | boolean | `false` | Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels) |
 | `ci.securityWatch` | team | string: `off`, `daily`, `weekly` | `"off"` | Install the scheduled job that keeps the Security digest issue current |
 | `ci.labelsEnvironment` | team | string |  | GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret) |

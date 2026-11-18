@@ -1,0 +1,10 @@
+{
+  "name": "ingest-docs",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Turn existing specifications into epics and sub-issues, each citing the section it came from, after reporting where the specifications contradict each other and asking the person how to resolve it."
+}
