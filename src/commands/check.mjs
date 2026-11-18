@@ -8,14 +8,20 @@ import { CliError, EXIT } from '../cli/errors.mjs'
 import { loadConfig } from '../config/config.mjs'
 import { checkTitle, checkCommit } from '../conventions/conventions.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
+import { checkLoop, LOOP_CHECK } from '../workflow/loop.mjs'
+import { systemGit } from '../workflow/start.mjs'
+import { runningVersion } from '../version/pin.mjs'
 
-export const usage = 'agent-os check title "<title>" [--body-file <file> | --pr <n>]\n       agent-os check commit [--message-file <file> | --ref <rev>]'
+export const usage = 'agent-os check title "<title>" [--body-file <file> | --pr <n>]\n       agent-os check commit [--message-file <file> | --ref <rev>]\n       agent-os check loop (--body-file <file> [--base <branch>] [--author <login>] | --from-ci)'
 
 export const options = {
   'body-file': { type: 'string', description: 'title: the description to match the issue suffix against' },
   pr: { type: 'string', description: 'title: read the title and description of this pull or merge request' },
   'message-file': { type: 'string', description: 'commit: the message to check' },
   ref: { type: 'string', description: 'commit: check this commit (default HEAD)' },
+  base: { type: 'string', description: 'loop: the target branch (default: branches.integration)' },
+  author: { type: 'string', description: 'loop: the author login (dependency bots are exempt)' },
+  'from-ci': { type: 'boolean', description: 'loop: read the description, author and target branch from the CI event (GitHub Actions or GitLab CI)' },
 }
 
 const read = (cwd, file) => {
@@ -50,5 +56,36 @@ export function run(ctx) {
     ctx.output(r, r.ok ? `commit: ok${r.exempt ? ' (exempt)' : ''}` : [`commit: ${r.problems.length} problem(s)`, ...r.problems.map((p) => `  - ${p}`)].join('\n'))
     return r.ok ? EXIT.OK : EXIT.CHECK_FAILED
   }
+  if (what === 'loop') {
+    const input = ctx.values['from-ci'] ? fromCi(ctx.io.env ?? process.env) : null
+    if (!input && !ctx.values['body-file']) throw new CliError('--body-file or --from-ci is required', { hint: 'the change request description, written to a file' })
+    const r = checkLoop({ config: merged, git: ctx.io.git ?? systemGit(ctx.cwd), cwd: ctx.cwd, running: ctx.io.running ?? runningVersion() }, {
+      body: input ? input.body : read(ctx.cwd, ctx.values['body-file']),
+      base: ctx.values.base ?? input?.base ?? merged.branches.integration,
+      author: ctx.values.author ?? input?.author,
+      lang: merged.languages.prs,
+    })
+    ctx.output(r, [r.ok ? `${LOOP_CHECK}: ok${r.exempt ? ` (${r.exempt})` : ''}` : `${LOOP_CHECK}: ${r.problems.length} problem(s)`, ...r.problems.map((p) => `  - ${p}`), ...r.notes.map((n) => `  ${n}`)].join('\n'))
+    return r.ok ? EXIT.OK : EXIT.CHECK_FAILED
+  }
   throw new CliError(what ? `unknown check "${what}"` : 'missing what to check', { hint: `usage: ${usage}` })
+}
+
+/**
+ * The change request from the CI environment, read from files and variables rather than interpolated into a script:
+ * GitHub Actions' event file, or GitLab's merge request variables.
+ */
+export function fromCi(env) {
+  if (env.GITHUB_EVENT_PATH) {
+    let event
+    try { event = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, 'utf8')) } catch { throw new CliError('cannot read the GitHub event file', { hint: 'run this in a pull_request workflow' }) }
+    const pr = event.pull_request
+    if (!pr) throw new CliError('this GitHub event has no pull request', { hint: 'run the loop check on pull_request events' })
+    return { body: pr.body ?? '', author: pr.user?.login ?? null, base: pr.base?.ref ?? null }
+  }
+  if (env.GITLAB_CI) {
+    if (!env.CI_MERGE_REQUEST_IID) throw new CliError('this GitLab pipeline is not a merge request pipeline', { hint: 'run the loop check with rules: if: $CI_PIPELINE_SOURCE == "merge_request_event"' })
+    return { body: env.CI_MERGE_REQUEST_DESCRIPTION ?? '', author: env.GITLAB_USER_LOGIN ?? null, base: env.CI_MERGE_REQUEST_TARGET_BRANCH_NAME ?? null }
+  }
+  throw new CliError('--from-ci found neither GitHub Actions nor GitLab CI', { hint: 'pass --body-file instead' })
 }

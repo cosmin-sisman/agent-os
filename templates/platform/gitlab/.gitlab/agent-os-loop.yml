@@ -1,0 +1,18 @@
+# The self-improvement loop, enforced on every merge request (agent-os, design §10). Include it from .gitlab-ci.yml:
+#   include:
+#     - local: .gitlab/agent-os-loop.yml
+# It passes when doctor --ci has no failure, the Lessons section says something, and a lesson or decision has its
+# journal entry. Managed by agent-os: change it through agent-os.json, not by hand.
+agent-os/loop:
+  stage: test
+  image: node:22-alpine
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  variables:
+    GIT_DEPTH: "0"
+  before_script:
+    - apk add --no-cache git
+    - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+  script:
+    # The description, author and target branch come from GitLab's merge request variables.
+    - npx -y @cosmin-sisman/agent-os{{#if version}}@{{{version}}}{{/if}} check loop --from-ci

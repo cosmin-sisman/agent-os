@@ -12,7 +12,7 @@ agent-os lang set labels ro              # switch the labels language and rename
 | Area | On GitHub |
 |---|---|
 | branches | creates the integration branch (`branches.integration`, default `development`) from the production branch if it is missing, and makes it the **default branch**, so `Closes #N` closes issues when a PR merges |
-| ruleset | protects both branches: no direct pushes (pull requests only), no force pushes, no deletion, review threads resolved, `branches.requiredApprovals`, and `branches.requiredChecks` as required status checks. Admins can still merge through a pull request. A ruleset that already covers both branches is reused and completed, never duplicated |
+| ruleset | protects both branches: no direct pushes (pull requests only), no force pushes, no deletion, review threads resolved, `branches.requiredApprovals`, and `branches.requiredChecks` plus `agent-os/loop` ([loop check](loop.md)) as required status checks. Admins can still merge through a pull request. A ruleset that already covers both branches is reused and completed, never duplicated |
 | labels | creates the core labels from the dictionary in the `labels` language, and updates their color and description. Switching language **renames** them, so they stay on their issues. Other labels are left alone |
 | milestones | makes sure the rolling milestone (`Stage 0 - Release N (in progress)`) exists, numbered after the last release, and renames it when the `milestones` language changes |
 | files | installs the platform route (issue templates, the PR template, skills) as managed files (see [managed files](managed-files.md)) |

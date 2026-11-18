@@ -21,7 +21,8 @@ test('given a repo with main only, setup creates development, makes it default a
   assert.equal(gh.state.defaultBranch, 'development')
   const rs = gh.state.rulesets.find((r) => r.name === RULESET_NAME)
   assert.deepEqual(rs.conditions.ref_name.include, ['refs/heads/main', 'refs/heads/development'])
-  assert.deepEqual(rs.rules.map((r) => r.type), ['deletion', 'non_fast_forward', 'pull_request'])
+  assert.deepEqual(rs.rules.map((r) => r.type), ['deletion', 'non_fast_forward', 'pull_request', 'required_status_checks'])
+  assert.deepEqual(rs.rules[3].parameters.required_status_checks, [{ context: 'agent-os/loop' }], 'the loop check is always required')
   assert.equal(gh.state.labels.length, LABELS.length)
   assert.deepEqual(gh.state.milestones.map((m) => m.title), ['Stage 0 - Release 1 (in progress)'])
 })
@@ -58,12 +59,12 @@ test('labels with the right name but another color or description are updated; u
 })
 
 test('an existing ruleset covering both branches is reused and completed, never duplicated', () => {
-  const gh = fakeGitHubRepo({ branches: { main: 's', development: 's' }, defaultBranch: 'development', rulesets: [{ name: 'protect main and development', target: 'branch', conditions: { ref_name: { include: ['refs/heads/main', 'refs/heads/development'] } }, rules: [{ type: 'deletion' }, { type: 'non_fast_forward' }, { type: 'pull_request', parameters: {} }] }] })
+  const gh = fakeGitHubRepo({ branches: { main: 's', development: 's' }, defaultBranch: 'development', rulesets: [{ name: 'protect main and development', target: 'branch', conditions: { ref_name: { include: ['refs/heads/main', 'refs/heads/development'] } }, rules: [{ type: 'deletion' }, { type: 'non_fast_forward' }, { type: 'pull_request', parameters: {} }, { type: 'required_status_checks', parameters: { required_status_checks: [{ context: 'agent-os/loop' }] } }] }] })
   const client = ghClient(gh.run)
   assert.deepEqual(planGitHubSetup(config(), client, { only: ['ruleset'] }), [], 'already covered')
   const steps = planGitHubSetup(config({ branches: { requiredChecks: ['ci'] } }), client, { only: ['ruleset'] })
   assert.equal(steps.length, 1)
-  assert.match(steps[0].description, /update ruleset "protect main and development" \(#100\): add missing rules and required checks ci/)
+  assert.match(steps[0].description, /update ruleset "protect main and development" \(#100\): add required checks agent-os\/loop,ci/)
   apply(steps)
   assert.equal(gh.state.rulesets.length, 1)
   assert.equal(gh.state.rulesets[0].name, 'protect main and development')
@@ -74,7 +75,7 @@ test('the desired ruleset follows the configured branches, checks and approvals'
   const r = desiredRuleset(config({ branches: { integration: 'develop', production: 'master', requiredChecks: ['ci', 'lint'], requiredApprovals: 1 } }))
   assert.deepEqual(r.conditions.ref_name.include, ['refs/heads/master', 'refs/heads/develop'])
   assert.equal(r.rules.find((x) => x.type === 'pull_request').parameters.required_approving_review_count, 1)
-  assert.deepEqual(r.rules.find((x) => x.type === 'required_status_checks').parameters.required_status_checks, [{ context: 'ci' }, { context: 'lint' }])
+  assert.deepEqual(r.rules.find((x) => x.type === 'required_status_checks').parameters.required_status_checks, [{ context: 'ci' }, { context: 'lint' }, { context: 'agent-os/loop' }])
 })
 
 test('the rolling milestone is created after the last release number, or renamed into the milestones language', () => {

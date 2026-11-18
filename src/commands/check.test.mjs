@@ -51,3 +51,27 @@ test('check commit reads a message file or a commit', async () => {
     assert.equal((await cli(dir, ['check', 'commit', '--ref', 'nope'])).code, 2)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
+
+test('check loop --from-ci reads the GitHub event file and the GitLab variables; nothing is interpolated', async () => {
+  const dir = tmp()
+  const loop = async (env) => {
+    let stdout = ''
+    const code = await run(['check', 'loop', '--from-ci'], { stdout: (s) => { stdout += s }, stderr: () => {}, cwd: dir, env, git: () => ({ status: 0, stdout: '', stderr: '' }) })
+    return { code, stdout }
+  }
+  try {
+    writeFileSync(join(dir, '.gitignore'), '.agent-os/local.json\n.agent-os/cache/\n')
+    const event = (body, login = 'ana') => { writeFileSync(join(dir, 'event.json'), JSON.stringify({ pull_request: { body, user: { login }, base: { ref: 'development' } } })); return { GITHUB_EVENT_PATH: join(dir, 'event.json') } }
+    const ok = await loop(event('## Lessons\n\nNone: typo fix "$(rm -rf /)"\n'))
+    assert.equal(ok.code, 0, ok.stdout)
+    assert.match(ok.stdout, /^agent-os\/loop: ok/)
+    const empty = await loop(event('## Lessons\n\n<!-- Required. -->\n'))
+    assert.equal(empty.code, 1)
+    assert.match(empty.stdout, /"## Lessons" is empty/)
+    assert.match((await loop(event('', 'dependabot[bot]'))).stdout, /dependency bot/)
+    const gl = await loop({ GITLAB_CI: 'true', CI_MERGE_REQUEST_IID: '4', CI_MERGE_REQUEST_DESCRIPTION: '## Lessons\n\nNone: rename\n', CI_MERGE_REQUEST_TARGET_BRANCH_NAME: 'development', GITLAB_USER_LOGIN: 'ana' })
+    assert.equal(gl.code, 0, gl.stdout)
+    assert.equal((await loop({ GITLAB_CI: 'true' })).code, 2, 'not a merge request pipeline')
+    assert.equal((await loop({})).code, 2)
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})

@@ -46,4 +46,4 @@ Each check that ran counts 1 when it passes, ½ when it only warns and 0 when it
 ## Where it runs
 
 - `agent-os update` runs `doctor --ci` in its preflight and stops on any failure.
-- The CI loop check (`agent-os/loop`, #28) runs `doctor --ci` on every change request.
+- The CI loop check ([`agent-os/loop`](loop.md)) runs `doctor --ci` on every change request.
