@@ -31,7 +31,7 @@
 **agent-os** installs a working agreement into any repository. It sets up the skills, rules, hooks and small deterministic scripts that let a team (five people or fifty, each with their own coding-agent sessions on their own laptops) move work from idea to production the same way every time. Your code platform is the shared memory: **GitHub or GitLab**, in the cloud or self-managed on your own servers. Every piece of work also teaches the system something, so it keeps up with the project instead of falling behind it.
 
 ```bash
-npx -y @cosmin-sisman/agent-os@0.1.2 init --detect
+npx -y @cosmin-sisman/agent-os install
 ```
 
 > [!TIP]
@@ -172,7 +172,26 @@ Issues, PRs, commits, labels, milestones, docs and chat are each set to `en` or 
 
 **Requirements:** Node.js 22 or later, git, and the platform CLI logged in: [`gh`](https://cli.github.com) (`gh auth login`) for GitHub, or [`glab`](https://gitlab.com/gitlab-org/cli) (`glab auth login --hostname <host>`) for GitLab. Skills and hooks run in [Claude Code](https://claude.com/claude-code). AGENTS.md and the CLI work in other agents too.
 
-Run it without installing, pinned to a version:
+### One command
+
+In any folder, empty or not:
+
+```bash
+npx -y @cosmin-sisman/agent-os install
+```
+
+It asks a few questions, and you can stop at any of them:
+- it offers `git init -b development` when the folder is not a repository yet;
+- with no `origin` remote, it asks for the platform (GitHub or GitLab, and the host when it is self-managed) and the project, and offers to create the repository, private, only after you confirm;
+- it detects the repository's state and suggests a profile;
+- it installs the skills, rules and hooks, then your personal settings (chat language, sessions);
+- it ends with what to do next.
+
+Every `init` flag works with `install` too, for scripts: `install --platform github --project acme/shop --solo --lang en --yes`. On a terminal, `npx @cosmin-sisman/agent-os` with no command does the same in a folder that has no `agent-os.json` yet. `install` ships after 0.1.2; on 0.1.2, use the step-by-step commands below.
+
+### Step by step
+
+Run any command without installing, pinned to a version:
 
 ```bash
 npx -y @cosmin-sisman/agent-os@0.1.2 <command>
