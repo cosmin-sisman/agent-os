@@ -1,8 +1,10 @@
-// /test: scenarios planned into the issue (Given / When / Then; a bug starts with its regression test), the gate's
+// /test: scenarios planned into the issue (Given / When / Then; a bug starts with its regression test; sensitive areas
+// get "Given an attacker" abuse cases), the gate's
 // results table written into the change request, and the changed logic that has no test. Design §12.
 
 import { labelId } from '../workflow/next.mjs'
 import { matches } from '../util/glob.mjs'
+import { abuseCases } from '../security/threats.mjs'
 
 export const HEADINGS = {
   scenarios: ['Test scenarios', 'Scenarii de test'],
@@ -51,6 +53,8 @@ export function planScenarios(issue, { lang = 'en' } = {}) {
   }
   for (const c of items(sectionText(issue.body, HEADINGS.criteria))) proposed.push(`${w.given} …, ${w.when} …, ${w.then} ${c.text.replace(/\.$/, '')}`)
   if (!proposed.length && !existing.length) proposed.push(`${w.given} …, ${w.when} …, ${w.then} ${firstLine(sectionText(issue.body, HEADINGS.goal)) ?? issue.title}`)
+  // Abuse cases (§23): a security-sensitive area (payments, auth, public API, personal data) gets attacker scenarios.
+  proposed.push(...abuseCases(issue, { lang }))
   const have = new Set(existing.map((e) => norm(e.text)))
   return { existing, proposed: proposed.filter((p) => !have.has(norm(p))) }
 }

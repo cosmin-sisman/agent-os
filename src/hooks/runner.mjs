@@ -12,6 +12,7 @@ import { budgetBytes, fitBudget, localContext, remoteContext } from './session.m
 import { editReminders } from './edit.mjs'
 import { gapsReminder } from './gaps.mjs'
 import { sessionWarning } from '../security/digest.mjs'
+import { threatModelStale } from '../security/threats.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 import { systemGit } from '../workflow/start.mjs'
 
@@ -100,7 +101,8 @@ export const CORE_HANDLERS = [
     timeoutMs: 500,
     run(input, { cwd }) {
       // The last advisory watch, from the cache: no network at session start.
-      const text = sessionWarning(cwd)
+      const stale = threatModelStale(cwd)
+      const text = [sessionWarning(cwd), stale?.stale.length ? `Security: the threat model ${stale.id} is stale (${stale.stale.join(', ')} changed): agent-os security threat-model` : null].filter(Boolean).join('\n')
       return text ? { message: text } : null
     },
   },

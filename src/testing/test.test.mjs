@@ -12,7 +12,8 @@ const BUG = { title: 'Login: the session expires after five minutes', labels: ['
 test('given a bug issue, plan adds a regression scenario that must fail before the fix', () => {
   const p = planScenarios(BUG)
   assert.deepEqual(p.existing, [])
-  assert.deepEqual(p.proposed, ['Given Log in and wait six minutes, when it runs, then The session lasts 8 hours (not "The session expires after 5 minutes") (regression test: it fails before the fix)'])
+  assert.equal(p.proposed[0], 'Given Log in and wait six minutes, when it runs, then The session lasts 8 hours (not "The session expires after 5 minutes") (regression test: it fails before the fix)')
+  assert.ok(p.proposed.slice(1).length && p.proposed.slice(1).every((x) => x.startsWith('Given an attacker')), 'a login issue is in the auth area: abuse cases follow the regression test')
   const ro = planScenarios({ ...BUG, labels: ['tip:bug'] }, { lang: 'ro' })
   assert.match(ro.proposed[0], /^Dat fiind .*\(test de regresie: pica inainte de fix\)$/)
 })

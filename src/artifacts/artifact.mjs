@@ -12,12 +12,12 @@ import { LANGUAGES } from '../i18n/i18n.mjs'
 import { closest } from '../util/closest.mjs'
 
 export const DIR = 'artifacts'
-export const TYPES = ['discovery', 'analysis', 'stack-map', 'comparison', 'decision-support', 'release-report', 'retro', 'architecture', 'dashboard', 'audit']
+export const TYPES = ['discovery', 'analysis', 'stack-map', 'comparison', 'decision-support', 'release-report', 'retro', 'architecture', 'dashboard', 'audit', 'threat-model']
 export const KINDS = ['snapshot', 'living']
 export const STATUSES = ['draft', 'current', 'stale', 'superseded']
 export const KEYS = ['id', 'title', 'type', 'kind', 'status', 'summary', 'languages', 'authors', 'refs', 'areas', 'build', 'sources']
 const ID = /^(\d{4})-(\d{2})-(\d{2})-[a-z0-9]+(-[a-z0-9]+)*$/
-const LIVING = new Set(['stack-map', 'dashboard'])
+const LIVING = new Set(['stack-map', 'dashboard', 'threat-model'])
 
 const oneOf = (what, v, list) => (list.includes(v) ? null : `${what} must be one of ${list.join(', ')}${typeof v === 'string' && closest(v, list) ? ` (did you mean "${closest(v, list)}"?)` : ''}, got ${JSON.stringify(v)}`)
 const strings = (v) => Array.isArray(v) && v.every((x) => typeof x === 'string')
@@ -77,6 +77,7 @@ const SECTIONS = {
   retro: ['What went well', 'What did not', 'Lessons', 'Actions'],
   architecture: ['Context', 'Components', 'Data flows', 'Decisions'],
   dashboard: ['Overview', 'Metrics', 'Notes'],
+  'threat-model': ['Layers', 'Threats (STRIDE)', 'Data flows'],
   audit: ['Summary', 'Scores per lens', 'Findings', 'Questions', 'Strengths', 'Roadmap'],
 }
 

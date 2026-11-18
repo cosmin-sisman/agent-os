@@ -14,7 +14,7 @@ import { findDiacritics } from '../i18n/i18n.mjs'
 import { externalLoads } from './artifact.mjs'
 
 const DIR = fileURLToPath(new URL('../../templates/artifacts/', import.meta.url))
-const TYPES = ['discovery', 'analysis', 'comparison', 'release-report', 'retro', 'audit']
+const TYPES = ['discovery', 'analysis', 'comparison', 'release-report', 'retro', 'audit', 'threat-model']
 const NOW = new Date('2026-11-18T10:00:00Z')
 async function cli(cwd, argv) {
   let stdout = ''

@@ -72,3 +72,27 @@ agent-os security pass [--base <branch>] [--report <file>…]   # exit 1 on a FA
 
 - **Scanner results, read and never run.** agent-os does not install or run scanners. It reads the reports the project's tools produce: SARIF (CodeQL, Semgrep, GitLab SAST, Trivy, …) and gitleaks JSON. They come from `security.reports` or `--report`, and only findings on the changed files are kept. **A secret's value is never copied**, only its rule and location. When no report is read, the pass says so.
 - **Missing scanners.** List the scanners the team runs in `security.scanners` (for example `["gitleaks", "osv-scanner"]`). `agent-os env` reports the ones the laptop lacks, by asking only for their version.
+
+## Preparing: threat model, abuse cases, regression tests, exercises
+
+**Threat model.** `agent-os security threat-model` writes the STRIDE threat model as a living artifact, `artifacts/<date>-threat-model/` (type `threat-model`). It holds:
+- each layer of `stack.yaml` with its threats and their mitigations;
+- the data flows between layer groups that cross a trust boundary;
+- the layers it cannot model.
+
+`stack.yaml` is one of the artifact's sources, so the model goes stale as soon as the stack changes. Four things react to that:
+- `agent-os stack set` refreshes it in the same step;
+- SessionStart says it is stale;
+- `release plan` lists it as a problem until it is refreshed;
+- `security threat-model` refreshes it in place: the same folder, new data, new hashes.
+
+**Abuse cases.** `/test plan` adds "Given an attacker…" scenarios for the security-sensitive areas an issue touches: payments, auth, public API and personal data. It reads them from the `area:` labels, the title and the Goal or Context section, in the issues language.
+
+**Regression tests.** A fixed vulnerability is a bug, and every bug's plan starts with its regression scenario, a test that fails without the fix. In a sensitive area, the abuse cases follow it.
+
+**Exercises.** `agent-os security exercise [<name>]` walks a tabletop incident against the project's runbooks:
+- `leaked-key`;
+- `compromised-account`;
+- `vulnerable-dependency`.
+
+The runbooks are found in `docs/runbooks/`, `runbooks/`, `docs/operations/`, `docs/incidents/` and `RUNBOOK*.md`. Each step is reported as covered by a runbook or as a gap. Gaps are proposed as one issue, filed only on confirmation through /ticket, and exit 1. An exercise is a conversation: nothing is run, and scenarios only ever target environments the project owns.
