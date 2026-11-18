@@ -12,7 +12,7 @@ import { LANGUAGES } from '../i18n/i18n.mjs'
 import { closest } from '../util/closest.mjs'
 
 export const DIR = 'artifacts'
-export const TYPES = ['discovery', 'analysis', 'stack-map', 'comparison', 'decision-support', 'release-report', 'retro', 'architecture', 'dashboard']
+export const TYPES = ['discovery', 'analysis', 'stack-map', 'comparison', 'decision-support', 'release-report', 'retro', 'architecture', 'dashboard', 'audit']
 export const KINDS = ['snapshot', 'living']
 export const STATUSES = ['draft', 'current', 'stale', 'superseded']
 export const KEYS = ['id', 'title', 'type', 'kind', 'status', 'summary', 'languages', 'authors', 'refs', 'areas', 'build', 'sources']
@@ -77,6 +77,7 @@ const SECTIONS = {
   retro: ['What went well', 'What did not', 'Lessons', 'Actions'],
   architecture: ['Context', 'Components', 'Data flows', 'Decisions'],
   dashboard: ['Overview', 'Metrics', 'Notes'],
+  audit: ['Summary', 'Scores per lens', 'Findings', 'Questions', 'Strengths', 'Roadmap'],
 }
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])

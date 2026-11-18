@@ -37,9 +37,32 @@ A lens answers with `{"lens", "findings": [...], "strengths": [...]}`. Each find
 - A finding with no recommendation is noted.
 - Strengths are kept.
 
-An audit creates nothing on the platform. Issues for accepted findings are proposed with /ticket, only on the person's yes.
+## Outputs
+
+`agent-os audit report --plan <plan.json> <answers…>` writes the **audit artifact**, `artifacts/<date>-audit-<slug>/` (type `audit`). It holds:
+- the summary;
+- a score per lens: 100, minus 40, 20, 10 or 5 for each critical, high, medium or low finding the lens raised;
+- the findings table, the questions and the strengths;
+- a roadmap: critical and high findings now, medium next, low later;
+- the commit it audited.
+
+`data.json` also keeps the report under `audit`, so the next audit can compare with it. `agent-os audit verify <id>` checks that the audited commit is in the repository and counts the commits since then.
+
+**Comparison.** When an earlier audit artifact has the same subject and input, the new one lists the findings that were **fixed** (gone), **new**, **worse** (higher severity) and **better**. Findings match by title or by shared evidence.
+
+**Proposed issues.** `agent-os audit propose <id>` proposes nothing until the person picks findings with `--accept <n>…`. It then drafts one issue per finding:
+- a title by lens;
+- labels: `type:bug` for security and privacy findings, `type:chore` for the rest, a priority from the severity, and `area:audit`;
+- a body with the evidence, the recommendation and its alternatives.
+
+More than five accepted findings become one epic with sub-issues. The drafts are filed through /ticket. Neither `report` nor `propose` calls the platform.
+
+**Lessons and the journal.** The /audit skill captures the patterns worth remembering with `agent-os lessons add`. It then adds a journal entry linking the artifact and the issues.
 
 ```
 agent-os audit plan "the orders queries are slow since the last migration" --json
 agent-os audit merge .agent-os/cache/audit/*.json
+agent-os audit report --plan .agent-os/cache/audit-plan.json .agent-os/cache/audit/*.json
+agent-os audit propose 2026-11-18-audit-project --accept 1 --accept 3
+agent-os audit verify 2026-11-18-audit-project
 ```

@@ -1,0 +1,54 @@
+{
+  "kind": "audit",
+  "lang": "ro",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Rezumat",
+      "text": []
+    },
+    {
+      "heading": "Scor pe lentila",
+      "table": {
+        "columns": [
+          "Lentila",
+          "Constatari",
+          "Cea mai grava",
+          "Scor"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Constatari",
+      "table": {
+        "columns": [
+          "Severitate",
+          "Incredere",
+          "Constatare",
+          "Lentile",
+          "Dovezi",
+          "Recomandare"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Intrebari",
+      "items": []
+    },
+    {
+      "heading": "Puncte forte",
+      "items": []
+    },
+    {
+      "heading": "Plan",
+      "items": []
+    },
+    {
+      "heading": "Comparatie cu auditul anterior",
+      "items": []
+    }
+  ]
+}

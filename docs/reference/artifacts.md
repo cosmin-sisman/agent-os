@@ -8,7 +8,7 @@ An artifact is a page kept in the repository: `artifact.yaml` (metadata) plus a 
 |---|---|
 | `id` | `<YYYY-MM-DD>-<slug>`: equals the folder name and starts with a valid date |
 | `title`, `summary` | required |
-| `type` | `discovery`, `analysis`, `stack-map`, `comparison`, `decision-support`, `release-report`, `retro`, `architecture`, `dashboard` |
+| `type` | `discovery`, `analysis`, `stack-map`, `comparison`, `decision-support`, `release-report`, `retro`, `architecture`, `dashboard`, `audit` |
 | `kind` | `snapshot` (frozen once merged: a new date is a new artifact) or `living` (regenerated in place) |
 | `status` | `draft`, `current`, `stale`, `superseded` |
 | `languages` | `[en]`, `[ro]` or both |
@@ -33,7 +33,7 @@ agent-os artifact log <id>         # the folder's git history
 
 ## Templates
 
-`discovery`, `analysis`, `comparison`, `release-report` and `retro` come with a template. `artifact new` creates three files in the artifact folder:
+`discovery`, `analysis`, `comparison`, `release-report`, `retro` and `audit` come with a template. `artifact new` creates three files in the artifact folder:
 - `template.html`: one shared page that draws the data;
 - `data.json`: the type's sections in the docs language (en or ro), with the title filled in;
 - `index.html`: built at once from the other two.
