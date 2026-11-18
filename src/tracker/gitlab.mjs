@@ -250,6 +250,53 @@ export class GitLabTracker {
     return { number: mr.iid, url: mr.web_url }
   }
 
+  findPullRequest({ head, base }) {
+    const mr = (this.api.rest('GET', this.p(`merge_requests?state=opened&source_branch=${encodeURIComponent(head)}&target_branch=${encodeURIComponent(base)}&per_page=1`)) ?? [])[0]
+    return mr ? { number: mr.iid, url: mr.web_url } : null
+  }
+
+  updatePullRequest(number, { title, body }, { dryRun = false } = {}) {
+    const request = { method: 'PUT', path: this.p(`merge_requests/${number}`), body: { ...(title ? { title } : {}), ...(body !== undefined ? { description: body } : {}) } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    const mr = this.api.rest(request.method, request.path, request.body)
+    return { number, url: mr?.web_url ?? null }
+  }
+
+  createTag(tag, sha, { dryRun = false } = {}) {
+    const request = { method: 'POST', path: this.p(`repository/tags?tag_name=${encodeURIComponent(tag)}&ref=${sha}`) }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    try { this.api.rest(request.method, request.path); return { tag, sha, created: true } } catch (err) {
+      if (!/already exists|HTTP 400|HTTP 409/i.test(err.output ?? err.message)) throw err
+      const existing = this.api.rest('GET', this.p(`repository/tags/${encodeURIComponent(tag)}`))?.commit?.id
+      if (existing !== sha) throw new CliError(`the tag ${tag} already exists on another commit (${String(existing).slice(0, 7)})`, { hint: 'releases are never re-tagged: pick the next version' })
+      return { tag, sha, created: false }
+    }
+  }
+
+  publishRelease({ tag, name, body }, { dryRun = false } = {}) {
+    if (dryRun) return { dryRun: true, requests: [{ method: 'POST', path: this.p('releases'), body: { tag_name: tag, name, description: body } }] }
+    let existing = null
+    try { existing = this.api.rest('GET', this.p(`releases/${encodeURIComponent(tag)}`)) } catch (err) { if (!/HTTP 404/.test(err.output ?? err.message)) throw err }
+    const r = existing ? this.api.rest('PUT', this.p(`releases/${encodeURIComponent(tag)}`), { name, description: body }) : this.api.rest('POST', this.p('releases'), { tag_name: tag, name, description: body })
+    return { tag, url: r?._links?.self ?? null, created: !existing }
+  }
+
+  createMilestone({ title, description }, { dryRun = false } = {}) {
+    const request = { method: 'POST', path: this.p('milestones'), body: { title, description } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    const m = this.api.rest(request.method, request.path, request.body)
+    this.cache.milestones = null
+    return { number: m.id, title }
+  }
+
+  updateMilestone(number, { title, description, state }, { dryRun = false } = {}) {
+    const request = { method: 'PUT', path: this.p(`milestones/${number}`), body: { ...(title ? { title } : {}), ...(description !== undefined ? { description } : {}), ...(state ? { state_event: state === 'closed' ? 'close' : 'activate' } : {}) } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    this.api.rest(request.method, request.path, request.body)
+    this.cache.milestones = null
+    return { number, ...request.body }
+  }
+
   labelChangeRequest(number, labels, { dryRun = false } = {}) {
     const request = { method: 'PUT', path: this.p(`merge_requests/${number}`), body: { add_labels: labels.join(',') } }
     if (dryRun) return { dryRun: true, requests: [request] }

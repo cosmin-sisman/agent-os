@@ -121,3 +121,24 @@ Two lines in a change request's description feed the notes:
 - `Replacement: <what to use instead>`. Every deprecation must name its replacement.
 
 Decision records, incidents and release entries added to the journal in the range are listed under *Decisions and incidents*. `--changelog` writes the same entry that `update --plan` reads, keeping the file's comment header. Nothing is published; the release flow is #17.
+
+## Releasing: `release plan | open | finish`
+
+```bash
+agent-os release plan --version 0.2.0                      # read only: range, notes, risks, problems
+agent-os release open --version 0.2.0 [--dry-run]          # release/0.2.0 + the release change request
+agent-os release finish --version 0.2.0 [--accept <risk>…] [--dry-run]
+agent-os release finish --version 0.2.1 --hotfix           # tag what is on production, sync it back
+```
+
+| Step | What it does | On a rerun |
+|---|---|---|
+| plan | range from the last `v*` tag on the production branch to `origin/<integration>`; grouped notes; risks; the title `release-<n>: <version>` from the rolling milestone | read only |
+| open | `release/<version>` from `origin/<integration>` with the `changelog.yaml` entry and a `release` journal entry; a change request into production, with the notes, the risks and a **Before merge** item per risk | reuses the branch, updates the change request |
+| finish | refuses while checks fail, reviews are missing or a risk is not accepted; merges with a **merge commit** pinned to the checked head (never squashed); tags `v<version>`; publishes the platform release with the notes; closes the rolling milestone as `Release <n> - <date>` and opens the next; runs the release checks (`checkEnvironment` and the `release:*` suites in `gate`); opens the sync of the release branch into integration | an existing tag on the same commit, the release, the rolled milestone and the sync are reused; a tag on another commit stops it |
+
+**Risks** stop `finish` until they are accepted, either ticked under Before merge or passed as `--accept <id>` (or a whole kind, `--accept env`):
+- `destructive:<file>`: a migration in the range that drops, truncates, deletes or renames.
+- `env:<NAME>`: a new variable in `.env.example` or in `requires.env`.
+
+Nothing deletes the integration branch, and nothing squashes into production.
