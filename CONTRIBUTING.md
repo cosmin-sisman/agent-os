@@ -44,3 +44,18 @@ The loop and gate jobs live in `ci.yml`, so the package's own loop, gate and ret
 - run `npm test`;
 - run `agent-os check title` and `agent-os check loop --body-file <body>`, and look at the exit code (never through a pipe);
 - after changing a command, an option or a core skill, run `npm run docs`: the commands reference and the skill catalog are generated, and a test fails when they are stale.
+
+## Releases and npm
+
+A release is `agent-os release plan --version x.y.z`, then `release open` and `release finish`:
+- `release open` sets `package.json` (and `package-lock.json`, if there is one) to the released version in the release commit, so the tag and the package agree. `release plan` reports a mismatch until then.
+- Pushing the tag starts `.github/workflows/publish.yml`. It publishes exactly the tagged commit to npm, with provenance (`npm publish --provenance --access public`), and only when:
+  - the tag is `v<package.json version>`;
+  - the commit is on `main`;
+  - the tests pass.
+
+**The `NPM_TOKEN` secret is the owner's step:**
+1. Create an npm token that may publish `@cosmin-sisman/agent-os`: a granular access token, or an automation token when the account uses 2FA.
+2. Add it under Settings → Secrets and variables → Actions → `NPM_TOKEN`.
+
+Without the secret, the workflow stops with a clear error and publishes nothing. Nobody else creates the secret, runs `npm publish` by hand, or pushes release tags outside `release finish`.
