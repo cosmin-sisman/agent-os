@@ -75,7 +75,7 @@ export function freeMemoryMb() {
  * @param {{ rules: object[], env?: Record<string, string | undefined>, minFreeMb?: number, freeMb?: () => number }} options
  * @returns {{ id: string, message: string }[]} the rules it breaks
  */
-export function checkCommand(line, { rules, env = {}, minFreeMb = 0, freeMb = freeMemoryMb }) {
+export function checkCommand(line, { rules, env = {}, minFreeMb = 0, freeMb = freeMemoryMb, currentBranch = null }) {
   const broken = []
   for (const simple of splitCommands(line)) {
     const { env: inline, rest } = envPrefix(simple)
@@ -88,6 +88,9 @@ export function checkCommand(line, { rules, env = {}, minFreeMb = 0, freeMb = fr
         if (found.length) broken.push({ ...rule, message: `${found.join(' ')}: ${rule.message ?? 'this flag is not allowed here'}` })
       } else if (rule.type === 'require-env') {
         if (!inline[rule.env] && !env[rule.env]) broken.push({ ...rule, message: rule.message ?? `set ${rule.env}=1 in front of the command once the team agreed to run it` })
+      } else if (rule.type === 'protected-push') {
+        const hit = pushTargets(rest, currentBranch).filter((b) => b === '*' || (rule.branches ?? []).includes(b))
+        if (hit.length) broken.push({ ...rule, message: `${hit.includes('*') ? 'this pushes every branch, the long-lived ones too' : `this pushes to ${hit.join(', ')}`}: ${rule.message}` })
       } else if (rule.type === 'min-free-memory') {
         const free = freeMb()
         if (free < minFreeMb) broken.push({ ...rule, message: `${rule.message ?? 'heavy command'}: only ${free} MB free, below the ${minFreeMb} MB floor (machine.minFreeMb); stop a dev server or another session first` })
@@ -98,5 +101,33 @@ export function checkCommand(line, { rules, env = {}, minFreeMb = 0, freeMb = fr
   return broken.filter((r) => !seen.has(r.id) && seen.add(r.id)).map((r) => ({ id: r.id, message: r.message }))
 }
 
+/**
+ * The branches a `git push` command line would update, given the branch checked out: explicit refspecs (`main`,
+ * `HEAD:main`, `+x:refs/heads/main`, `:main` to delete), `--all` and `--mirror` (every branch), and the current branch
+ * when the push names no refspec or only HEAD.
+ */
+export function pushTargets(rest, currentBranch) {
+  const w = words(rest).slice(2)
+  if (w.some((x) => x === '--all' || x === '--mirror')) return ['*']
+  const positional = []
+  for (let i = 0; i < w.length; i++) {
+    if (w[i].startsWith('-')) { if (['--repo', '--receive-pack', '--exec', '-o', '--push-option'].includes(w[i])) i++; continue }
+    positional.push(w[i])
+  }
+  const refspecs = positional.slice(1)
+  if (!refspecs.length) return currentBranch ? [currentBranch] : []
+  return refspecs.map((r) => {
+    const s = r.replace(/^\+/, '')
+    const dst = s.includes(':') ? s.split(':').pop() : s
+    return dst === 'HEAD' || dst === '' ? (s.includes(':') && dst === '' ? null : currentBranch) : dst.replace(/^refs\/heads\//, '')
+  }).filter(Boolean)
+}
+
+/** The rule that keeps pushes off the long-lived branches: work reaches them through change requests only. */
+const protectedPush = (config) => ({
+  id: 'push-protected', type: 'protected-push', pattern: '^git\\s+push\\b', branches: [config.branches?.integration, config.branches?.production].filter(Boolean),
+  message: 'pushing to a long-lived branch skips review: claim the issue first (agent-os start <n>) so the work is on its own branch, then open a change request',
+})
+
 /** The rules in force for a merged configuration: built-ins minus disabled ones, plus the project's. */
-export const rulesFor = (config) => [...BUILT_IN.filter((r) => !(config.guards?.disable ?? []).includes(r.id)), ...(config.guards?.rules ?? [])]
+export const rulesFor = (config) => [...[...BUILT_IN, protectedPush(config)].filter((r) => !(config.guards?.disable ?? []).includes(r.id)), ...(config.guards?.rules ?? [])]
