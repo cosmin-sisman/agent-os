@@ -31,11 +31,11 @@ export function releaseFacts(cwd, config, { git } = {}) {
   }
 }
 
-const TODO = { en: (what) => `_to fill: ${what}_`, ro: (what) => `_de completat: ${what}_` }
+const TO_FILL = { en: (what) => `_to fill: ${what}_`, ro: (what) => `_de completat: ${what}_` }
 
 /** The runbook files, in the docs language. */
 export function runbooks(facts, { lang = 'en' } = {}) {
-  const t = TODO[lang] ?? TODO.en
+  const t = TO_FILL[lang] ?? TO_FILL.en
   const f = facts
   const ci = f.workflows.length ? f.workflows.map((w) => `\`${w}\``).join(', ') : t('the CI configuration')
   const checks = f.requiredChecks.length ? f.requiredChecks.map((c) => `\`${c}\``).join(', ') : t('the required checks')
