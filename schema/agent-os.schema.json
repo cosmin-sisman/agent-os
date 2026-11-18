@@ -631,6 +631,15 @@
             "type": "string",
             "description": "A runner tag"
           }
+        },
+        "labels": {
+          "type": "boolean",
+          "description": "Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels)",
+          "default": false
+        },
+        "labelsEnvironment": {
+          "type": "string",
+          "description": "GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret)"
         }
       },
       "additionalProperties": false

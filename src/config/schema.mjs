@@ -110,6 +110,8 @@ export const SCHEMA = obj({
   ci: obj({
     image: str('The container image generated CI jobs run in, e.g. from the internal registry (default node:22)'),
     tags: list(str('A runner tag'), 'Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels)', { default: [] }),
+    labels: bool('Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels)', { default: false }),
+    labelsEnvironment: str('GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret)'),
   }, 'How generated CI jobs run: image and runners', { default: {} }),
   adoption: obj({
     warnOnlyUntil: str('Until this date (YYYY-MM-DD) guards only warn instead of refusing', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),

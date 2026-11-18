@@ -1,0 +1,84 @@
+{{#if ci.labels}}
+# Keeps the repository's labels in step with agent-os.json and stack.yaml (agent-os setup --only labels): it completes
+# labels and never replaces or deletes them. Installed because agent-os.json sets ci.labels.
+#   preview: on a pull request (never pull_request_target), with the read-only workflow token and no secret, it only
+#            reports what would change (job summary).
+#   apply:   on a push to {{{branches.integration}}}, the only job that may write labels: AGENT_OS_LABELS_TOKEN, or the
+#            workflow token with issues: write. Without a token it says which is missing and changes nothing.
+name: agent-os labels
+
+on:
+  pull_request:
+    paths: ["agent-os.json", "stack.yaml", ".github/workflows/agent-os-labels.yml"]
+  push:
+    branches: ["{{{branches.integration}}}"]
+    paths: ["agent-os.json", "stack.yaml", ".github/workflows/agent-os-labels.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-os-labels-{{{expr.open}}} github.event.pull_request.number || github.ref {{{expr.close}}}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    name: agent-os/labels (preview)
+    if: github.event_name == 'pull_request'
+    runs-on: {{{runner.runsOn}}}
+{{#if runner.image}}
+    container: "{{{runner.image}}}"
+{{/if}}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: read
+    env:
+      GH_TOKEN: {{{expr.open}}} github.token {{{expr.close}}}
+{{#if runner.npmRegistry}}
+      npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: what would change
+        run: {{{runner.npx}}} setup --only labels --dry-run | tee -a "$GITHUB_STEP_SUMMARY"
+
+  apply:
+    name: agent-os/labels (apply)
+    if: github.event_name == 'push'
+    runs-on: {{{runner.runsOn}}}
+{{#if runner.image}}
+    container: "{{{runner.image}}}"
+{{/if}}
+{{#if ci.labelsEnvironment}}
+    environment: "{{{ci.labelsEnvironment}}}"
+{{/if}}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GH_TOKEN: {{{expr.open}}} secrets.AGENT_OS_LABELS_TOKEN || github.token {{{expr.close}}}
+{{#if runner.npmRegistry}}
+      npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: apply
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::agent-os labels: no token that may write labels (AGENT_OS_LABELS_TOKEN, or the workflow token with issues: write); nothing was changed"
+            exit 0
+          fi
+          {{{runner.npx}}} setup --only labels | tee -a "$GITHUB_STEP_SUMMARY"
+{{/if}}

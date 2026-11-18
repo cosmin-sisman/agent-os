@@ -124,6 +124,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `ci` | team | object | `{}` | How generated CI jobs run: image and runners |
 | `ci.image` | team | string |  | The container image generated CI jobs run in, e.g. from the internal registry (default node:22) |
 | `ci.tags` | team | array | `[]` | Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels) |
+| `ci.labels` | team | boolean | `false` | Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels) |
+| `ci.labelsEnvironment` | team | string |  | GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret) |
 | `adoption` | team | object | `{}` | Adoption mode for projects new to agent-os |
 | `adoption.warnOnlyUntil` | team | string |  | Until this date (YYYY-MM-DD) guards only warn instead of refusing |
 | `adoption.cutoff` | team | string |  | Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD) |
