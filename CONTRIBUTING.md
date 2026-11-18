@@ -19,7 +19,7 @@ This repository uses the workflow agent-os will install. Until the CLI exists, t
 
 - Title: `<type>(<scope>): <summary> [#N]`, lowercase, imperative, ≤ 72 characters. The brackets list every issue the body closes or references. CI checks it (`agent-os check title`), and so can you before pushing: `node bin/agent-os.mjs check title "<title>" --body-file <body>`.
 - Body: the template's sections. `## Lessons` is required: write the lesson, or "None: <reason>".
-- Add a journal entry in the same PR: `.agent-os/journal/YYYY/MM/<YYYY-MM-DDTHH-MM>-<github-user>-<slug>.md`, with front matter `type`, `refs`, `areas`, `author`.
+- Add a journal entry in the same PR: `agent-os journal add --type decision --title "…" --area <area> --ref "#N" --body-file <file>` writes `.agent-os/journal/YYYY/MM/<YYYY-MM-DDTHH-MM>-<github-user>-<slug>.md` (UTC) with front matter `type`, `refs`, `areas`, `author`. `agent-os journal check` validates every entry (also part of `npm test`).
 - One PR closes one issue (`Closes #N`).
 
 ## Decisions
