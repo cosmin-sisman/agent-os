@@ -4,6 +4,15 @@ One file per decision, named `<YYYY-MM-DD>-<slug>.md`. The id is the date plus a
 
 Each record has: **Status** (proposed · accepted · superseded by …), **Context**, **Decision**, **Consequences**. A record is never rewritten after it is accepted: a change is a new record that supersedes it.
 
+```bash
+agent-os decision new cache-ttl --title "Cache the PR list for 10 minutes"     # docs/decisions/<today>-cache-ttl.md, proposed
+agent-os decision new merge-commits --title "Releases use merge commits" --supersedes squash
+agent-os decision list                                                          # rendered on demand
+agent-os decision check                                                         # also a doctor check
+```
+
+`--supersedes` writes the new record (marked `supersedes [old](…)`) and changes only the old record's status line, to `superseded by [new](…)`. `check` (and `doctor`) fails on a name that is not `<YYYY-MM-DD>-<slug>.md`, a missing title, status or section, or a superseded record that does not link an existing successor. The template follows the `docs` language (in `ro`: Stare, Context, Decizie, Consecinte).
+
 | Record | Decision |
 |---|---|
 | [managed-files-and-lock](2026-11-18-managed-files-and-lock.md) | installed files are tracked by hash; updates merge, never clobber |
