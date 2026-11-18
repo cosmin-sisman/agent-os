@@ -3,7 +3,9 @@
 // private, after a yes), then runs the full init and the personal settings, and ends with what to do next. It is
 // also what the bare `agent-os` runs on a terminal in a folder without agent-os.json. Every flag of init works here.
 
-import { basename, resolve } from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
+import { basename, join, resolve } from 'node:path'
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { ask } from '../cli/prompt.mjs'
 import { loadConfig } from '../config/config.mjs'
@@ -12,6 +14,9 @@ import { remoteUrl } from '../platform/detect.mjs'
 import { systemGit } from '../workflow/start.mjs'
 import { PLATFORM_CREATE, creatorFor } from '../platform/create.mjs'
 import { DESCRIBE, full, options as initOptions, personal } from './init.mjs'
+import { PACKAGE, hookCommand } from '../version/pin.mjs'
+import { onPath } from '../util/which.mjs'
+import { excerpt } from '../util/spawn.mjs'
 
 export const usage = 'agent-os install [any init flag: --profile, --platform github|gitlab --project <owner/name> [--host <url>], --lang, --solo|--team, --chat, --setup, --yes …]\n       (the bare `agent-os` runs it on a terminal in a folder without agent-os.json)'
 
@@ -61,9 +66,57 @@ export async function run(ctx) {
   try {
     const code = (await full(ctx)) ?? EXIT.OK
     // The person said no to the plan, or init found failures: stop there, without the personal settings.
-    if (code === EXIT.OK && reports.at(-1)?.data?.written && !ctx.dryRun) await personal(ctx)
-    return finish(ctx, output, { done, reports, code })
+    const init = reports.at(-1)?.data
+    const after = []
+    if (code === EXIT.OK && init?.written && !ctx.dryRun) {
+      await personal(ctx)
+      // What a fresh folder still lacks after init (#275): the CLI the skills call, and a first commit on the remote.
+      after.push(...await offerCli(ctx, q, interactive))
+      after.push(...await offerFirstCommit(ctx, q, { interactive, git, files: init.files ?? [] }))
+    }
+    return finish(ctx, output, { done, reports, after, code })
   } finally { ctx.output = output }
+}
+
+/** npm, which is a .cmd on Windows (run through the shell there, with fixed arguments only). */
+const systemNpm = (args) => {
+  const win = process.platform === 'win32'
+  const r = spawnSync(win ? 'npm.cmd' : 'npm', args, { encoding: 'utf8', timeout: 180000, windowsHide: true, shell: win })
+  return { status: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? (r.error ? String(r.error.message) : '') }
+}
+
+/** Offers the agent-os command on this laptop, pinned, when it is not on the PATH; never installs without a yes. */
+async function offerCli(ctx, q, interactive) {
+  if (onPath('agent-os', ctx.io.env ?? process.env)) return []
+  const { merged } = loadConfig(ctx.cwd)
+  const spec = `${PACKAGE}@${merged.version}`
+  const npx = hookCommand(merged, { cwd: ctx.cwd })
+  if (!interactive) return [`the agent-os command is not on this PATH: npm i -g ${spec} installs it; until then, run ${npx} <command>`]
+  const yes = await q({ key: 'cli', kind: 'yesno', default: true, text: `The skills call the agent-os command, which is not installed on this laptop. Install it now (npm i -g ${spec})?` })
+  if (!yes) return [`not installed: the skills run ${npx} <command> until you run npm i -g ${spec}`]
+  const r = (ctx.io.npm ?? systemNpm)(['install', '--global', spec])
+  return [r.status === 0 ? `installed the agent-os command (npm i -g ${spec})` : `npm i -g ${spec} failed: ${excerpt(r.stderr || r.stdout)}; run it yourself, or use ${npx} <command>`]
+}
+
+/**
+ * In a repository with no commit yet, offers the first commit with exactly the files init wrote, and the push of the
+ * integration branch to origin. Personal files stay out (.gitignore keeps them out of git add). A run that is not on a
+ * terminal and has no --yes only says how.
+ */
+async function offerFirstCommit(ctx, q, { interactive, git, files }) {
+  if (git(['rev-parse', '--verify', '--quiet', 'HEAD']).status === 0) return []
+  const branch = git(['symbolic-ref', '--short', 'HEAD']).stdout.trim() || ctx.values.integration || 'development'
+  const paths = [...new Set(['agent-os.json', '.gitignore', '.agent-os', ...files.map((f) => String(f.key).split('#')[0])])].filter((p) => existsSync(join(ctx.cwd, p)))
+  const how = `git add ${paths.length > 6 ? '<the installed files>' : paths.join(' ')} && git commit -m "chore: install agent-os" && git push -u origin ${branch}`
+  if (!interactive && !ctx.values.yes) return [`not committed yet: ${how}`]
+  const yes = await q({ key: 'commit', kind: 'yesno', default: true, text: `Nothing is committed yet. Commit the installed files as the first commit on ${branch} ("chore: install agent-os") and push it to origin?` })
+  if (!yes) return [`not committed: ${how}`]
+  const add = git(['add', '--', ...paths])
+  if (add.status !== 0) return [`git add failed: ${excerpt(add.stderr)}; then: ${how}`]
+  const commit = git(['commit', '-m', 'chore: install agent-os'])
+  if (commit.status !== 0) return [`git commit failed: ${excerpt(commit.stderr || commit.stdout)} (set git config user.name and user.email); then: ${how}`]
+  const push = git(['push', '-u', 'origin', branch])
+  return [`committed the installed files on ${branch} (chore: install agent-os)`, push.status === 0 ? `pushed ${branch} to origin` : `git push failed: ${excerpt(push.stderr)}; run git push -u origin ${branch} once origin is reachable`]
 }
 
 /** Asks the platform, the host and the project; creates the repository (private) after a yes, or adds an existing one. */
@@ -103,7 +156,7 @@ async function choosePlatform(ctx, q) {
 }
 
 /** One report: what was done, init's and the personal settings' own lines, then what to do next. */
-function finish(ctx, output, { done, reports, code }) {
+function finish(ctx, output, { done, reports, after = [], code }) {
   const written = reports.find((r) => r.data && 'written' in r.data)?.data
   const profile = written?.profile ?? reports[0]?.data?.profile
   const ready = code === EXIT.OK && (written?.written || ctx.dryRun)
@@ -117,7 +170,7 @@ function finish(ctx, output, { done, reports, code }) {
     ...(ctx.values.setup ? [] : ['  then, when the team agrees: agent-os setup --dry-run, then agent-os setup (branch protection, labels, milestone)']),
     'The usage guide: https://github.com/cosmin-sisman/agent-os/blob/development/docs/guides/usage.md',
   ] : []
-  output({ done, steps: reports.map((r) => r.data), profile: profile ?? null }, [...done, ...reports.map((r) => r.text).filter(Boolean).map(compact), ...next].join('\n'))
+  output({ done, steps: reports.map((r) => r.data), profile: profile ?? null }, [...done, ...reports.map((r) => r.text).filter(Boolean).map(compact), ...after, ...next].join('\n'))
   return code
 }
 

@@ -185,6 +185,7 @@ It asks a few questions, and you can stop at any of them:
 - with no `origin` remote, it asks for the platform (GitHub or GitLab, and the host when it is self-managed) and the project, and offers to create the repository, private, only after you confirm;
 - it detects the repository's state and suggests a profile;
 - it installs the skills, rules and hooks, then your personal settings (chat language, sessions);
+- it offers the `agent-os` command on your laptop (`npm i -g`, pinned) when it is missing, and the first commit and push in a new repository;
 - it ends with what to do next.
 
 Every `init` flag works with `install` too, for scripts: `install --platform github --project acme/shop --solo --lang en --yes`. On a terminal, `npx @cosmin-sisman/agent-os` with no command does the same in a folder that has no `agent-os.json` yet. `install` ships after 0.1.2; on 0.1.2, use the step-by-step commands below.

@@ -9,6 +9,13 @@ import { budgetBytes, fitBudget, localContext, remoteContext } from './session.m
 import { runEvent } from './runner.mjs'
 
 const CONFIG = { branches: { integration: 'development', production: 'main' }, contextBudgets: {}, platform: { type: 'github', project: 'acme/app' } }
+/** A PATH with the agent-os command on it, so the session adds no "not on this PATH" line. */
+function withCli(cwd) {
+  const bin = join(cwd, '.bin')
+  mkdirSync(bin, { recursive: true })
+  writeFileSync(join(bin, process.platform === 'win32' ? 'agent-os.cmd' : 'agent-os'), '')
+  return { PATH: bin, PATHEXT: '.CMD' }
+}
 const git = (branch = 'feat/30-session-context', changed = ['src/db/a.ts']) => (args) => {
   const k = args.join(' ')
   if (k === 'rev-parse --abbrev-ref HEAD') return { status: 0, stdout: `${branch}\n`, stderr: '' }
@@ -32,7 +39,7 @@ test('given no network, it injects local information only, and never blocks', as
   const cwd = project()
   try {
     const handlers = [
-      { name: 'session', events: ['SessionStart'], run: () => ({ lines: localContext({ config: CONFIG, cwd, git: git() }).lines }) },
+      { name: 'session', events: ['SessionStart'], run: () => ({ lines: localContext({ config: CONFIG, cwd, git: git(), env: withCli(cwd) }).lines }) },
       { name: 'session-remote', events: ['SessionStart'], run: () => ({ lines: remoteContext({ tracker: { whoami: () => { throw new Error('getaddrinfo ENOTFOUND api.github.com') } }, branch: 'feat/30-x' }).lines }) },
     ]
     const out = await runEvent('SessionStart', { session_id: 's1' }, { config: CONFIG, cwd, handlers })
@@ -50,7 +57,7 @@ test('given no network, it injects local information only, and never blocks', as
 test('with the platform: the issue, assignments and reviews, ahead of the local extras', async () => {
   const cwd = project()
   try {
-    const lines = [...localContext({ config: CONFIG, cwd, git: git() }).lines, ...remoteContext({ tracker, branch: 'feat/30-session-context' }).lines]
+    const lines = [...localContext({ config: CONFIG, cwd, git: git(), env: withCli(cwd) }).lines, ...remoteContext({ tracker, branch: 'feat/30-session-context' }).lines]
     const fit = fitBudget(lines, 1536)
     assert.match(fit.text, /^agent-os: you are on feat\/30-session-context \(issue #30\)\.\n/)
     assert.match(fit.text, /Issue #30: SessionStart context \(open\)\./)
@@ -77,7 +84,7 @@ test('never exceeds the budget: the least important lines go first', async () =>
 test('nothing personal or secret: no values from local.json, no environment', async () => {
   const cwd = project()
   try {
-    const lines = localContext({ config: CONFIG, cwd, git: git() }).lines.map((l) => l.text).join('\n')
+    const lines = localContext({ config: CONFIG, cwd, git: git(), env: withCli(cwd) }).lines.map((l) => l.text).join('\n')
     assert.doesNotMatch(lines, /ghp_|maxWorkers|chat|\bro\b/)
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
@@ -100,5 +107,19 @@ test('a context handler that times out is left out silently; the local context s
     const out = await runEvent('SessionStart', { session_id: 's2' }, { config: CONFIG, cwd, handlers })
     assert.equal(out.hookSpecificOutput.additionalContext, 'local')
     assert.equal(out.systemMessage, undefined)
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('where agent-os is not on the PATH, the session names the exact pinned npx command; where it is, nothing', () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'aos-session-'))
+  try {
+    const config = { ...CONFIG, version: '0.1.3' }
+    const missing = localContext({ config, cwd, git: git(), env: { PATH: '' } }).lines.map((l) => l.text).join('\n')
+    assert.match(missing, /agent-os CLI: not on this PATH; run each `agent-os <command>` as `npx -y @cosmin-sisman\/agent-os@0\.1\.3 <command>` \(never an unscoped "agent-os" package\)/)
+    const bin = join(cwd, 'bin')
+    mkdirSync(bin)
+    writeFileSync(join(bin, process.platform === 'win32' ? 'agent-os.cmd' : 'agent-os'), '')
+    const present = localContext({ config, cwd, git: git(), env: { PATH: bin, PATHEXT: '.CMD' } }).lines.map((l) => l.text).join('\n')
+    assert.doesNotMatch(present, /agent-os CLI:/)
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
