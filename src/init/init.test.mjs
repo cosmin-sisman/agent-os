@@ -67,7 +67,7 @@ test('interactively: chat first, then the profile, languages, branch and team; n
   const dir = mkdtempSync(join(tmpdir(), 'aos-init-'))
   try {
     const asked = []
-    const answers = ['en', 'active', 'ro', 'develop', 'n', 'n']
+    const answers = ['en', 'active', 'ro', 'develop', 'n', 'forward-only', 'n']
     const r = await init(dir, ['--platform', 'gitlab', '--project', 'team/app'], { ask: async (q) => { asked.push(q.split('?')[0]); return answers.shift() } })
     assert.equal(r.code, 0)
     assert.match(asked[0], /Which language should the agent talk to you in/)
@@ -75,6 +75,7 @@ test('interactively: chat first, then the profile, languages, branch and team; n
     assert.match(asked[2], /Language of the team areas/)
     assert.match(asked[3], /Integration branch/)
     assert.match(asked[4], /Do several people work here/)
+    assert.match(asked[5], /This repository has history/)
     assert.match(r.stdout, /nothing written/)
     assert.ok(!existsSync(join(dir, 'agent-os.json')))
   } finally { rmSync(dir, { recursive: true, force: true }) }
@@ -89,5 +90,44 @@ test('the platform is detected from the origin remote when not given', async () 
     const none = await init(dir, ['--lang', 'en', '--chat', 'en', '--yes'], { ask: noPrompt, remote: null })
     assert.equal(none.code, 2)
     assert.match(none.stderr, /pass --platform github\|gitlab --project/)
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('given old issues without milestones, doctor does not report them after a forward-only init; old docs are warnings, not failures', async () => {
+  const { spawnSync } = await import('node:child_process')
+  const { mkdirSync } = await import('node:fs')
+  const { loadConfig } = await import('../config/config.mjs')
+  const { runDoctor } = await import('../doctor/doctor.mjs')
+  const { readJournal } = await import('../journal/journal.mjs')
+  const dir = mkdtempSync(join(tmpdir(), 'aos-init-legacy-'))
+  try {
+    // A legacy repository: years of history, tags, docs with a link that broke long ago.
+    const env = { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: join(dir, '.gc'), GIT_AUTHOR_NAME: 'T', GIT_AUTHOR_EMAIL: 't@e.com', GIT_COMMITTER_NAME: 'T', GIT_COMMITTER_EMAIL: 't@e.com', GIT_AUTHOR_DATE: '2024-01-10T10:00:00Z', GIT_COMMITTER_DATE: '2024-01-10T10:00:00Z' }
+    writeFileSync(join(dir, '.gc'), '[commit]\n\tgpgsign = false\n')
+    const g = (...a) => spawnSync('git', a, { cwd: dir, env, encoding: 'utf8' })
+    g('init', '-q')
+    mkdirSync(join(dir, 'src'), { recursive: true })
+    for (let i = 0; i < 8; i++) { writeFileSync(join(dir, `src/m${i}.js`), `export const x${i} = ${i}\n`); g('add', '-A'); g('commit', '-qm', `m${i}`) }
+    writeFileSync(join(dir, 'README.md'), '# Legacy\n\nSee [the old guide](docs/gone.md).\n'); g('add', '-A'); g('commit', '-qm', 'readme'); g('tag', 'v1.0.0')
+    const git = (args) => { const r = spawnSync('git', args, { cwd: dir, env, encoding: 'utf8' }); return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } }
+    const r = await init(dir, [...FLAGS, '--methodology', 'forward-only', '--author', 'ana'], { ask: noPrompt, git })
+    assert.equal(r.code, 0, r.stdout + r.stderr)
+    assert.match(r.stdout, /profile: maintenance, forward-only from \d{4}-\d{2}-\d{2}/)
+    const config = loadConfig(dir).merged
+    assert.match(config.adoption.cutoff, /^\d{4}-\d{2}-\d{2}$/)
+    const [baseline] = readJournal(dir)
+    assert.equal(baseline.meta.type, 'note')
+    assert.match(baseline.title, /^Baseline: agent-os adopted forward-only on /)
+    assert.match(baseline.body, /- Commits: 9 \(0 in the last 90 days\), last on 2024-01-10T10:00:00Z; tags: 1/)
+    // The platform: old issues without milestones are history; a new one is reported.
+    const tracker = { openIssues: () => [{ number: 3, labels: [], milestone: null, createdAt: '2024-02-01T00:00:00Z' }, { number: 90, labels: [], milestone: null, createdAt: '2099-01-01T00:00:00Z' }], labels: () => [], pullRequests: () => [], blockers: () => [] }
+    const d = runDoctor({ cwd: dir, config, running: '0.0.0', tracker, me: 'ana' }, {})
+    const issueMsgs = d.checks.find((c) => c.id === 'issues').findings.map((f) => f.message)
+    assert.ok(!issueMsgs.some((m) => m.startsWith('#3 ')), 'old issues are not reported')
+    assert.ok(issueMsgs.some((m) => m.startsWith('#90 ')))
+    const link = d.checks.find((c) => c.id === 'links').findings.find((f) => /README\.md/.test(f.message))
+    assert.equal(link.level, 'warn')
+    assert.match(link.message, /pre-existing; forward-only since/)
+    assert.equal(runDoctor({ cwd: dir, config, running: '0.0.0' }, { offline: true }).summary.fail, 0, 'doctor passes on a legacy repo right after init')
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })

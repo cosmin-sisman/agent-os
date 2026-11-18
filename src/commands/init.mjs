@@ -21,6 +21,8 @@ export const options = {
   'area-lang': { type: 'string', multiple: true, description: 'One area in another language, e.g. --area-lang issues=ro (repeat)' },
   solo: { type: 'boolean', description: 'One person: no required approvals' },
   team: { type: 'boolean', description: 'A team: one approval required on change requests' },
+  methodology: { type: 'string', description: 'For an existing repository: forward-only (conventions from today on) or retrofit (#50)' },
+  author: { type: 'string', description: 'The login for the baseline journal entry (default: your platform login)' },
   setup: { type: 'boolean', description: 'Also apply the platform setup (branches, protection, labels, milestone); asks first unless --yes' },
   detect: { type: 'boolean', description: 'Only read the repository and suggest a profile (greenfield, spec-first, active, maintenance); writes nothing' },
   chat: { type: 'string', description: 'Language the agent talks to you in: en or ro' },
@@ -157,15 +159,21 @@ async function full(ctx) {
   const production = v.production ?? merged.branches.production
   const team = v.solo ? false : v.team ? true : await ask(ctx.io, { key: 'team', kind: 'yesno', default: true, text: 'Do several people work here (one approval required on change requests)?' }, { useDefaults })
 
+  // 5. An existing repository: forward-only (from today on) or retrofit (history brought in, #50).
+  let methodology = null
+  if (profile !== 'greenfield') {
+    methodology = v.methodology !== undefined ? oneOf(['forward-only', 'retrofit'])(v.methodology, 'methodology') : await ask(ctx.io, { key: 'methodology', kind: 'choice', choices: ['forward-only', 'retrofit'], default: 'forward-only', text: 'This repository has history. Apply the conventions from today on (forward-only), or bring the history in (retrofit)?' }, { useDefaults })
+    if (methodology === 'retrofit') throw new CliError('retrofit is planned but not implemented yet', { hint: 'use --methodology forward-only now; retrofit can follow later (#50)' })
+  }
   const version = ctx.io.running ?? runningVersion()
-  const cfg = buildConfig({ profile, platform, integration, production, team, lang, areaLangs, chat, version, cwd: ctx.cwd })
+  const cfg = buildConfig({ profile, platform, integration, production, team, lang, areaLangs, chat, version, cwd: ctx.cwd, methodology })
   const plan = planInit({ cwd: ctx.cwd, ...cfg, version })
   if (plan.problems.length) throw new CliError(`the answers do not make a valid configuration:\n  - ${plan.problems.join('\n  - ')}`)
   let platformSteps = []
   try { platformSteps = planPlatformSetup(plan.merged, { gh: ctx.io.gh, glab: ctx.io.glab }) } catch (err) { lines.push(`platform plan unavailable: ${err.message.split('\n')[0]}${err.hint ? ` (${err.hint})` : ''}`) }
   const changed = plan.files.filter((f) => f.action !== 'unchanged')
   lines.push(
-    `profile: ${profile}${profile === state.profile ? '' : ` (detected ${state.profile})`}; team areas in ${lang}${Object.keys(areaLangs).length ? ` (${Object.entries(areaLangs).map(([a, l]) => `${a} ${l}`).join(', ')})` : ''}; chat in ${chat}; ${integration} → ${production}; ${team ? 'team (1 approval)' : 'solo'}`,
+    `profile: ${profile}${profile === state.profile ? '' : ` (detected ${state.profile})`}${methodology ? `, ${methodology}${methodology === 'forward-only' ? ` from ${cfg.team.adoption.cutoff} (doctor ignores older history; a baseline journal entry records the snapshot)` : ''}` : ''}; team areas in ${lang}${Object.keys(areaLangs).length ? ` (${Object.entries(areaLangs).map(([a, l]) => `${a} ${l}`).join(', ')})` : ''}; chat in ${chat}; ${integration} → ${production}; ${team ? 'team (1 approval)' : 'solo'}`,
     `${plan.existing ? 'update' : 'write'} ${TEAM_FILE}, ${LOCAL_FILE}${plan.ignore.length ? `, .gitignore (+ ${plan.ignore.join(', ')})` : ''}`,
     ...changed.map((f) => `  ${f.action === 'conflict' ? `keep ${f.key}: it exists and differs (agent-os's version goes to ${f.rej} to merge by hand)` : `${f.action.replace('installed', 'install')} ${f.key}`}`),
     platformSteps.length ? `platform (${v.setup ? 'will apply' : 'apply later with agent-os setup'}):` : 'platform: nothing to change',
@@ -176,7 +184,10 @@ async function full(ctx) {
     const go = await ask(ctx.io, { key: 'confirm', kind: 'yesno', default: true, text: `${lines.join('\n')}\nWrite this?` }, { useDefaults })
     if (!go) { ctx.output({ written: false }, 'nothing written'); return EXIT.OK }
   }
-  const r = applyInit({ cwd: ctx.cwd, ...cfg, version, plan })
+  let author = v.author ?? null
+  if (!author && methodology) { try { author = (await import('../tracker/gh.mjs')).ghClient(ctx.io.gh).rest('GET', 'user')?.login ?? null } catch { author = null } }
+  const baseline = methodology === 'forward-only' ? { signals: state.signals, profile, author: author ?? 'agent-os' } : null
+  const r = applyInit({ cwd: ctx.cwd, ...cfg, version, plan, baseline })
   if (v.setup) for (const s of platformSteps.filter((x) => x.action !== 'keep')) s.apply()
   const fails = r.doctor.checks.flatMap((c) => c.findings.filter((f) => f.level === 'fail'))
   ctx.output({ written: true, profile, files: r.results.filter((x) => x.action !== 'unchanged'), doctor: { score: r.doctor.score, summary: r.doctor.summary }, platformApplied: Boolean(v.setup) },

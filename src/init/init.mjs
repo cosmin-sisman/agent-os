@@ -8,6 +8,7 @@ import { GITIGNORE_ENTRIES, LOCAL_FILE, TEAM_FILE, saveJson, validate, loadConfi
 import { AREAS } from '../i18n/i18n.mjs'
 import { installRoutes } from '../managed/install.mjs'
 import { runDoctor } from '../doctor/doctor.mjs'
+import { addEntry } from '../journal/journal.mjs'
 
 export const TEAM_IGNORES = [...GITIGNORE_ENTRIES, '.claude/settings.local.json', '.claude/worktrees/']
 const DAY = 86400e3
@@ -33,7 +34,7 @@ export function buildConfig(a) {
     branches: { integration: a.integration, production: a.production, requiredApprovals: a.team ? 1 : 0 },
     languages,
     gate: suggestGate(a.cwd),
-    adoption: { warnOnlyUntil: new Date(now.getTime() + 14 * DAY).toISOString().slice(0, 10) },
+    adoption: { warnOnlyUntil: new Date(now.getTime() + 14 * DAY).toISOString().slice(0, 10), ...(a.methodology === 'forward-only' ? { cutoff: now.toISOString().slice(0, 10) } : {}) },
   }
   const local = { languages: { chat: a.chat } }
   return { team, local }
@@ -50,7 +51,7 @@ export function planInit({ cwd, team, local, version }) {
 }
 
 /** Writes the plan: configuration, .gitignore, managed files; then runs doctor (offline). */
-export function applyInit({ cwd, team, local, version, plan }) {
+export function applyInit({ cwd, team, local, version, plan, baseline = null }) {
   saveJson(cwd, TEAM_FILE, team)
   saveJson(cwd, LOCAL_FILE, local)
   if (plan.ignore.length) {
@@ -60,6 +61,28 @@ export function applyInit({ cwd, team, local, version, plan }) {
   }
   const { merged } = loadConfig(cwd)
   const results = installRoutes(cwd, merged, { version }).results
+  if (baseline) addEntry(cwd, baselineEntry(team, baseline))
   const doctor = runDoctor({ cwd, config: merged, running: version }, { offline: true })
   return { results, doctor }
+}
+
+/**
+ * The baseline entry of a forward-only adoption: a snapshot of where the repository stood, so later readers know
+ * which history predates the conventions.
+ * @param {object} team the team configuration (with adoption.cutoff)
+ * @param {{ signals: object, profile: string, author: string, now?: Date, openIssues?: number | null }} b
+ */
+export function baselineEntry(team, { signals: s, profile, author, now = new Date(), openIssues = null }) {
+  return {
+    type: 'note', title: `Baseline: agent-os adopted forward-only on ${team.adoption.cutoff}`, areas: ['adoption'], refs: [], author, at: now,
+    body: [
+      `From ${team.adoption.cutoff} on, the conventions apply to new work; history before it stays as it is, and \`agent-os doctor\` does not report it.`,
+      '',
+      `- Profile: ${profile}`,
+      `- Commits: ${s.commits} (${s.recentCommits} in the last 90 days), last on ${s.lastCommit ?? 'never'}; tags: ${s.tags}`,
+      `- Code files: ${s.codeFiles}; documents: ${s.docFiles}; CI: ${s.ci.join(', ') || 'none'}; agent files: ${s.agentFiles.join(', ') || 'none'}`,
+      ...(s.openChangeRequests === null ? [] : [`- Open change requests: ${s.openChangeRequests}`]),
+      ...(openIssues === null ? [] : [`- Open issues: ${openIssues}`]),
+    ].join('\n'),
+  }
 }
