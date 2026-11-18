@@ -9,6 +9,9 @@ import { join } from 'node:path'
 import { loadConfig } from '../config/config.mjs'
 import { installRoutes } from '../managed/install.mjs'
 import { report, runDoctor } from './doctor.mjs'
+import { COMMANDS } from '../cli/registry.mjs'
+
+const PLANNED = COMMANDS.find((c) => c.status === 'planned')
 
 const write = (root, files) => { for (const [p, c] of Object.entries(files)) { mkdirSync(join(root, p, '..'), { recursive: true }); writeFileSync(join(root, p), c) } }
 
@@ -51,7 +54,7 @@ test('every finding names its fix', () => {
   const cwd = freshInstall({ slots: { review: 'missing-skill' }, contextBudgets: { 'big.md': '1KB' } })
   try {
     write(cwd, {
-      'AGENTS.md': '# A\n\nSee [the guide](docs/nope.md) and run `x`. Use `agent-os frobnicate` and `agent-os stack`.\n',
+      'AGENTS.md': `# A\n\nSee [the guide](docs/nope.md) and run \`x\`. Use \`agent-os frobnicate\` and \`agent-os ${PLANNED.name}\`.\n`,
       'big.md': 'x'.repeat(2000),
       '.claude/skills/broken/SKILL.md': 'no front matter',
       'x.md.rej': 'conflict',
@@ -65,7 +68,7 @@ test('every finding names its fix', () => {
     const msgs = all.map((f) => f.message).join('\n')
     assert.match(msgs, /AGENTS\.md: the link to docs\/nope\.md is broken/)
     assert.match(msgs, /calls "agent-os frobnicate", which is not a command/)
-    assert.match(msgs, /calls "agent-os stack", which is planned \(#74\)/)
+    assert.ok(msgs.includes(`calls "agent-os ${PLANNED.name}", which is planned (#${PLANNED.issue})`), msgs)
     assert.match(msgs, /big\.md is 2\.0 KB, over its 1KB budget/)
     assert.match(msgs, /x\.md\.rej holds an unresolved update conflict/)
     assert.match(msgs, /slot "review" is bound to "missing-skill"/)
