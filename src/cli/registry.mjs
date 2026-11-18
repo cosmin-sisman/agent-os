@@ -36,7 +36,7 @@ export const COMMANDS = [
   { name: 'setup', summary: 'Make the repository ready on its platform: branches, protection, labels, milestones, files', status: 'new', issue: 11, load: () => import('../commands/setup.mjs') },
   { name: 'manifest', summary: 'Build and check the lifecycle manifest; list deprecated items this project still uses', status: 'new', issue: 66, load: () => import('../commands/manifest.mjs') },
   { name: 'start', summary: 'Claim an issue: assign, branch from the right base, link, In Progress, check out', status: 'new', issue: 14, load: () => import('../commands/start.mjs') },
-  { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'planned', issue: 18 },
+  { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'new', issue: 18, load: () => import('../commands/next.mjs') },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'planned', issue: 33 },
   { name: 'gate', summary: 'Run the checks the current diff needs', status: 'planned', issue: 43 },
   { name: 'check', summary: 'Check a pull or merge request title against its description, or a commit message', status: 'new', issue: 19, load: () => import('../commands/check.mjs') },

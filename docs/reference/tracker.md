@@ -59,3 +59,21 @@ agent-os start 31 --hotfix      # hotfix/31-<slug>, cut from the production bran
 - It stops, changing nothing, when the issue is assigned to someone else (ask in its comments; `--force` once they agree), has open sub-issues (start one of them), is an epic, is closed or is a pull request.
 - The branch is checked out in place. `--worktree` puts it in `.claude/worktrees/<branch>` instead, for parallel sessions; it is off by default.
 - With a board, the issue moves to In Progress.
+
+## What to work on: `next` and `/next`
+
+```bash
+agent-os next            # the top three, one line each, with the action
+agent-os next --json     # recommendations, excluded (with reasons), the current milestone, warnings
+agent-os next --limit 5
+```
+
+The order (design §9), the same for the same platform state:
+
+1. Your open change requests with requested changes or failing checks.
+2. Reviews requested from you.
+3. Issues assigned to you with a branch on the remote (`<type>/<n>-<slug>`): in progress.
+4. Your other issues: earliest milestone (due date, then version in the title), then priority, then how many open issues they block.
+5. Unassigned issues in the current milestone (the first open milestone in that order with open issues): by priority, then the number of their areas you closed issues in recently.
+
+Ties go to the lower issue number. Epics, blocked issues (an open "blocked by" link, or the `blocked` label where the platform has no dependency links) and issues assigned to someone else are left out and listed in `excluded`. It only reads.

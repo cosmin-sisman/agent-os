@@ -6,6 +6,9 @@ import { CliError } from '../cli/errors.mjs'
 
 const ALREADY = /already|duplicate sub-issues|already exists|has already been taken/i
 
+/** An issue from the REST API, in the tracker's shape. */
+const issueOf = (i) => ({ number: i.number, title: i.title, state: i.state, url: i.html_url, labels: (i.labels ?? []).map((l) => (typeof l === 'string' ? l : l.name)), milestone: i.milestone ? { title: i.milestone.title, dueOn: i.milestone.due_on ?? null } : null, assignees: (i.assignees ?? []).map((a) => a.login) })
+
 export class GitHubTracker {
   /**
    * @param {{ repo: string, host?: string, board?: { owner: string, number: number } }} target
@@ -50,6 +53,37 @@ export class GitHubTracker {
   search(query, { limit = 20 } = {}) {
     const q = encodeURIComponent(`repo:${this.repo} is:issue ${query}`)
     return (this.gh.rest('GET', `search/issues?q=${q}&per_page=${limit}`)?.items ?? []).map((i) => ({ number: i.number, title: i.title, state: i.state, body: i.body ?? '', url: i.html_url }))
+  }
+
+  /** Every open issue (not pull requests), with labels, milestone and assignees. Pages of 100, at most 2000. */
+  openIssues() {
+    const all = []
+    for (let page = 1; page <= 20; page++) {
+      const batch = this.gh.rest('GET', `repos/${this.repo}/issues?state=open&per_page=100&page=${page}`) ?? []
+      all.push(...batch.filter((i) => !i.pull_request).map(issueOf))
+      if (batch.length < 100) break
+    }
+    return all
+  }
+
+  /** Issues closed recently with this person assigned, newest first. */
+  recentlyClosed(login, { limit = 20 } = {}) {
+    return (this.gh.rest('GET', `repos/${this.repo}/issues?state=closed&assignee=${encodeURIComponent(login)}&sort=updated&direction=desc&per_page=${limit}`) ?? []).filter((i) => !i.pull_request).map(issueOf)
+  }
+
+  /** The issues an issue blocks. */
+  blocking(number) {
+    return (this.gh.rest('GET', `repos/${this.repo}/issues/${number}/dependencies/blocking?per_page=100`) ?? []).map((i) => ({ number: i.number, title: i.title, state: i.state }))
+  }
+
+  /**
+   * Open pull requests matching a search ("author:@me", "review-requested:@me"), with their review decision and the
+   * state of the checks on their last commit.
+   */
+  pullRequests(filter) {
+    const q = 'query($q:String!){ search(query:$q, type:ISSUE, first:50){ nodes{ ... on PullRequest { number title url isDraft reviewDecision commits(last:1){ nodes{ commit{ statusCheckRollup{ state } } } } } } } }'
+    const nodes = this.gh.graphql(q, { q: `repo:${this.repo} is:pr is:open ${filter}` })?.search?.nodes ?? []
+    return nodes.filter((n) => n?.number).map((n) => ({ number: n.number, title: n.title, url: n.url, draft: Boolean(n.isDraft), review: n.reviewDecision ?? null, checks: n.commits?.nodes?.[0]?.commit?.statusCheckRollup?.state ?? null }))
   }
 
   /** Open and closed issue counts per milestone (or one milestone by title). */

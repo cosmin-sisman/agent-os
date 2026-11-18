@@ -39,7 +39,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 | `src/managed/install.mjs` | the install plan: core plus the active platform route, rendered; the lock records the platform |
 | `src/managed/` | managed files: three-way merge (`merge3.mjs`), the lock, merge bases, Markdown blocks, settings.json hooks, eject and relock (`managed.mjs`) |
 | `src/tracker/` | the tracker interface (`tracker.mjs`), the GitHub adapter (`github.mjs`) and the gh client with retries (`gh.mjs`); a fake gh for tests in `__fixtures__/` |
-| `src/workflow/` | the work loop: `/start` (`start.mjs`: claim, branch name and base, link, In Progress, check out) |
+| `src/workflow/` | the work loop: `/next` (`next.mjs`: deterministic ranking, design §9), `/start` (`start.mjs`: claim, branch name and base, link, In Progress, check out) |
 | `src/env/` | environment checks (`checks.mjs`), version ranges (`semver.mjs`) and the probe that looks at the machine (`probe.mjs`); a fake probe for tests in `__fixtures__/` |
 | `src/hooks/` | the hooks runner (`runner.mjs`: events, handlers, isolation, adoption mode, the settings block) and guard rules (`guards.mjs`) |
 | `src/i18n/` | the language engine: areas, the core label and milestone dictionaries (`labels.yaml`, `milestones.yaml`), the ASCII rule for ro, the agents' language rule |
