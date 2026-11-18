@@ -46,6 +46,11 @@ export const SCHEMA = obj({
     docs: lang('Human documentation in docs/'),
     journal: lang('Journal entries and decision records'),
   }, 'Language per area', { default: {} }),
+  conventions: obj({
+    types: list(str('A change type'), 'Allowed types in change-request titles and commit subjects', { default: ['feat', 'fix', 'docs', 'chore', 'refactor', 'perf', 'test', 'ci', 'build', 'style', 'revert'] }),
+    maxTitleLength: int('Longest change-request title or commit subject, issue suffix included', { minimum: 30, maximum: 200, default: 72 }),
+    exempt: list(str('A regular expression; matching titles are not checked'), 'Titles exempt from the checks (syncs, bots)', { default: ['^chore: sync \\S+ into \\S+$', '^(chore|build)\\(deps(-dev)?\\): '] }),
+  }, 'Title and commit message conventions', { default: {} }),
   packs: list(str('A pack id'), 'Optional packs installed in this project', { default: [] }),
   slots: map({ type: ['string', 'null'], description: 'The skill bound to this slot, or null for none' }, 'Capability slots and the skills bound to them', { default: {} }),
   gate: map(str('The command that runs this suite'), 'Test and check suites by name', { default: {} }),

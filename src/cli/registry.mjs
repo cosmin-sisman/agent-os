@@ -38,7 +38,7 @@ export const COMMANDS = [
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'planned', issue: 18 },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'planned', issue: 33 },
   { name: 'gate', summary: 'Run the checks the current diff needs', status: 'planned', issue: 43 },
-  { name: 'check', summary: 'Check a pull or merge request title or a commit message', status: 'planned', issue: 19 },
+  { name: 'check', summary: 'Check a pull or merge request title against its description, or a commit message', status: 'new', issue: 19, load: () => import('../commands/check.mjs') },
   { name: 'map', summary: 'Render a map of one area of the code, on demand', status: 'planned', issue: 26 },
   { name: 'journal', summary: 'Add to or read the project journal', status: 'planned', issue: 22 },
   { name: 'lessons', summary: 'Capture, recall, search and triage lessons learned', status: 'planned', issue: 24 },
