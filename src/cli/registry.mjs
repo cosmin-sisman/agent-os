@@ -63,7 +63,7 @@ export const COMMANDS = [
   { name: 'add', summary: 'Add a pack (the short form of agent-os pack add)', status: 'new', issue: 55, load: () => import('../commands/add.mjs') },
   { name: 'skills', summary: 'The skill index: core, external and local skills, with what each does', status: 'new', issue: 41, load: () => import('../commands/skills.mjs') },
   { name: 'skill', summary: 'Vendor, update, remove, scaffold and register skills; check the registry', status: 'new', issue: 39, load: () => import('../commands/skill.mjs') },
-  { name: 'retrofit', summary: 'Plan and apply history into the system for an existing repository', status: 'planned', issue: 50 },
+  { name: 'retrofit', summary: 'Plan and apply history into the system for an existing repository', status: 'new', issue: 50, load: () => import('../commands/retrofit.mjs') },
   { name: 'sbom', summary: 'Generate a software bill of materials for the security watch', status: 'planned', issue: 108 },
 ]
 
