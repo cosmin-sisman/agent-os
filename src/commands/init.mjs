@@ -1,6 +1,6 @@
 // `agent-os init --me`: the personal part of setting up agent-os, for anyone joining a project. It asks first which
 // language the agent should talk to you in, then about your sessions and machine, and writes only .agent-os/local.json.
-// It never changes a committed file. The full `init` (detection, profiles, team setup) is planned in #49.
+// It never changes a committed file. Without --me it is the full init (detection, profiles, team setup); `install` runs both.
 
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { ask } from '../cli/prompt.mjs'
@@ -33,17 +33,33 @@ export const options = {
   yes: { type: 'boolean', short: 'y', description: 'Do not ask; use flags and defaults' },
 }
 
+/** One line per choice, shown in the interactive menus. */
+export const DESCRIBE = {
+  language: { en: 'English', ro: 'Romanian, without diacritics (ASCII only)' },
+  profile: { greenfield: 'a new project, no code yet', 'spec-first': 'specifications or docs, little code', active: 'in active development, with history', maintenance: 'finished, kept healthy' },
+  methodology: { 'forward-only': 'conventions from today on; history stays as it is', retrofit: 'bring the history into the system too' },
+}
+
 /** @param {import('../cli/context.mjs').Context} ctx */
 export async function run(ctx) {
   if (ctx.values.detect) return detect(ctx)
   if (!ctx.values.me) return full(ctx)
+  return personal(ctx)
+}
+
+/**
+ * The personal settings (`init --me`): chat language, sessions, orchestrator, machine limits, in .agent-os/local.json.
+ * `install` runs it right after the full init; a value given as a flag is never asked.
+ * @param {import('../cli/context.mjs').Context} ctx
+ */
+export async function personal(ctx) {
   const { local, merged, initialized } = loadConfig(ctx.cwd)
   const useDefaults = Boolean(ctx.values.yes)
   const flag = (name, parse) => (ctx.values[name] === undefined ? undefined : parse(ctx.values[name], name))
 
   const answers = {}
   answers.chat = flag('chat', oneOf(LANGUAGES)) ?? await ask(ctx.io, {
-    key: 'chat', kind: 'choice', choices: LANGUAGES, default: merged.languages.chat,
+    key: 'chat', kind: 'choice', choices: LANGUAGES, descriptions: DESCRIBE.language,  default: merged.languages.chat,
     text: 'Which language should the agent talk to you in? Team areas (issues, PRs, code) keep their own languages.',
   }, { useDefaults })
 
@@ -118,7 +134,8 @@ async function detect(ctx) {
 
 const PROFILES_LIST = ['greenfield', 'spec-first', 'active', 'maintenance']
 
-async function full(ctx) {
+/** The full init: detection, profile, platform, team settings, managed files, then doctor. */
+export async function full(ctx) {
   const v = ctx.values
   const useDefaults = Boolean(v.yes)
   const { detectState } = await import('../init/detect.mjs')
@@ -133,9 +150,9 @@ async function full(ctx) {
 
   const state = detectState({ cwd: ctx.cwd, git })
   // 1. Personal first: the chat language.
-  const chat = v.chat !== undefined ? oneOf(LANGUAGES)(v.chat, 'chat') : await ask(ctx.io, { key: 'chat', kind: 'choice', choices: LANGUAGES, default: merged.languages.chat, text: 'Which language should the agent talk to you in?' }, { useDefaults })
+  const chat = v.chat !== undefined ? oneOf(LANGUAGES)(v.chat, 'chat') : await ask(ctx.io, { key: 'chat', kind: 'choice', choices: LANGUAGES, descriptions: DESCRIBE.language,  default: merged.languages.chat, text: 'Which language should the agent talk to you in?' }, { useDefaults })
   // 2. The profile, confirmed.
-  const profile = v.profile !== undefined ? oneOf(PROFILES_LIST)(v.profile, 'profile') : await ask(ctx.io, { key: 'profile', kind: 'choice', choices: PROFILES_LIST, default: state.profile, text: `This looks like a ${state.profile} repository (${state.reason}). Which profile?` }, { useDefaults })
+  const profile = v.profile !== undefined ? oneOf(PROFILES_LIST)(v.profile, 'profile') : await ask(ctx.io, { key: 'profile', kind: 'choice', choices: PROFILES_LIST, descriptions: DESCRIBE.profile,  default: state.profile, text: `This looks like a ${state.profile} repository (${state.reason}). Which profile?` }, { useDefaults })
   // 3. Platform, from the remote unless given.
   let platform
   if (v.platform || v.project) {
@@ -148,7 +165,7 @@ async function full(ctx) {
     lines.push(`platform: ${platform.type} ${platform.project}${platform.host ? ` at ${platform.host}` : ''} (${d.evidence})`)
   }
   // 4. Team languages, branches, solo or team.
-  const lang = v.lang !== undefined ? oneOf(LANGUAGES)(v.lang, 'lang') : await ask(ctx.io, { key: 'lang', kind: 'choice', choices: LANGUAGES, default: 'en', text: 'Language of the team areas (issues, change requests, commits, docs, …)? Change single areas later with agent-os lang set.' }, { useDefaults })
+  const lang = v.lang !== undefined ? oneOf(LANGUAGES)(v.lang, 'lang') : await ask(ctx.io, { key: 'lang', kind: 'choice', choices: LANGUAGES, descriptions: DESCRIBE.language,  default: 'en', text: 'Language of the team areas (issues, change requests, commits, docs, …)? Change single areas later with agent-os lang set.' }, { useDefaults })
   const areaLangs = {}
   for (const pair of v['area-lang'] ?? []) {
     const [area, l] = pair.split('=')
@@ -162,7 +179,7 @@ async function full(ctx) {
   // 5. An existing repository: forward-only (from today on) or retrofit (history brought in, #50).
   let methodology = null
   if (profile !== 'greenfield') {
-    methodology = v.methodology !== undefined ? oneOf(['forward-only', 'retrofit'])(v.methodology, 'methodology') : await ask(ctx.io, { key: 'methodology', kind: 'choice', choices: ['forward-only', 'retrofit'], default: 'forward-only', text: 'This repository has history. Apply the conventions from today on (forward-only), or bring the history in (retrofit)?' }, { useDefaults })
+    methodology = v.methodology !== undefined ? oneOf(['forward-only', 'retrofit'])(v.methodology, 'methodology') : await ask(ctx.io, { key: 'methodology', kind: 'choice', choices: ['forward-only', 'retrofit'], descriptions: DESCRIBE.methodology,  default: 'forward-only', text: 'This repository has history. Apply the conventions from today on (forward-only), or bring the history in (retrofit)?' }, { useDefaults })
     if (methodology === 'retrofit') throw new CliError('retrofit is planned but not implemented yet', { hint: 'use --methodology forward-only now; retrofit can follow later (#50)' })
   }
   const version = ctx.io.running ?? runningVersion()

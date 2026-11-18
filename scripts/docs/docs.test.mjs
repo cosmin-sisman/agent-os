@@ -1,5 +1,6 @@
 // Tests for the documentation: every command is documented (the generated reference is current), every command in
-// the guides exists with the options it is shown with, and a new user can follow the greenfield guide end to end.
+// the guides exists with the options it is shown with, a new user can follow the greenfield guide end to end, and the
+// usage guide covers every core skill.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
@@ -38,7 +39,7 @@ test('every command is documented: the generated references are current', async 
 
 test('every command in the guides exists, with the actions and options it is shown with', async () => {
   const files = readdirSync(GUIDES).filter((f) => f.endsWith('.md'))
-  assert.deepEqual(files.sort(), ['README.md', 'active.md', 'faq.md', 'greenfield.md', 'maintenance.md', 'spec-first.md'])
+  assert.deepEqual(files.sort(), ['README.md', 'active.md', 'faq.md', 'greenfield.md', 'maintenance.md', 'spec-first.md', 'usage.md'])
   let seen = 0
   for (const f of files) {
     for (const words of guideCommands(readFileSync(join(GUIDES, f), 'utf8'))) {
@@ -90,4 +91,10 @@ test('given a new user, the greenfield guide works end to end', async () => {
     assert.deepEqual(created.map((c) => c.title), ['Catalog', 'Catalog: Visitors can browse products by category', 'Catalog: Products show their price and stock', 'Checkout', 'Checkout: Customers can pay by card'])
     assert.ok(created.every((c) => c.milestone === 'MVP'))
   } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('the usage guide has a section for every core skill, and /pr for the change-request skill', () => {
+  const text = readFileSync(join(GUIDES, 'usage.md'), 'utf8')
+  const skills = readdirSync(join(ROOT, 'templates/core/.claude/skills')).filter((d) => !d.startsWith('__'))
+  for (const s of [...skills, 'pr']) assert.match(text, new RegExp(`^### /${s}\\b`, 'm'), `usage.md has no section for /${s}`)
 })

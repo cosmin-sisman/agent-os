@@ -24,6 +24,7 @@ export const COMMANDS = [
   { name: 'help', summary: 'Show help for agent-os or for one command', status: 'new', issue: 3, load: () => import('../commands/help.mjs') },
   { name: 'version', summary: 'Print the agent-os version', status: 'new', issue: 3, load: () => import('../commands/version.mjs') },
   { name: 'init', summary: 'Set up agent-os; --me sets only your personal settings (full init: #49)', status: 'new', issue: 99, load: () => import('../commands/init.mjs') },
+  { name: 'install', summary: 'Start in any folder: git init, the platform and project (created if you want), init and your settings, in one go', status: 'new', issue: 264, load: () => import('../commands/install.mjs') },
   { name: 'config', summary: 'Read, change or validate agent-os.json and your personal settings', status: 'new', issue: 4, load: () => import('../commands/config.mjs') },
   { name: 'doctor', summary: 'Check the agent system, the repository and platform hygiene; readiness score; --fix', status: 'new', issue: 27, load: () => import('../commands/doctor.mjs') },
   { name: 'env', summary: 'Check MCP servers, CLIs, token scopes and variables, on this laptop and in the repo', status: 'new', issue: 9, load: () => import('../commands/env.mjs') },

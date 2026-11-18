@@ -5,8 +5,8 @@ import { spawnSync } from 'node:child_process'
 import { CliError } from '../cli/errors.mjs'
 
 /** The real gh: returns { status, stdout, stderr }. */
-export function systemGh(args, { input } = {}) {
-  const r = spawnSync(process.platform === 'win32' ? 'gh.exe' : 'gh', args, { input, encoding: 'utf8', timeout: 60000, windowsHide: true })
+export function systemGh(args, { input, env } = {}) {
+  const r = spawnSync(process.platform === 'win32' ? 'gh.exe' : 'gh', args, { input, encoding: 'utf8', timeout: 60000, windowsHide: true, ...(env ? { env: { ...process.env, ...env } } : {}) })
   if (r.error?.code === 'ENOENT') throw new CliError('the GitHub CLI (gh) is not installed', { hint: 'install it from https://cli.github.com, then run "gh auth login"' })
   return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' }
 }
