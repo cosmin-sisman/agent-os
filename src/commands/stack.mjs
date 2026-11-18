@@ -11,18 +11,22 @@ import { closest } from '../util/closest.mjs'
 import { catalogFiles, KINDS, mergeCatalog, problemText, validateCatalog } from '../stack/catalog.mjs'
 import { changeLayer } from '../stack/change.mjs'
 import { detectStack, stackDrift, stackFromDetections } from '../stack/detect.mjs'
+import { importSheet, readSheets, stackFromImport, writeOverlay } from '../stack/import.mjs'
+import { basename, resolve } from 'node:path'
 import { loadConfig } from '../config/config.mjs'
 import { languageFor } from '../i18n/i18n.mjs'
 import { loadCatalog, readStack, stackFromBlueprint, stackSummary, validateStack } from '../stack/stack.mjs'
 
-export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run] | set <layer> <tech> [--why <text>] | status <layer> <status> [--why <text>] | detect [--write] | drift   (import, render: later issues)'
+export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run] | set <layer> <tech> [--why <text>] | status <layer> <status> [--why <text>] | detect [--write] | drift | import <file.csv|file.xlsx> [--sheet <name>] [--write [--force]] [--overlay]   (render: later)'
 
 export const options = {
   from: { type: 'string', description: 'new: the blueprint id (catalog/blueprints.yaml)' },
   project: { type: 'string', description: 'new: the project name' },
   force: { type: 'boolean', description: 'new: replace an existing stack.yaml' },
   why: { type: 'string', description: 'set, status: why, for the decision record' },
-  write: { type: 'boolean', description: 'detect: write stack.yaml from what was found (only when there is none)' },
+  write: { type: 'boolean', description: 'detect, import: write stack.yaml (only when there is none, or with --force for import)' },
+  sheet: { type: 'string', description: 'import: the sheet to read (default: the first with Layer and Technology columns)' },
+  overlay: { type: 'boolean', description: 'import: add the technologies and layers the catalog lacks to .agent-os/catalog/' },
 }
 
 const pad = (rows) => {
@@ -85,6 +89,26 @@ ${problems.length} problem(s):
       lines.push('', ctx.dryRun ? text : r.detections.length ? 'wrote stack.yaml: check every layer and its paths, then agent-os stack check' : 'nothing to write')
     }
     ctx.output(r, lines.join('\n'))
+    return EXIT.OK
+  }
+  if (action === 'import') {
+    const file = ctx.positionals[1]
+    if (!file) throw new CliError('which file?', { hint: 'agent-os stack import <file.csv|file.xlsx>' })
+    const path = resolve(ctx.cwd, file)
+    if (!existsSync(path)) throw new CliError(`${file} does not exist`)
+    const r = importSheet(readSheets(path), { catalog, sheet: ctx.values.sheet })
+    const text = stackFromImport(r, { source: basename(file) })
+    for (const p of r.problems) ctx.io.stderr(`agent-os: warning: ${p}\n`)
+    const unknown = [...r.suggestions.technologies.map((t) => `technology "${t.name}" → ${t.id}`), ...r.suggestions.layers.map((l) => `layer "${l.name.en}" → ${l.id}`)]
+    const lines = [`sheet ${r.sheet}: ${r.layers.length} layer(s)${r.project ? `, project "${r.project}"` : ''}${r.level ? `, level ${r.level}` : ''}`]
+    if (unknown.length) lines.push(`not in the catalog (overlay suggestions${ctx.values.overlay ? '' : ', add them with --overlay'}): ${unknown.join('; ')}`)
+    if (ctx.values.write) {
+      if (existsSync(join(ctx.cwd, 'stack.yaml')) && !ctx.values.force) throw new CliError('stack.yaml already exists', { hint: 'agent-os stack import … --write --force replaces it; agent-os stack set changes one layer' })
+      if (!ctx.dryRun) writeFileSync(join(ctx.cwd, 'stack.yaml'), text)
+      lines.push(`${ctx.dryRun ? 'would write' : 'wrote'} stack.yaml; add each layer's paths, then agent-os stack check`)
+    } else lines.push('', text)
+    if (ctx.values.overlay) { const w = ctx.dryRun ? [] : writeOverlay(ctx.cwd, r.suggestions); lines.push(w.length ? `added to the overlay: ${w.join(', ')} (fill in their attributes; agent-os stack catalog check)` : 'nothing to add to the overlay') }
+    ctx.output({ ...r, text }, lines.join('\n'))
     return EXIT.OK
   }
   if (action === 'drift') {

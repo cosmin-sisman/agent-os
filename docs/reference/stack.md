@@ -96,4 +96,27 @@ The `doctor` `stack` check reports the same findings as warnings, since the code
 - `gateLayers` attaches gate suites to layers (`"data-layer": ["migrations"]`), so a change under a layer's paths runs them, next to `gatePaths`.
 - The doctor `area-map` check warns when a layer in use isn't mentioned in the AGENTS.md area map.
 
-`import` and `render` come with later issues.
+## Import from a stack builder sheet
+
+```sh
+agent-os stack import plan.xlsx [--sheet Builder] [--write [--force]] [--overlay]
+agent-os stack import plan.csv  --write
+```
+
+**Reading the sheet:**
+- It finds the header row, in en or ro: Layer/Strat, Technology/Tehnologie, the chosen or recommended Provider/Furnizor, Status, Notes/Note.
+- It reads the rows below it, and the project name and level labelled above the table.
+- Names map to catalog ids whatever their case or diacritics ("Email / Notificări" → `email-notifications`).
+- Statuses map from en or ro: Ales → chosen, De evaluat → evaluating, Opțional → optional, Respins → rejected.
+- Without `--write`, the stack.yaml it would write is printed. With `--write`, it writes it, and refuses to replace one without `--force`.
+
+**Unknown technologies and layers** become **overlay suggestions**. With `--overlay`, they are added to `.agent-os/catalog/` (never replacing an id) for you to complete. Until then, `stack check` reports their ids as unknown.
+
+**xlsx files come from outside, so they are read defensively,** with `node:zlib` and no dependency:
+- limits on the number of entries, each entry's and the total unpacked size, and the compression ratio (zip bombs);
+- an entry named with `..` or an absolute path is refused;
+- only cell values are read: a formula gives its cached value and is never evaluated, and macros and external links are ignored.
+
+CSV can use commas or semicolons, with quoted fields.
+
+`render` comes with a later issue.
