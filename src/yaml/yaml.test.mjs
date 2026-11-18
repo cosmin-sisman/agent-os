@@ -123,7 +123,15 @@ test('structural errors point at the offending line', () => {
   refuses('a: {x: 1', /unclosed "\{"/, 1, 9)
   refuses('a: 1\n  b: 2', /unexpected indentation/, 2, 3)
   refuses('a:\n  - 1\n  b: 2', /expected|unexpected/, 3, 3)
-  refuses('just text', /expected "key: value"/, 1, 1)
+  refuses('a: 1\njust text', /expected "key: value"/, 2, 1)
   refuses('a: "open', /unterminated double-quoted string/, 1, 4)
   refuses('a: {x: 1, x: 2}', /duplicate key "x"/, 1, 11)
+})
+
+test('a document can be a single inline value', () => {
+  assert.deepEqual(parse('# comment\n[]\n'), [])
+  assert.deepEqual(parse('{a: 1, b: [x]}'), { a: 1, b: ['x'] })
+  assert.equal(parse('"just text"'), 'just text')
+  assert.equal(parse('42'), 42)
+  assert.equal(stringify([]), '[]\n')
 })

@@ -34,6 +34,7 @@ export const COMMANDS = [
   { name: 'lang', summary: 'Show or set the language of each area (renaming labels and milestones), check ro text, print the language rule', status: 'new', issue: 7, load: () => import('../commands/lang.mjs') },
   { name: 'issue', summary: 'Create, relate, assign, branch and place issues on the board; read progress', status: 'new', issue: 12, load: () => import('../commands/issue.mjs') },
   { name: 'setup', summary: 'Make the repository ready on its platform: branches, protection, labels, milestones, files', status: 'new', issue: 11, load: () => import('../commands/setup.mjs') },
+  { name: 'manifest', summary: 'Build and check the lifecycle manifest; list deprecated items this project still uses', status: 'new', issue: 66, load: () => import('../commands/manifest.mjs') },
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'planned', issue: 18 },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'planned', issue: 33 },
   { name: 'gate', summary: 'Run the checks the current diff needs', status: 'planned', issue: 43 },
