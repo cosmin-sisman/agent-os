@@ -21,3 +21,8 @@ Each record has: **Status** (proposed · accepted · superseded by …), **Conte
 | [artifacts-in-repo](2026-11-18-artifacts-in-repo.md) | visual artifacts versioned in the repo, published to Pages, verified and indexed |
 | [upstream-feedback](2026-11-18-upstream-feedback.md) | `/upstream` files improvements on the public repo from any project, privacy-filtered |
 | [versions-and-safe-updates](2026-11-18-versions-and-safe-updates.md) | pinned version, lifecycle markers (new, stable, deprecated, legacy, removed), updates through a PR with migrations |
+| [platforms-github-and-gitlab](2026-11-18-platforms-github-and-gitlab.md) | GitHub or GitLab (cloud, self-managed), one adapter interface, capability probing with fallbacks, platform routes |
+| [audit](2026-11-18-audit.md) | `/audit`: subjects from idea to system, separate lenses, evidence-based findings, artifact + issues |
+| [coding-standards](2026-11-18-coding-standards.md) | English code, headers, clarity, a decision procedure between solutions; always on |
+| [security](2026-11-18-security.md) | `/security`: relevant advisories, layer-based checks in every change request, threat models and abuse cases, private reporting |
+| [system-map](2026-11-18-system-map.md) | `system.yaml` + `/system`: repo shape, components, edges, exposure, endpoint inventory, contract drift and breaking-change alerts |

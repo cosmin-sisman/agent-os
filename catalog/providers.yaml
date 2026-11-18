@@ -430,3 +430,14 @@
   role:
     en: "The client's own infrastructure"
     ro: "Infrastructura clientului"
+
+- id: gitlab
+  name: "GitLab"
+  kind: "Code / CI"
+  ease: 4
+  cost: 2
+  euRegions: verify
+  mcpHint: true
+  role:
+    en: "Repositories, CI/CD; gitlab.com or self-managed"
+    ro: "Repo-uri, CI/CD; gitlab.com sau self-managed"
