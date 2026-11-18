@@ -38,3 +38,17 @@ Exit codes: 1 on any error (or any warning with `--strict`), otherwise 0. Notes 
 Every workflow agent-os generates (gate, loop, retro, on both platforms, with and without `ci.image`/`ci.tags`/`npmRegistry`) passes its own review with no errors or warnings. A test keeps it that way, and keeps this repository's own workflows clean.
 
 The YAML parser reads block scalars (`run: |`) verbatim, as real workflows use them.
+
+## The labels workflow (opt-in)
+
+With `"ci": { "labels": true }`, install adds a workflow that keeps the platform's labels in step with agent-os.json and stack.yaml. It runs `agent-os setup --only labels`, which completes labels and never replaces or deletes them.
+
+**GitHub** (`.github/workflows/agent-os-labels.yml`):
+- **preview**, on `pull_request` (never `pull_request_target`): it uses the read-only workflow token (`issues: read`) and **no secret**, and writes what would change to the job summary.
+- **apply**, on a push to the integration branch: the only job that may write labels. It has `issues: write` and runs only there. It uses `AGENT_OS_LABELS_TOKEN` when the organization makes the workflow token read-only, else the workflow token. `ci.labelsEnvironment` puts it in a deployment environment, to require approval or to scope the secret.
+
+**GitLab** (`.gitlab/agent-os-labels.yml`, included from `.gitlab-ci.yml`):
+- **preview**, in merge request pipelines: it reads labels with `AGENT_OS_LABELS_READ_TOKEN` (a `read_api` token) when set, otherwise it skips. It never writes.
+- **apply**, only on a push to the protected integration branch (`$CI_COMMIT_REF_PROTECTED`): it uses `AGENT_OS_LABELS_TOKEN`, a project access token with the `api` scope stored as a **protected, masked** CI variable. The job token cannot write labels.
+
+The user creates and stores the tokens; agent-os never does. Without a token, a job says which one is missing and changes nothing. Both workflows pass `agent-os ci review`.

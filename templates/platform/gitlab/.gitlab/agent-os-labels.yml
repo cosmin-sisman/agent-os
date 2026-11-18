@@ -1,0 +1,53 @@
+{{#if ci.labels}}
+# Keeps the project's labels in step with agent-os.json and stack.yaml (agent-os setup --only labels): it completes
+# labels and never replaces or deletes them. Include it from .gitlab-ci.yml (include: - local: .gitlab/agent-os-labels.yml).
+#   agent-os/labels-preview: in a merge request pipeline it only reports what would change. It reads labels with
+#                            AGENT_OS_LABELS_READ_TOKEN (read_api) when set, and otherwise skips; it never writes.
+#   agent-os/labels:         on a push to the protected {{{branches.integration}}} branch only, with AGENT_OS_LABELS_TOKEN: a project
+#                            access token with the api scope, in a protected and masked CI variable (the job token
+#                            cannot write labels). Without it, the job says so and changes nothing.
+agent-os/labels-preview:
+  stage: test
+  image: "{{{runner.gitlabImage}}}"
+{{#if runner.tags}}
+  tags: {{{runner.tags}}}
+{{/if}}
+  timeout: 5m
+  interruptible: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: ["agent-os.json", "stack.yaml", ".gitlab/agent-os-labels.yml"]
+{{#if runner.npmRegistry}}
+  variables:
+    npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+  script:
+    - |
+      if [ -z "$AGENT_OS_LABELS_READ_TOKEN" ]; then
+        echo "agent-os labels: preview skipped (set AGENT_OS_LABELS_READ_TOKEN, a read_api token, to see what would change); nothing was changed"
+        exit 0
+      fi
+      GITLAB_TOKEN="$AGENT_OS_LABELS_READ_TOKEN" {{{runner.npx}}} setup --only labels --dry-run
+
+agent-os/labels:
+  stage: deploy
+  image: "{{{runner.gitlabImage}}}"
+{{#if runner.tags}}
+  tags: {{{runner.tags}}}
+{{/if}}
+  timeout: 5m
+  rules:
+    - if: $CI_COMMIT_BRANCH == "{{{branches.integration}}}" && $CI_COMMIT_REF_PROTECTED == "true"
+      changes: ["agent-os.json", "stack.yaml", ".gitlab/agent-os-labels.yml"]
+{{#if runner.npmRegistry}}
+  variables:
+    npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+  script:
+    - |
+      if [ -z "$AGENT_OS_LABELS_TOKEN" ]; then
+        echo "agent-os labels: AGENT_OS_LABELS_TOKEN is not set (a project access token with the api scope, protected and masked); nothing was changed"
+        exit 0
+      fi
+      GITLAB_TOKEN="$AGENT_OS_LABELS_TOKEN" {{{runner.npx}}} setup --only labels
+{{/if}}
