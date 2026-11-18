@@ -100,3 +100,24 @@ A **legacy** feature is an old behaviour kept for teams that still need it. It s
 - `agent-os doctor` reports each enabled feature as **debt**, with its removal version and what replaces it (from `src/lifecycle/lifecycle.yaml`, id `legacy:<id>`). It fails on an id this version does not have.
 - `doctor` also lists every **deprecated** item the project still uses (config keys in `agent-os.json` or `.agent-os/local.json`, commands and flags in its hooks), each with its replacement.
 - When a deprecated or legacy command or flag runs, agent-os prints a note on stderr, so `--json` output stays clean: `agent-os: note: hook --print-settings is deprecated and will be removed in 0.7.0; use setup`.
+
+## Release notes: `release notes`
+
+```bash
+agent-os release notes --from v0.1.0 --version 0.2.0               # Markdown for the release page
+agent-os release notes --from v0.1.0 --version 0.2.0 --changelog   # also add the entry to changelog.yaml
+agent-os release notes --from v0.1.0 --version 0.2.0 --json
+```
+
+It reads the change requests merged in `--from..--to` from the history: squash subjects that end in `(#N)` and merge commits. It groups them as Breaking, New, Deprecated, Legacy, Removed, Fixes and Chore:
+
+1. a `changelog:*` label decides first (`changelog:breaking`, `changelog:new`, `changelog:deprecation`, `changelog:legacy`, `changelog:removed`);
+2. then the type label (`type:feature` → New, `type:bug` → Fixes, docs/chore/research → Chore);
+3. then the title's type (`feat` → New, `fix`/`perf` → Fixes, a `!` → Breaking).
+
+Two lines in a change request's description feed the notes:
+
+- `Migration: migrations/0.2.0.mjs`. Every breaking or removal item must name its migration, or `migrations/<version>.mjs` must exist. Otherwise the command lists the problem and exits 1.
+- `Replacement: <what to use instead>`. Every deprecation must name its replacement.
+
+Decision records, incidents and release entries added to the journal in the range are listed under *Decisions and incidents*. `--changelog` writes the same entry that `update --plan` reads, keeping the file's comment header. Nothing is published; the release flow is #17.
