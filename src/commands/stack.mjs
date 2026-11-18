@@ -10,17 +10,19 @@ import { parse } from '../yaml/yaml.mjs'
 import { closest } from '../util/closest.mjs'
 import { catalogFiles, KINDS, mergeCatalog, problemText, validateCatalog } from '../stack/catalog.mjs'
 import { changeLayer } from '../stack/change.mjs'
+import { detectStack, stackDrift, stackFromDetections } from '../stack/detect.mjs'
 import { loadConfig } from '../config/config.mjs'
 import { languageFor } from '../i18n/i18n.mjs'
 import { loadCatalog, readStack, stackFromBlueprint, stackSummary, validateStack } from '../stack/stack.mjs'
 
-export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run] | set <layer> <tech> [--why <text>] | status <layer> <status> [--why <text>]   (detect, drift, import, render: later issues)'
+export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run] | set <layer> <tech> [--why <text>] | status <layer> <status> [--why <text>] | detect [--write] | drift   (import, render: later issues)'
 
 export const options = {
   from: { type: 'string', description: 'new: the blueprint id (catalog/blueprints.yaml)' },
   project: { type: 'string', description: 'new: the project name' },
   force: { type: 'boolean', description: 'new: replace an existing stack.yaml' },
   why: { type: 'string', description: 'set, status: why, for the decision record' },
+  write: { type: 'boolean', description: 'detect: write stack.yaml from what was found (only when there is none)' },
 }
 
 const pad = (rows) => {
@@ -71,6 +73,25 @@ ${problems.length} problem(s):
     const { rows, summary } = stackSummary(stack, catalog)
     ctx.output({ rows, summary, problems: v.problems, warnings: v.warnings }, `${showText(rows, summary)}${v.problems.length ? `\n\nstack.yaml has ${v.problems.length} problem(s): agent-os stack check` : ''}`)
     return v.problems.length ? EXIT.CHECK_FAILED : EXIT.OK
+  }
+  if (action === 'detect') {
+    const r = detectStack(ctx.cwd, { catalog })
+    const lines = r.detections.length ? r.detections.map((d) => `${d.layer.padEnd(22)} ${d.name}  ← ${d.evidence.slice(0, 3).map((e) => (e.detail && e.detail !== 'file' ? `${e.file} (${e.detail})` : e.file)).join(', ')}${d.paths.length ? `  [${d.paths.join(', ')}]` : ''}`) : ['nothing detected: no manifests, configs or workflows the rules know']
+    for (const p of r.providers) lines.push(`provider ${p.provider}  ← ${p.evidence.map((e) => e.file).join(', ')}`)
+    if (ctx.values.write) {
+      if (existsSync(join(ctx.cwd, 'stack.yaml'))) throw new CliError('stack.yaml already exists: detect never overwrites it', { hint: 'agent-os stack drift shows the differences; agent-os stack set changes a layer' })
+      const text = stackFromDetections(r)
+      if (!ctx.dryRun && r.detections.length) writeFileSync(join(ctx.cwd, 'stack.yaml'), text)
+      lines.push('', ctx.dryRun ? text : r.detections.length ? 'wrote stack.yaml: check every layer and its paths, then agent-os stack check' : 'nothing to write')
+    }
+    ctx.output(r, lines.join('\n'))
+    return EXIT.OK
+  }
+  if (action === 'drift') {
+    const r = stackDrift(ctx.cwd, { catalog })
+    if (!r.stack) throw new CliError('there is no stack.yaml', { hint: 'agent-os stack detect --write drafts one from the code' })
+    ctx.output(r, r.drift.length ? r.drift.map((d) => `${d.kind.padEnd(10)} ${d.message}\n           fix: ${d.fix}`).join('\n') : 'stack.yaml matches the code')
+    return r.drift.length ? EXIT.CHECK_FAILED : EXIT.OK
   }
   if (action === 'set' || action === 'status') {
     const [, layer, value] = ctx.positionals

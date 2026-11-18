@@ -335,6 +335,18 @@
       },
       "additionalProperties": false
     },
+    "gateLayers": {
+      "type": "object",
+      "description": "Stack layers and the gate suites a change to them needs (\"data-layer\": [\"migrations\"]), matched through the layer paths in stack.yaml",
+      "default": {},
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "A suite name from \"gate\""
+        }
+      }
+    },
     "gatePaths": {
       "type": "object",
       "description": "Path globs and the gate suites a change to them needs (\"docs/**\": [\"docs\"]); without it every suite runs",

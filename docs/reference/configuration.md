@@ -80,6 +80,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `testing.exclude` | team | array | `[]` | Paths agent-os test gaps leaves out |
 | `testing.map` | team | object | `{}` | Source globs and where their tests live ("src/**/*.ts": ["{dir}/{name}.test.ts"]); files no glob matches use the built-in naming rules |
 | `testing.map.<name>` | team | array |  |  |
+| `gateLayers` | team | object | `{}` | Stack layers and the gate suites a change to them needs ("data-layer": ["migrations"]), matched through the layer paths in stack.yaml |
+| `gateLayers.<name>` | team | array |  |  |
 | `gatePaths` | team | object | `{}` | Path globs and the gate suites a change to them needs ("docs/**": ["docs"]); without it every suite runs |
 | `gatePaths.<name>` | team | array |  |  |
 | `requires` | team | object | `{}` | What a working setup needs, checked by agent-os env |

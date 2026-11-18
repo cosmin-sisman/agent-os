@@ -70,4 +70,30 @@ Every layer in use (status `chosen`) is an **area**:
 - **Overlap:** overlapping changes show the areas the shared files belong to.
 - **CODEOWNERS:** layers that list `owners` (logins or teams) and `paths` produce a managed block in the project's CODEOWNERS (`.github/`, `.gitlab/`, `docs/` or the root, whichever exists). The team's own lines around the block are never touched, and a block edited by hand gets a `.rej` instead of being overwritten.
 
-`detect`, `drift`, `import` and `render` come with later issues.
+## Detect and drift
+
+```sh
+agent-os stack detect [--write]   # what the code shows, each with its evidence; --write drafts stack.yaml when there is none
+agent-os stack drift              # where stack.yaml and the code disagree (exit 1); doctor runs it as warnings
+```
+
+**detect** reads manifests and config files; it never runs anything:
+- `package.json` dependencies and Python requirements (`requirements*.txt`, `pyproject.toml`);
+- framework configs (`next.config.*`, `astro.config.*`, `svelte.config.*`, …), `schema.prisma`, `drizzle.config.*`, Supabase migrations;
+- `Dockerfile` and compose files, `turbo.json`, workflows (`.github/workflows/`, `.gitlab-ci.yml`), `eas.json`, `*.tf`;
+- provider files: `vercel.json`, `wrangler.toml`, `fly.toml`, `railway.json`, `netlify.toml`.
+
+Each detection names its catalog technology, its layer, the **evidence** (file and packages) and the paths it covers. Dependencies, build output and test fixtures are skipped. `--write` drafts stack.yaml with the evidence in each layer's note. It never overwrites an existing file.
+
+**drift** reports three kinds of disagreement:
+- **mismatch:** a layer whose technology the code doesn't show while it shows another one in that layer ("stack.yaml says drizzle-supabase-postgres for data-layer, but the code uses Prisma + Neon Postgres: packages/db/package.json (@prisma/client)"). The fix is `stack set`.
+- **unlisted:** a technology the code shows in a layer stack.yaml doesn't list.
+- **empty-path:** a layer path that matches no file.
+
+The `doctor` `stack` check reports the same findings as warnings, since the code may be mid-migration.
+
+**Layers elsewhere:**
+- `gateLayers` attaches gate suites to layers (`"data-layer": ["migrations"]`), so a change under a layer's paths runs them, next to `gatePaths`.
+- The doctor `area-map` check warns when a layer in use isn't mentioned in the AGENTS.md area map.
+
+`import` and `render` come with later issues.
