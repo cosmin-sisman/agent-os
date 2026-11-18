@@ -45,6 +45,17 @@ The loop and gate jobs live in `ci.yml`, so the package's own loop, gate and ret
 - run `agent-os check title` and `agent-os check loop --body-file <body>`, and look at the exit code (never through a pipe);
 - after changing a command, an option or a core skill, run `npm run docs`: the commands reference and the skill catalog are generated, and a test fails when they are stale.
 
+## Skill evals
+
+`scripts/evals/` builds fixture repositories on the fly (empty, spec-only, active, maintenance: real git with dated commits, nothing committed) and runs deterministic scenarios on them:
+- each state gets its profile;
+- a destructive migration makes `/release` ask;
+- contradicting specs block `/ingest-docs`;
+- `/discover` cites evidence and writes nothing;
+- `map` and lesson recall save steps and tokens over reading everything.
+
+They run inside `npm test`. `node scripts/evals/run.mjs` prints them one per line, and the `evals` workflow runs them on demand. That workflow has no schedule: this repository keeps no scheduled workflow active, so adding one is the owner's call. Scenarios that would need a model are listed as skipped and never run in CI.
+
 ## Releases and npm
 
 A release is `agent-os release plan --version x.y.z`, then `release open` and `release finish`:
