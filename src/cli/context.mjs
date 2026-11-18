@@ -7,6 +7,7 @@
  * @property {(s: string) => void} stderr
  * @property {string} cwd
  * @property {Record<string, string | undefined>} env
+ * @property {(question: string) => Promise<string>} [ask] asks a question on a terminal; absent when nobody can answer
  */
 
 export class Context {

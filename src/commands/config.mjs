@@ -1,10 +1,11 @@
 // `agent-os config`: reads, changes and validates the team file (agent-os.json) and the personal file
-// (.agent-os/local.json). `set` picks the right file from the key, so personal settings never get committed.
+// (.agent-os/local.json). `set` picks the right file from the key, so personal settings never get committed; it
+// never edits .gitignore (a committed file) and keeps personal files out of git through .git/info/exclude instead.
 
 import { join } from 'node:path'
 import { CliError, EXIT } from '../cli/errors.mjs'
 import {
-  TEAM_FILE, LOCAL_FILE, loadConfig, validate, nodeFor, isPersonal, getPath, setPath, saveJson, ensureGitignore, unknownKeyHint,
+  TEAM_FILE, LOCAL_FILE, loadConfig, validate, nodeFor, isPersonal, getPath, setPath, saveJson, ignoreStatus, applyIgnore, unknownKeyHint,
 } from '../config/config.mjs'
 
 export const usage = 'agent-os config [get [key] | set <key> <value> | unset <key> | validate | path]'
@@ -53,9 +54,10 @@ function set(ctx, key, raw) {
   const verb = value === undefined ? 'unset' : 'set'
   if (ctx.dryRun) return ctx.output({ dryRun: true, file, key, value: value ?? null }, `would ${verb} ${key} in ${file}`)
   saveJson(ctx.cwd, file, next)
-  const ignored = personal ? ensureGitignore(ctx.cwd) : []
-  ctx.output({ file, key, value: value ?? null, gitignoreAdded: ignored },
-    `${verb} ${key} in ${file}${ignored.length ? `\nadded to .gitignore: ${ignored.join(', ')}` : ''}`)
+  const ignore = personal ? ignoreStatus(ctx.cwd) : { action: null, message: null }
+  applyIgnore(ignore)
+  ctx.output({ file, key, value: value ?? null, ignore: ignore.action },
+    `${verb} ${key} in ${file}${ignore.message ? `\n${ignore.message}` : ''}`)
 }
 
 function dropEmpty(obj, key) {

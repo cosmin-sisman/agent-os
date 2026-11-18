@@ -13,11 +13,15 @@ Every key belongs to exactly one file. A personal key in `agent-os.json`, or a t
 agent-os config                          # the merged configuration, with defaults
 agent-os config get languages.issues     # one value
 agent-os config set languages.issues ro  # team key → agent-os.json
-agent-os config set languages.chat en    # personal key → .agent-os/local.json (and .gitignore entries)
+agent-os config set languages.chat en    # personal key → .agent-os/local.json
 agent-os config unset gate.unit
 agent-os config validate                 # exit 0 valid, 1 problems, 2 could not read
 agent-os config path
 ```
+
+Neither `config set` nor `init --me` edits a committed file. When the personal files are not ignored yet, they are added to `.git/info/exclude`, which is local to your clone, and the output asks the team to add them to `.gitignore`. Editing `.gitignore` is a team change, made by the full `init`.
+
+Someone joining a project runs `agent-os init --me`. It asks first which language the agent should talk to you in, then how many agent sessions you run in parallel (and, if more than one, whether one of them coordinates the others and the first dev-server port), then the free-memory floor for heavy commands. It writes only `.agent-os/local.json`. Flags answer the same questions (`--chat`, `--sessions`, `--orchestrator`, `--dev-port`, `--min-free-mb`), and `--yes` takes the defaults for the rest.
 
 Values are read as JSON when they parse (`true`, `3`, `["a","b"]`, `{"x":1}`), and as plain strings otherwise. `--dry-run` shows what would change.
 

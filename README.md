@@ -173,6 +173,7 @@ Issues, PRs, commits, labels, milestones, docs and chat are each set to `en` or 
 npx @cosmin-sisman/agent-os init      # detects the repo's state, asks 4–6 questions, shows the plan, then writes it
 npx @cosmin-sisman/agent-os doctor    # checks the agent system and GitHub hygiene (the same check runs in CI)
 npx @cosmin-sisman/agent-os next      # what to work on next, and why
+npx @cosmin-sisman/agent-os init --me # joining a project: your chat language, sessions and machine limits only
 ```
 
 `init` recognizes four kinds of repository and adapts:

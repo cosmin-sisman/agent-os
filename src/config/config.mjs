@@ -2,6 +2,7 @@
 // .agent-os/local.json (personal, gitignored). Every problem names the file, the key, what was expected and what was found.
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { join, dirname } from 'node:path'
 import { SCHEMA } from './schema.mjs'
 import { CliError } from '../cli/errors.mjs'
@@ -170,7 +171,7 @@ export function saveJson(cwd, file, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
 }
 
-/** Adds the personal and cache entries to the repository's .gitignore when they are missing. Returns what it added. */
+/** Adds the personal and cache entries to the repository's .gitignore when they are missing (a team change: full init only). Returns what it added. */
 export function ensureGitignore(cwd) {
   const path = join(cwd, '.gitignore')
   const text = existsSync(path) ? readFileSync(path, 'utf8') : ''
@@ -178,4 +179,34 @@ export function ensureGitignore(cwd) {
   const missing = GITIGNORE_ENTRIES.filter((e) => !lines.has(e))
   if (missing.length) writeFileSync(path, `${text}${text && !text.endsWith('\n') ? '\n' : ''}${missing.join('\n')}\n`)
   return missing
+}
+
+/**
+ * How the personal files stay out of git without touching committed files: when .gitignore (or any ignore rule)
+ * already covers them, nothing; otherwise the repository-local .git/info/exclude, which is never committed.
+ * Adding them to .gitignore is a team change, made by the full init (#49).
+ */
+export function ignoreStatus(cwd) {
+  let gitDir
+  try {
+    gitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+  } catch {
+    return { action: null, missing: [], message: 'warning: not a git repository; make sure .agent-os/local.json is never committed' }
+  }
+  const missing = GITIGNORE_ENTRIES.filter((entry) => {
+    try { execFileSync('git', ['check-ignore', '-q', '--no-index', entry], { cwd, stdio: 'ignore' }); return false } catch { return true }
+  })
+  if (!missing.length) return { action: null, missing, message: null }
+  return {
+    action: 'exclude', missing, excludeFile: join(gitDir, 'info', 'exclude'),
+    message: `added ${missing.join(', ')} to .git/info/exclude (local, never committed); ask the team to add them to .gitignore`,
+  }
+}
+
+/** Carries out what ignoreStatus decided. */
+export function applyIgnore(status) {
+  if (status.action !== 'exclude') return
+  mkdirSync(dirname(status.excludeFile), { recursive: true })
+  const text = existsSync(status.excludeFile) ? readFileSync(status.excludeFile, 'utf8') : ''
+  writeFileSync(status.excludeFile, `${text}${text && !text.endsWith('\n') ? '\n' : ''}# agent-os personal files\n${status.missing.join('\n')}\n`)
 }
