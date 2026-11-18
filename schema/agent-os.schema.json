@@ -86,6 +86,22 @@
           "type": "string",
           "description": "Releases merge into this branch",
           "default": "main"
+        },
+        "requiredChecks": {
+          "type": "array",
+          "description": "Checks that must pass before merging into either branch",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A check name, such as ci"
+          }
+        },
+        "requiredApprovals": {
+          "type": "integer",
+          "description": "Approving reviews required on pull or merge requests",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 0
         }
       },
       "additionalProperties": false
