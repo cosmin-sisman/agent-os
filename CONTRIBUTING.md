@@ -37,13 +37,24 @@ Adding or changing a layer, technology, language, provider, runtime or blueprint
 ## Checks
 
 Every PR runs two required checks:
-- `ci`: `npm test`, `agent-os stack catalog check` and `npm run site` on Linux, macOS and Windows with Node 22, 24 and 26, plus `actionlint` on the workflows;
+- `ci`: `npm test`, `agent-os stack catalog check` and `npm run site` on Linux, macOS and Windows with Node 22, 24 and 26, plus `actionlint` on the workflows. On pull requests macOS does not run; pushes to `development` and `main` run the full matrix, macOS included;
 - `agent-os/loop`: a valid Lessons section, a journal entry, and `doctor --ci`.
 
 The loop and gate jobs live in `ci.yml`, so the package's own loop, gate and retro workflows are turned off in `agent-os.json` (`ci.loop`, `ci.gate`, `ci.retro`). Before you push:
 - run `npm test`;
 - run `agent-os check title` and `agent-os check loop --body-file <body>`, and look at the exit code (never through a pipe);
 - after changing a command, an option or a core skill, run `npm run docs`: the commands reference and the skill catalog are generated, and a test fails when they are stale.
+
+## Skill evals
+
+`scripts/evals/` builds fixture repositories on the fly (empty, spec-only, active, maintenance: real git with dated commits, nothing committed) and runs deterministic scenarios on them:
+- each state gets its profile;
+- a destructive migration makes `/release` ask;
+- contradicting specs block `/ingest-docs`;
+- `/discover` cites evidence and writes nothing;
+- `map` and lesson recall save steps and tokens over reading everything.
+
+They run inside `npm test`. `node scripts/evals/run.mjs` prints them one per line, and the `evals` workflow runs them on demand. That workflow has no schedule: this repository keeps no scheduled workflow active, so adding one is the owner's call. Scenarios that would need a model are listed as skipped and never run in CI.
 
 ## Releases and npm
 

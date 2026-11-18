@@ -36,6 +36,7 @@ Every command prints text, or one JSON object with `--json`. Exit codes: 0 ok, 1
 | [`start`](#start) | new | Claim an issue: assign, branch from the right base, link, In Progress, check out |
 | [`next`](#next) | new | Recommend what to work on next, with reasons |
 | [`board`](#board) | new | Keep the optional planning board in step with the issues (GitHub Projects) |
+| [`orchestrate`](#orchestrate) | new | Optional per-laptop orchestrator: claim the role, brief workers, typed messages, a local ledger |
 | [`handoff`](#handoff) | new | Status comments on the issues you hold and a handoff journal entry |
 | [`thread`](#thread) | new | Read the conversation on an issue or change request: decisions, language, participants |
 | [`overlap`](#overlap) | new | List open changes that touch the same files as yours |
@@ -144,7 +145,7 @@ agent-os doctor [--offline | --ci] [--fix] [--check <id>…]
 | `--offline` | Local checks only: no platform calls |
 | `--ci` | What the CI loop check runs: local, deterministic checks |
 | `--fix` | Apply the mechanical fixes, then check again |
-| `--check <value>`, repeatable | Run only this check (repeat): skills, slots, commands, hooks, links, area-map, stack, system, headers, standards, budgets, language, journal, lessons, decisions, artifacts, conflicts, version, lifecycle, gitignore, personal, issues, labels, titles |
+| `--check <value>`, repeatable | Run only this check (repeat): skills, slots, commands, hooks, agents, links, area-map, stack, system, headers, standards, budgets, language, journal, lessons, decisions, artifacts, conflicts, version, lifecycle, gitignore, personal, issues, labels, titles |
 
 ## env
 
@@ -251,6 +252,7 @@ agent-os issue new --title "<Area>: <problem>" --body-file <f> --label <type> --
 | `--title <value>` | Issue title |
 | `--body-file <value>` | Read the issue body from this file |
 | `--label <value>`, repeatable | A label (repeat for several) |
+| `--hardening` | new/create: security work that reveals nothing exploitable; filed with the security label (a vulnerability goes to agent-os security report) |
 | `--remove-label <value>`, repeatable | A label to remove (repeat for several) |
 | `--milestone <value>` | Milestone title |
 | `--assignee <value>`, repeatable | An assignee login (repeat for several) |
@@ -328,6 +330,23 @@ agent-os board plan [--issue <n>] | sync [--issue <n>] [--dry-run] | create --ti
 |---|---|
 | `--issue <value>` | plan/sync: only this issue |
 | `--title <value>` | create: the board title |
+
+## orchestrate
+
+Optional per-laptop orchestrator: claim the role, brief workers, typed messages, a local ledger. Status: new (#35).
+
+```
+agent-os orchestrate status   ·   claim [--force]   ·   release   ·   reconcile
+agent-os orchestrate brief <issue> [--notes <text>]
+agent-os orchestrate message <ACK|QUESTION|UPDATE|DONE|REVISE|CLOSE> <worker|#issue> [--text <t>] [--pr <n>]
+```
+
+| Option | What |
+|---|---|
+| `--force` | claim: take the role from a session that is gone |
+| `--notes <value>` | brief: extra notes for the worker (no secrets) |
+| `--text <value>` | message: the message (no secrets, no permission requests) |
+| `--pr <value>` | message: the change request a DONE refers to |
 
 ## handoff
 
@@ -826,7 +845,7 @@ agent-os sbom [--out <file>] [--json]
 Watch the advisories that touch the dependencies (OSV, GHSA, KEV); keep the Security digest. Status: new (#108).
 
 ```
-agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--report <sarif|gitleaks.json>…]   ·   threat-model [--force] [--dry-run]   ·   exercise [<name>]
+agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--report <sarif|gitleaks.json>…]   ·   threat-model [--force] [--dry-run]   ·   exercise [<name>]   ·   report --title <t> --body-file <f> [--severity low|medium|high|critical] [--dry-run]
 ```
 
 | Option | What |
@@ -835,3 +854,6 @@ agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--r
 | `--base <value>` | pass: the branch to compare with (default branches.integration) |
 | `--report <value>`, repeatable | pass: a scanner report to read (SARIF, gitleaks JSON); adds to security.reports |
 | `--force` | threat-model: regenerate even when it is current |
+| `--title <value>` | report: the vulnerability in a few words |
+| `--body-file <value>` | report: the details (what, where, how to reproduce, impact) |
+| `--severity <value>` | report: low, medium, high or critical |

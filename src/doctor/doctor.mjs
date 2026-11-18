@@ -45,11 +45,11 @@ export function runDoctor(deps, { offline = false, ci = false, fix = false, only
   return { mode: ci ? 'ci' : local ? 'offline' : 'full', score, summary, checks: results, fixed }
 }
 
-/** The report for people: failures first with their fixes, then warnings, then the score. */
+/** The report for people: failures first with their fixes, then warnings, then info notes, then the score. */
 export function report(r) {
   const lines = []
-  for (const level of ['fail', 'warn']) {
-    for (const c of r.checks) for (const f of c.findings.filter((x) => x.level === level)) lines.push(`${level === 'fail' ? 'FAIL' : 'warn'}  [${c.id}] ${f.message}${f.fix ? `\n      fix: ${f.fix}${f.fixable ? ' (doctor --fix does it)' : ''}` : ''}`)
+  for (const level of ['fail', 'warn', 'info']) {
+    for (const c of r.checks) for (const f of c.findings.filter((x) => x.level === level)) lines.push(`${level === 'fail' ? 'FAIL' : level}  [${c.id}] ${f.message}${f.fix ? `\n      fix: ${f.fix}${f.fixable ? ' (doctor --fix does it)' : ''}` : ''}`)
   }
   const skipped = r.checks.filter((c) => c.skipped).map((c) => c.id)
   lines.push('', ...r.fixed.map((x) => `fixed: ${x}`), `readiness ${r.score}/100: ${r.summary.ok} ok, ${r.summary.warn} warn, ${r.summary.fail} fail${skipped.length ? ` (skipped: ${skipped.join(', ')})` : ''}`)

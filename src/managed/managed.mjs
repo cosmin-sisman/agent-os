@@ -61,6 +61,30 @@ const end = (id, style = 'html') => (style === 'hash' ? `# agent-os:end ${id}` :
 /** The marker style for a file: HTML comments in Markdown, # lines elsewhere. */
 export const blockStyle = (path) => (/\.(md|markdown|html?)$/i.test(path) ? 'html' : 'hash')
 
+/**
+ * Where a block goes in a file that does not have it yet, for files where the end is the wrong place. A placer returns
+ * the new text, or null when the file has a shape it cannot complete safely (then it is a conflict, never a rewrite).
+ */
+const PLACERS = { '.gitlab-ci.yml#include': placeInclude }
+
+/**
+ * The agent-os include block in .gitlab-ci.yml (#233): inside the project's own top-level `include:` list, so the key
+ * is not duplicated and the team's includes stay; a new `include:` when there is none. An `include:` written as a
+ * string, a map or a list at another indentation is left to the person.
+ */
+export function placeInclude(text, block) {
+  const nl = text.includes('\r\n') ? '\r\n' : '\n'
+  if (!text.trim()) return `include:${nl}${block}${nl}`
+  const lines = text.split(/\r?\n/)
+  const at = lines.findIndex((l) => /^include:\s*(#.*)?$/.test(l))
+  if (at < 0) return lines.some((l) => /^include:/.test(l)) ? null : `${text}${text.endsWith('\n') ? '' : nl}${nl}include:${nl}${block}${nl}`
+  const next = lines.slice(at + 1).find((l) => l.trim() && !l.trim().startsWith('#'))
+  if (next !== undefined && /^\s/.test(next) && !/^ {2}- /.test(next)) return null
+  if (next !== undefined && /^- /.test(next)) return null
+  lines.splice(at + 1, 0, ...block.split(/\r?\n/))
+  return lines.join(nl)
+}
+
 /** The text between a block's markers (without them), or null when the block is not there. */
 export function readBlock(text, id, style = 'html') {
   const a = text.indexOf(begin(id, style))
@@ -130,13 +154,30 @@ function readItem(cwd, key) {
   return hooks === '{}\n' ? null : hooks
 }
 
+/** A new block placed by its file's placer, or null when there is no placer or the block is already there. */
+function placed(existing, key, content) {
+  const place = PLACERS[key]
+  const id = key.split('#')[1]
+  const style = blockStyle(pathOf(key))
+  if (!place || readBlock(existing, id, style) !== null) return null
+  return place(existing, writeBlock('', id, content, style).replace(/\r?\n$/, ''))
+}
+
+/** A new block the file's shape does not allow placing (see PLACERS): the person completes it by hand. */
+function unplaceable(cwd, key) {
+  const place = PLACERS[key]
+  const file = join(cwd, pathOf(key))
+  if (!place || !existsSync(file)) return false
+  return place(readFileSync(file, 'utf8'), '') === null
+}
+
 /** Writes the item's new content into the project, touching nothing outside it. */
 function writeItem(cwd, key, content) {
   const file = join(cwd, pathOf(key))
   mkdirSync(dirname(file), { recursive: true })
   const existing = existsSync(file) ? readFileSync(file, 'utf8') : ''
   if (kindOf(key) === 'file') writeFileSync(file, content)
-  else if (kindOf(key) === 'block') writeFileSync(file, writeBlock(existing, key.split('#')[1], content, blockStyle(pathOf(key))))
+  else if (kindOf(key) === 'block') writeFileSync(file, placed(existing, key, content) ?? writeBlock(existing, key.split('#')[1], content, blockStyle(pathOf(key))))
   else writeFileSync(file, `${JSON.stringify(writeHooks(existing ? JSON.parse(existing) : {}, content), null, 2)}\n`)
 }
 
@@ -172,7 +213,8 @@ export function applyManaged(cwd, items, { version, dryRun = false }) {
     let action
     let rej
     if (!entry) {
-      if (local === null) { action = 'installed'; if (!dryRun) writeItem(cwd, key, content); record() }
+      if (local === null && unplaceable(cwd, key)) { action = 'conflict'; rej = conflict(cwd, key, '', '', content, version, dryRun, `its ${pathOf(key)} has a shape agent-os cannot complete safely (add the lines below to it by hand)`) }
+      else if (local === null) { action = 'installed'; if (!dryRun) writeItem(cwd, key, content); record() }
       else if (eq(local, content)) { action = 'adopted'; record() }
       else { action = 'conflict'; rej = conflict(cwd, key, '', local, content, version, dryRun, 'exists and is not managed by agent-os yet') }
     } else if (local === null) {

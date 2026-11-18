@@ -77,7 +77,8 @@ async function flow(ctx, action) {
     try { author = ghClient(ctx.io.gh).rest('GET', 'user')?.login ?? author } catch { /* default */ }
     const r = openRelease(deps, { version: v.version, author, now: ctx.io.now ?? new Date(), dryRun: ctx.dryRun })
     if (r.problems) { ctx.output(r, `not opened:\n${r.problems.map((p) => `  - ${p}`).join('\n')}`); return EXIT.CHECK_FAILED }
-    ctx.output(r, r.dryRun ? `would:\n${r.steps.map((s) => `  ${s}`).join('\n')}` : `${r.updated ? 'updated' : 'opened'} ${vocab.cr} ${vocab.crRef}${r.changeRequest.number}: ${r.changeRequest.url ?? ''}`)
+    ctx.output(r, r.dryRun ? `would:\n${r.steps.map((s) => `  ${s}`).join('\n')}` : [`${r.updated ? 'updated' : 'opened'} ${vocab.cr} ${vocab.crRef}${r.changeRequest.number}: ${r.changeRequest.url ?? ''}`, ...(r.conflicts ? [`it CONFLICTS with ${merged.branches.production}: the platform runs no checks on it until the conflicts are resolved. Merge origin/${merged.branches.production} into ${r.plan.branch}, resolve, push, then run release open again`] : [])].join('\n'))
+    if (r.conflicts) return EXIT.CHECK_FAILED
     return EXIT.OK
   }
   const r = finishRelease(deps, { version: v.version, hotfix: v.hotfix, accept: v.accept ?? [], now: ctx.io.now ?? new Date(), probe: ctx.io.probe ?? systemProbe(ctx.io.env), exec: ctx.io.exec, dryRun: ctx.dryRun })
@@ -86,6 +87,6 @@ async function flow(ctx, action) {
     return r.problems.length ? EXIT.CHECK_FAILED : EXIT.OK
   }
   const failed = r.checks.suites.filter((s) => !s.passed)
-  ctx.output(r, [`released ${r.plan.tag} (${r.sha.slice(0, 7)})${r.release.url ? `: ${r.release.url}` : ''}`, r.milestone.closed ? `  milestone: closed "${r.milestone.closed}", opened "${r.milestone.opened}"` : `  milestone: "${r.milestone.opened}" is open`, `  checks: environment ${r.checks.env.fail ? 'failed' : 'ok'}${r.checks.suites.length ? `, ${r.checks.suites.map((s) => `${s.name} ${s.passed ? 'passed' : 'FAILED'}`).join(', ')}` : ''}`, `  sync into ${merged.branches.integration}: ${vocab.crRef}${r.sync.number}${r.sync.existed ? ' (already open)' : ''}`].join('\n'))
+  ctx.output(r, [`released ${r.plan.tag} (${r.sha.slice(0, 7)})${r.release.url ? `: ${r.release.url}` : ''}`, !r.milestone.opened ? '  milestones: left as they are (milestones.rolling is off)' : r.milestone.closed ? `  milestone: closed "${r.milestone.closed}", opened "${r.milestone.opened}"` : `  milestone: "${r.milestone.opened}" is open`, `  checks: environment ${r.checks.env.fail ? 'failed' : 'ok'}${r.checks.suites.length ? `, ${r.checks.suites.map((s) => `${s.name} ${s.passed ? 'passed' : 'FAILED'}`).join(', ')}` : ''}`, `  sync into ${merged.branches.integration}: ${vocab.crRef}${r.sync.number}${r.sync.existed ? ' (already open)' : ''}`].join('\n'))
   return failed.length || r.checks.env.fail ? EXIT.CHECK_FAILED : EXIT.OK
 }

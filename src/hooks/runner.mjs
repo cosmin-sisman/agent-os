@@ -13,6 +13,7 @@ import { editReminders } from './edit.mjs'
 import { gapsReminder } from './gaps.mjs'
 import { sessionWarning } from '../security/digest.mjs'
 import { threatModelStale } from '../security/threats.mjs'
+import { orchestratorEditGuard } from '../orchestrate/orchestrate.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 import { systemGit } from '../workflow/start.mjs'
 
@@ -49,6 +50,16 @@ export const CORE_HANDLERS = [
       if (/\bgit\s+push\b/.test(command)) { const r = systemGit(cwd)(['rev-parse', '--abbrev-ref', 'HEAD']); currentBranch = r.status === 0 ? r.stdout.trim() : null }
       const broken = checkCommand(command, { rules: rulesFor(config), env, minFreeMb: config.machine?.minFreeMb ?? 0, currentBranch })
       if (broken.length) return { decision: 'deny', message: broken.map((b) => `agent-os guard "${b.id}": ${b.message}`).join('\n') }
+    },
+  },
+  {
+    // The orchestrator session briefs workers and does not edit (#35); worker sessions run in their own worktrees.
+    name: 'orchestrator-edit',
+    events: ['PreToolUse'],
+    kind: 'guard',
+    timeoutMs: 1500,
+    run(input, { cwd }) {
+      return orchestratorEditGuard(input, { cwd })
     },
   },
   {

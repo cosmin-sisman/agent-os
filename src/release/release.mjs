@@ -21,6 +21,8 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const ok = (r) => r.status === 0
+/** Marks the change request release finish opens to bring production back into integration (#240). */
+export const SYNC_MARKER = '<!-- agent-os:sync -->'
 const out = (r) => (ok(r) ? r.stdout.trim() : null)
 const must = (git, args) => { const r = git(args); if (!ok(r)) throw new CliError(`git ${args.join(' ')} failed: ${(r.stderr || r.stdout).trim().split('\n')[0]}`); return r.stdout.trim() }
 
@@ -107,8 +109,10 @@ export function planRelease(deps, { version, hotfix = false }) {
     if (pkg?.lock && pkg.lock !== version) warnings.push(`package-lock.json is at ${pkg.lock}, not ${version}: release open sets it too`)
   }
   const lang = languageFor(config, 'milestones')
-  const rolling = tracker.milestones().filter((m) => m.state === 'open').map((m) => ({ m, n: Number(m.title.match(rollingPattern(lang))?.[1]) })).find((x) => x.n)
-  const n = rolling?.n ?? 1
+  const rolling = config.milestones?.rolling === false ? null : tracker.milestones().filter((m) => m.state === 'open').map((m) => ({ m, n: Number(m.title.match(rollingPattern(lang))?.[1]) })).find((x) => x.n)
+  // Without a rolling milestone the release number follows the release tags: the nth release is release-n.
+  const tagCount = () => (out(git(['tag', '--list', 'v[0-9]*'])) ?? '').split(/\r?\n/).filter((t) => t && t !== tag).length
+  const n = rolling?.n ?? (config.milestones?.rolling === false ? tagCount() + 1 : 1)
   return {
     version, tag, tagged: Boolean(tagged), hotfix, from, head, lastTag, branch: hotfix ? null : `release/${version}`,
     title: `release-${n}: ${version}`, milestone: rolling ? { number: rolling.m.number, title: rolling.m.title, n } : null,
@@ -136,8 +140,13 @@ const checked = (body, id) => new RegExp(`^\\s*[-*]\\s+\\[[xX]\\]\\s+${id.replac
 export function openRelease(deps, { version, author = 'agent-os', now = new Date(), dryRun = false }) {
   const { git, tracker, cwd, config, vocab } = deps
   const plan = planRelease(deps, { version })
-  if (plan.problems.length) return { opened: false, plan, problems: plan.problems }
   const { integration, production } = config.branches
+  // The release branch must start from a descendant of production, or its change request conflicts and the platform
+  // runs no checks on it (#240): a squashed or missing sync is caught here, with the fix.
+  if (!ok(git(['merge-base', '--is-ancestor', `origin/${production}`, `origin/${integration}`]))) {
+    plan.problems.push(`${production} is not an ancestor of ${integration}: the last release was not synced back with a merge commit, so the release ${vocab.changeRequest} would conflict. Open a ${vocab.changeRequest} from ${production} into ${integration} and merge it with a merge commit (agent-os ship merges syncs that way), then run release open again`)
+  }
+  if (plan.problems.length) return { opened: false, plan, problems: plan.problems }
   const body = releaseBody(plan, vocab)
   const existing = tracker.findPullRequest({ head: plan.branch, base: production })
   const remote = ok(git(['rev-parse', '--verify', '--quiet', `refs/remotes/origin/${plan.branch}`]))
@@ -162,7 +171,10 @@ export function openRelease(deps, { version, author = 'agent-os', now = new Date
     } finally { git(['switch', start]) }
   }
   const cr = existing ? { ...tracker.updatePullRequest(existing.number, { title: plan.title, body }), number: existing.number } : tracker.createPullRequest({ title: plan.title, body, head: plan.branch, base: production })
-  return { opened: true, plan, steps, changeRequest: { number: cr.number, url: cr.url ?? existing?.url ?? null }, updated: Boolean(existing) }
+  // A conflicting change request gets no checks at all on GitHub: say so instead of leaving it silent.
+  let conflicts = false
+  try { conflicts = tracker.pullRequestStatus(cr.number)?.mergeable === 'CONFLICTING' } catch { /* status unknown yet: nothing to report */ }
+  return { opened: true, plan, steps, changeRequest: { number: cr.number, url: cr.url ?? existing?.url ?? null }, updated: Boolean(existing), conflicts }
 }
 
 /**
@@ -196,9 +208,9 @@ export function finishRelease(deps, { version, hotfix = false, accept = [], now 
     ...(hotfix ? [] : [cr ? `merge ${vocab.crRef}${cr.number} into ${production} with a merge commit (never squashed)` : plan.tagged ? 'the release is already merged and tagged' : `open the release ${vocab.changeRequest} first (agent-os release open --version ${version})`]),
     plan.tagged ? `${plan.tag} already exists` : `tag ${plan.tag} on ${production}`,
     `publish the ${vocab.platform} release ${plan.tag} with the notes`,
-    plan.milestone && !plan.tagged ? `close "${plan.milestone.title}" as "${milestone('closed-release', languageFor(config, 'milestones'), { n: plan.milestone.n, date: now.toISOString().slice(0, 10) }).title}" and open Release ${plan.milestone.n + 1}` : 'make sure the next rolling milestone exists',
+    config.milestones?.rolling === false ? 'leave the milestones as they are (milestones.rolling is off)' : plan.milestone && !plan.tagged ? `close "${plan.milestone.title}" as "${milestone('closed-release', languageFor(config, 'milestones'), { n: plan.milestone.n, date: now.toISOString().slice(0, 10) }).title}" and open Release ${plan.milestone.n + 1}` : 'make sure the next rolling milestone exists',
     'run the release checks (environment, release:* suites)',
-    `open the sync of ${hotfix ? production : plan.branch} back into ${integration}`,
+    `open the sync of ${production} back into ${integration} (merged with a merge commit; no branch is deleted)`,
   ]
   if (problems.length || dryRun) return { released: false, dryRun, plan, steps, problems, asks: asks.map((a) => a.id) }
 
@@ -218,14 +230,18 @@ export function finishRelease(deps, { version, hotfix = false, accept = [], now 
     tracker.updateMilestone(plan.milestone.number, { title: closed.title, description: closed.description, state: 'closed' })
     rolled = closed.title
   }
-  const nextN = (plan.milestone?.n ?? 0) + (tag.created ? 1 : 0) || 1
-  const next = milestone('rolling-release', lang, { n: nextN })
-  if (!tracker.milestones().some((m) => m.title === next.title)) tracker.createMilestone(next)
+  // milestones.rolling false (#248): the project plans with its own milestones; release finish leaves them alone.
+  const rollingOn = config.milestones?.rolling !== false
+  const next = rollingOn ? milestone('rolling-release', lang, { n: (plan.milestone?.n ?? 0) + (tag.created ? 1 : 0) || 1 }) : null
+  if (next && !tracker.milestones().some((m) => m.title === next.title)) tracker.createMilestone(next)
   const env = checkEnvironment(config, { cwd, probe: probe ?? systemProbe(process.env), mode: 'ci' })
   const suites = Object.keys(config.gate ?? {}).filter((s) => s.startsWith('release:'))
   const checks = runSuites(config, suites, { cwd, exec })
-  const syncHead = hotfix ? production : plan.branch
+  // The sync comes from production itself: only that brings its release merge commit into integration, so the next
+  // release branch starts from a descendant of production and does not conflict (#240). ship merges it with a merge
+  // commit, never squashed; the marker tells it this is a sync.
+  const syncHead = production
   const existingSync = tracker.findPullRequest({ head: syncHead, base: integration })
-  const sync = existingSync ?? tracker.createPullRequest({ title: `chore(release): sync ${plan.tag} into ${integration}`, body: `## What\n\nBrings ${syncHead} (${plan.tag}) back into ${integration}: the changelog entry, the release journal entry${hotfix ? ' and the hotfix' : ''}.\n\n## Why\n\nThe release (${plan.tag}) is on ${production}; ${integration} must not fall behind it.\n\n## How it was tested\n\nThe release checks ran after tagging.\n\n## Lessons\n\nNone: the release sync.`, head: syncHead, base: integration })
-  return { released: true, plan, sha, tag, release, milestone: { closed: rolled, opened: next.title }, checks: { env: env.summary, suites: checks.map((s) => ({ name: s.name, passed: s.passed })) }, sync: { number: sync.number, url: sync.url ?? null, existed: Boolean(existingSync) } }
+  const sync = existingSync ?? tracker.createPullRequest({ title: `chore(release): sync ${plan.tag} into ${integration}`, body: `${SYNC_MARKER}\n## What\n\nBrings ${production} (${plan.tag}) back into ${integration}: the release merge commit, the changelog entry, the release journal entry${hotfix ? ' and the hotfix' : ''}.\n\n## Why\n\nThe release (${plan.tag}) is on ${production}; ${integration} must contain it, or the next release conflicts. Merge it with a merge commit (agent-os ship does), never squashed.\n\n## How it was tested\n\nThe release checks ran after tagging.\n\n## Lessons\n\nNone: the release sync.`, head: syncHead, base: integration })
+  return { released: true, plan, sha, tag, release, milestone: { closed: rolled, opened: next?.title ?? null }, checks: { env: env.summary, suites: checks.map((s) => ({ name: s.name, passed: s.passed })) }, sync: { number: sync.number, url: sync.url ?? null, existed: Boolean(existingSync) } }
 }

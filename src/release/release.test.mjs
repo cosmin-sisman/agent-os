@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { bumpPackage, finishRelease, openRelease, planRelease, releaseRisks } from './release.mjs'
+import { SYNC_MARKER, bumpPackage, finishRelease, openRelease, planRelease, releaseRisks } from './release.mjs'
 import { vocabularyFor } from '../platform/vocabulary.mjs'
 
 const CONFIG = { branches: { integration: 'development', production: 'main', requiredChecks: [], requiredApprovals: 0 }, languages: { milestones: 'en' }, requires: {}, gate: {} }
@@ -94,7 +94,7 @@ test('finish: merge commit pinned to the checked head, tag on production, notes,
     ['release', 'v0.2.0'],
     ['milestone', 5, { title: 'Release 3 - 2026-12-01', description: 'A shipped release', state: 'closed' }],
     ['new milestone', 'Stage 0 - Release 4 (in progress)'],
-    ['pr', 'release/0.2.0', 'development', 'chore(release): sync v0.2.0 into development'],
+    ['pr', 'main', 'development', 'chore(release): sync v0.2.0 into development'],
   ])
   assert.ok(!t.calls.some((c) => c[0] === 'delete'), 'never deletes a branch, the integration branch least of all')
   assert.ok(!t.calls.some((c) => c[0] === 'merge' && c[2].method === 'squash'))
@@ -165,6 +165,65 @@ test('release open sets package.json and package-lock.json to the released versi
     assert.deepEqual(bumpPackage(cwd, '0.2.0'), [], 'already at the version: nothing to change')
     assert.deepEqual(planRelease(deps(fakeGit(), fakeTracker(), cwd), { version: '0.2.0' }).warnings, [])
   } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('given production not an ancestor of integration, release open stops and says how to fix it', () => {
+  const base = fakeGit()
+  const git = (args) => (args[0] === 'merge-base' && args[1] === '--is-ancestor' ? (base(args), { status: 1, stdout: '', stderr: '' }) : base(args))
+  git.calls = base.calls
+  const t = fakeTracker()
+  const r = openRelease(deps(git, t), { version: '0.2.0' })
+  assert.equal(r.opened, false)
+  assert.match(r.problems.at(-1), /main is not an ancestor of development: the last release was not synced back with a merge commit[\s\S]*Open a pull request from main into development and merge it with a merge commit/)
+  assert.equal(t.calls.some((c) => c[0] === 'pr'), false, 'no release pull request is opened')
+  assert.equal(base.calls.some((c) => c[0] === 'switch'), false, 'no branch is created')
+})
+
+test('given a release pull request that conflicts, release open says so instead of silence', async () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'aos-release-'))
+  try {
+    const t = fakeTracker({ pr: { number: 70, url: 'u/70' } })
+    t.pullRequestStatus = () => ({ number: 70, mergeable: 'CONFLICTING' })
+    const r = openRelease(deps(fakeGit({ remoteBranches: ['release/0.2.0'] }), t, cwd), { version: '0.2.0' })
+    assert.deepEqual([r.opened, r.conflicts], [true, true])
+    t.pullRequestStatus = () => ({ number: 70, mergeable: 'MERGEABLE' })
+    assert.equal(openRelease(deps(fakeGit({ remoteBranches: ['release/0.2.0'] }), t, cwd), { version: '0.2.0' }).conflicts, false)
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('the sync release finish opens comes from production and is marked, so ship merges it with a merge commit', () => {
+  const t = fakeTracker({ pr: { number: 70, url: 'u/70' } })
+  let body = ''
+  const create = t.createPullRequest
+  t.createPullRequest = (spec) => { if (spec.base === 'development') body = spec.body; return create(spec) }
+  finishRelease(deps(fakeGit(), t), { version: '0.2.0', accept: ['env'], now: new Date('2026-12-01T00:00:00Z') })
+  assert.ok(body.startsWith(SYNC_MARKER), 'marked as a sync')
+  assert.match(body, /never squashed/)
+})
+
+test('given milestones.rolling false, release finish touches no milestone and the release is numbered from its tags', () => {
+  const t = fakeTracker({ pr: { number: 70, url: 'u/70' }, milestones: [{ number: 2, title: 'v0.2 Core workflow', state: 'open' }] })
+  const off = { ...CONFIG, milestones: { rolling: false } }
+  const git = fakeGit({ tags: ['v0.1.0', 'v0.1.1'] })
+  const base = git
+  const withTags = (args) => (args[0] === 'tag' && args[1] === '--list' ? { status: 0, stdout: 'v0.1.0\nv0.1.1\n', stderr: '' } : base(args))
+  withTags.calls = base.calls
+  const plan = planRelease({ git: withTags, tracker: t, cwd: '.', config: off, vocab: VOCAB }, { version: '0.2.0' })
+  assert.equal(plan.milestone, null)
+  assert.equal(plan.title, 'release-3: 0.2.0', 'the third release')
+  const r = finishRelease({ git: withTags, tracker: t, cwd: '.', config: off, vocab: VOCAB }, { version: '0.2.0', accept: ['env'], now: new Date('2026-12-01T00:00:00Z') })
+  assert.equal(r.released, true)
+  assert.equal(t.calls.some((c) => c[0] === 'milestone' || c[0] === 'new milestone'), false, 'no milestone closed or created')
+  assert.deepEqual(r.milestone, { closed: null, opened: null })
+  const dry = finishRelease({ git: withTags, tracker: t, cwd: '.', config: off, vocab: VOCAB }, { version: '0.2.0', accept: ['env'], dryRun: true })
+  assert.ok(dry.steps.includes('leave the milestones as they are (milestones.rolling is off)'))
+})
+
+test('given the default, release finish rolls the milestone as before', () => {
+  const t = fakeTracker({ pr: { number: 70, url: 'u/70' } })
+  finishRelease(deps(fakeGit(), t), { version: '0.2.0', accept: ['env'], now: new Date('2026-12-01T00:00:00Z') })
+  assert.ok(t.calls.some((c) => c[0] === 'milestone'), 'the rolling milestone is closed')
+  assert.ok(t.calls.some((c) => c[0] === 'new milestone' && /Release 4/.test(c[1])), 'and the next one opened')
 })
 
 test('given a KEV entry for a direct dependency, /release refuses to ship it until it is updated or accepted in writing', async () => {

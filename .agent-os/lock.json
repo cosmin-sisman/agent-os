@@ -4,267 +4,267 @@
   "items": {
     ".agent-os/registry/artifact.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "91bf9cc8471e303173987025baee0a65674fa63c46a23af34cf5ca53a6a56261"
+      "version": "0.1.1",
+      "sha256": "0ded6a8a0f383731fa7528fc8bcb0ff3f03525db1f60f09acb3797dd7075a920"
     },
     ".agent-os/registry/audit.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "ad56ee8447791632d8279ae69888b3ff755cc35949579d43ce108d6f3366bc5e"
+      "version": "0.1.1",
+      "sha256": "ca0252bc52dae561eaa145ed57bb6f2de279f7f18e8a3fc192b7a15fe06a7517"
     },
     ".agent-os/registry/ci.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "694538a0f51768a3f82cfa696a4f4b1a75f0cc53836e586276bb890e66c1f12b"
+      "version": "0.1.1",
+      "sha256": "a78b625a3e9efe37d3606d431dee4f6d0193a5fb5995e864a792f166d8f72ec9"
     },
     ".agent-os/registry/code-review.json": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "64be7c11deef842bd60d67e3a3436d1d35cf7f62785be630f8ec5af84f9f8333"
     },
     ".agent-os/registry/discover.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "c14297eda5f81c700d55b40b89f11f36e15fb50ec3b81713e3001b63e41ac73d"
+      "version": "0.1.1",
+      "sha256": "d8c10e657a7a3387ff50dee954151bdf47d37b044871d2cd21a71a5c282b1183"
     },
     ".agent-os/registry/doctor.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "ac04574fe6e382ebd3b4e655e5f1b98ac40307137250f90801a39f07681b0517"
+      "version": "0.1.1",
+      "sha256": "e9d2a891dfbba5292a961265f4f547070fed396b3c6475b447170fe846a4878e"
     },
     ".agent-os/registry/env.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "c1df41825ee917f600b38ccf512a7073f89484d86a94a8ba164597403f65fd4d"
+      "version": "0.1.1",
+      "sha256": "9bdaf865b1326c8ae956a8aa8a6d22f1f6e3c3c1771272853fd7927be2b6652c"
     },
     ".agent-os/registry/handoff.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "c74fe5cdeae6c9e93367ce5219c9f5f300e6b3fdc4b48161e2f1d0caaa7b84da"
+      "version": "0.1.1",
+      "sha256": "3d90f3f5ee7c73b93c1051cd7531391d706c541c2d2b112449eae0b1c588ad2f"
     },
     ".agent-os/registry/ingest-docs.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "6bae30e914e1904885e2aafa872104c69478446ebba99c78f2d1fa35f736e601"
+      "version": "0.1.1",
+      "sha256": "44641f110890d7fd8bbbfe56888a1e5f1c64eab8f651dc050f6bc99f0c5f3480"
     },
     ".agent-os/registry/kickoff.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "3ae87fbe2c08b323b98f451c6a46625962f414df7d076301d2238b8457071d11"
+      "version": "0.1.1",
+      "sha256": "f1f4d7abba66e69bbddb0cf856f6f01574ade853a13428b5f22763f43761979e"
     },
     ".agent-os/registry/lessons.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "0b73d5db3ebc7ddcea7d53e6a42ee31f620d3fe504f911272458baadc9fb4c83"
+      "version": "0.1.1",
+      "sha256": "5ac57901f80657a30d9e3db6d83944e0f6806a3ef2ae68b7327885290a00e2aa"
     },
     ".agent-os/registry/next.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "91f47c7e6cdec203e0113dfd073dbcb29cd12a72d94ddeecc8a87d4dc6596e35"
+      "version": "0.1.1",
+      "sha256": "a0cad17699b4951608224686c300640b407212bb9865bfe7088a205876642e83"
     },
     ".agent-os/registry/pr.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "d758272220429327213b94c8e73afb9b5ddeebf8df2724f60295580750d6206a"
+      "version": "0.1.1",
+      "sha256": "f62a53237e9e42b038c81e159771e1397079b2a1044a35622b7d3d435b43ff75"
     },
     ".agent-os/registry/release.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "66f1e7018b56c2e0140ebca4ac1a867ba3436ac23b085841ae4cbc415fdcb1b3"
+      "version": "0.1.1",
+      "sha256": "4c4bde0d2557c4cb445aac8aebb04234a1d2c87a0fee1ed7436841fbc8a1fd02"
     },
     ".agent-os/registry/retro.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "89d647edc254c667faaac609e6b194ebcd0f99e43407eaafa5e9b0591acd1978"
+      "version": "0.1.1",
+      "sha256": "25f3e6f66e4bbe898774ca5a4c14fabcf00ffe0c5dfb893fb89ef6ad50af9161"
     },
     ".agent-os/registry/runbook.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "c0cfc0729eb160b8bb0fcdba24a832023b1fb383d1a0c8c6369616be6b636b4f"
+      "version": "0.1.1",
+      "sha256": "33aca6527905801b4e7ef595c6d81b9ea7f6779b19c28e237edc1bdb3ddc77df"
     },
     ".agent-os/registry/security-review.json": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "f77ec70e0c4565b8eef6f007bc9cd43cff3c71085c0175ef169633238e15e678"
     },
     ".agent-os/registry/ship.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "975b5293b940527003d5baa194c28dad1bd3be1e802af4fa2403678b8c09190a"
+      "version": "0.1.1",
+      "sha256": "df428a4198799ed15cfdf451ca96d1e3dadfd5e326730d4a6b6d80139abc0184"
     },
     ".agent-os/registry/stack.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "a144724d9d392256e4d43c4fda0481ef47ff7e67dd107aeb8cf2350310f9a262"
+      "version": "0.1.1",
+      "sha256": "6f6247da5ce43f4aec507b5e131c4e9622f0d154c777d2705efee990f65ca5df"
     },
     ".agent-os/registry/standards.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "5d358885ca16306b926cd969f7aea7d070c44e634954b0db057d01ce939cf19a"
+      "version": "0.1.1",
+      "sha256": "a4a7c3cdf7a0d71a6000d2f27168f331ffe574b439997854c90253dced293820"
     },
     ".agent-os/registry/start.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "043e7556cba4ed5aa83460d27965e36fcaf93d0f87e92677f0e61be8f26704c4"
+      "version": "0.1.1",
+      "sha256": "b230b3f00908d3392b6a1076a65aef6363ab71ac726d4006d9dbca7ba3a10936"
     },
     ".agent-os/registry/system.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "75e2befc2484d6f848c37213ae1699cffebc9666355c368672736addc73f8672"
+      "version": "0.1.1",
+      "sha256": "fa2865c0d4f6220f8eb6c0f57418c45a7a4a399ffbd04567ddfe1b0fd882a2e2"
     },
     ".agent-os/registry/test.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "887a2847e30d43578619a0924a7343a46026408c52c292e25ce9e710ec68cf5f"
+      "version": "0.1.1",
+      "sha256": "a74fdcde28c9f2c66a7df041df3329691b487dff58dbc5e6bb3d571766d721fd"
     },
     ".agent-os/registry/ticket.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "101674e9b6aa7ee9339029eec28bb0164a192517d2fda7065effa0d71477d4c8"
+      "version": "0.1.1",
+      "sha256": "b34bd3a9530ba0162e5a14d9710d095ad9a45a73f3bcd9fb93d1ff088933dd47"
     },
     ".agent-os/registry/upstream.json": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "3869c012d92fbf0e91143048d1fee5e4c60705aa8d3c8d1dfcd893f426d8402b"
+      "version": "0.1.1",
+      "sha256": "9b578baa012d76d992f3443463d90ac358ace8804eb06b7f72f9205fdd99392a"
     },
     ".claude/rules/collaboration.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "c4734bfe54d58594ad42501c9676ee9e79b9455b72d82c6d9a4d842c12b59fd2"
     },
     ".claude/rules/standards.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "3693c61c2ecb60b8e211a7304dc712b6261a94c1db0adc5963a49dab5f367a96"
     },
     ".claude/settings.json#hooks": {
       "kind": "hooks",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "3cd156b254d21d288ca1a42978567e585fb000560869bad81c55f8422168d346"
     },
     ".claude/skills/artifact/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "b676189aaba5bf54afa278941a5e1036b85ad878a511aa42229d3105f1e6e931"
     },
     ".claude/skills/audit/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "e016d094bb128e29e47b6faab2af5aae90d3d372bd2b5f1cd3b1e442c55ed80c"
     },
     ".claude/skills/ci/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "2f7f9cc3fa865d3de2b21743fb98e5e4ba11c27647756e6426f9957794d56178"
     },
     ".claude/skills/discover/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "c5b85ea891c574f0c82022b2da9ebe5bd1541b8b8429d8577409290041d1cc70"
     },
     ".claude/skills/doctor/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "4f967ef8dab9829b52c7dc7ca287e416dceaccc38ae4beada0893a2509e7e937"
     },
     ".claude/skills/env/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "20e872d1ca3bf46903202546bba0dec5b0c63a36c9acf4d9ad999fcaec3d0930"
     },
     ".claude/skills/handoff/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "0b0fc9e5993215028caeaa87f182d3e8c9e2d9ffc11ebf2a7621cf055458b8eb"
     },
     ".claude/skills/ingest-docs/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "a7285bb421b87fc73ebcbe766519a71419f9a5960bcb2d949741739196da4a69"
     },
     ".claude/skills/kickoff/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "283f5ab6892491b9ecb73936dc68c5094bcf081f98e129a67aefef398e7d7707"
     },
     ".claude/skills/lessons/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "f8637e139e20a6f1e3d2959c88d44f72e26e5fad9d556294bc929e060b34a724"
     },
     ".claude/skills/next/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "49ce909ab271cd300655f1f2efe794a2b26eb72aaae00596bd3f524c52865161"
     },
     ".claude/skills/pr/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "89e817f9d62f07e9ef604824060d8d222c052a354553d49f7ff3aa9644e81ed4"
     },
     ".claude/skills/release/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
-      "sha256": "c543367a84825318af775e351fdd35685173413d7014a7e947b36ef22041d64f"
+      "version": "0.1.1",
+      "sha256": "d92cea4dd5f13bc62951b4797916c789786d85d61809521be9d40488ef91469c"
     },
     ".claude/skills/retro/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "c27311bec872d2a6b8ad28e08be42f56787eb52ae94bb047b22026514c63eecc"
     },
     ".claude/skills/runbook/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "9dde76b6528705cde02d6ff5c92085041cc07e368d70f60b1c0a3bbac2411c80"
     },
     ".claude/skills/ship/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "2a3a01b68469c695835ea8e9578e70bcffe8ac84bdae0ec577307379ca8faaa3"
     },
     ".claude/skills/stack/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "f71c1f1e951342fc4fc53c327b5472d7db89bb8c82716adc728cb9427b6180f8"
     },
     ".claude/skills/standards/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "5864641361a8b1198b821490a1e989e71a4840a7c5777ef516265604e493354e"
     },
     ".claude/skills/start/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "11f654852b42ff6b72cd3d7cfb286b53816633c1e4273d8aec524c96f9bd0fc1"
     },
     ".claude/skills/system/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "b5c706382b810c51a65df48fd1adef3bbc660113d18bb00988d0d63106477387"
     },
     ".claude/skills/test/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "c033fae3b89e0f4f7369067381dbe3b71ae1902756878ea42fa42a88b24f5568"
     },
     ".claude/skills/ticket/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "c4c35ac9e4d4f29971adc0bccdb836a0a5e5f58d032040e7db72e29b2a7f8959"
     },
     ".claude/skills/upstream/SKILL.md": {
       "kind": "file",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "0293fd7cfc57836a43a8c9804ae3b13d64eb760d9e4b68f02ce4b040bb10c15f"
     },
     "AGENTS.md#agent-os": {
       "kind": "block",
-      "version": "0.0.0",
-      "sha256": "96391fd842cda2c63fb6165ef80c4d4444fe336ef45ddbfa4afa6f99f1bdeab3"
+      "version": "0.1.1",
+      "sha256": "113dcb4012fae64c35a570ebadbc56e14f0e9088fa2a8f85447847f1ea1a8bdc"
     },
     "CLAUDE.md#agent-os": {
       "kind": "block",
-      "version": "0.0.0",
+      "version": "0.1.1",
       "sha256": "918b1c90559355ef78f33fdf3562f2b021ef8bdfd8a5c8415e5decd44934de55"
     }
   },

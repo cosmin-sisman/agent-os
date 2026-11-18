@@ -119,9 +119,20 @@ On a self-managed host (`platform.host` set), `/upstream` is off by default: it 
 | conflicts | managed files edited by hand: kept, never deleted; port or eject them first |
 | add | the new route's files (`.gitlab/…` or `.github/…`) |
 | rewrite | core files whose text depends on the platform (pull request ↔ merge request, `/pr` ↔ `/mr`) |
-| ci | on GitLab, `.gitlab-ci.yml` with an `include:` of each agent-os job file, when it is missing; otherwise the includes to add by hand |
+| ci | on GitLab, the managed `include` block in `.gitlab-ci.yml` (the same one install writes): the file is created when missing, the block goes into its `include:` list when there is one, and an `include:` it cannot complete is left to edit by hand |
 | manual | the team's own files under the old route's folders (such as `.github/workflows/ci.yml`), to port by hand |
 | config | `platform.type`, `platform.project`, `platform.host`, and `platform.board` dropped when leaving GitHub |
 | journal | references in journal entries to re-link from the importer's map (`{"#12": "#7", "#40": "!3"}`), and the ones the map lacks |
 
 It exits 1 while conflicts or the team's own files would leave something from the old route behind. Once they are handled, no file from the old route remains. Applying the plan (one branch, `chore/platform-switch-<to>`, and one change request on the new platform) is a later step.
+
+## GitLab: the include block
+
+GitLab runs only what `.gitlab-ci.yml` includes. On GitLab, agent-os installs its jobs as `.gitlab/agent-os-*.yml`, and wires each one into `.gitlab-ci.yml` through a managed block (`# agent-os:begin include` … `# agent-os:end include`). It never adds a second `include:` key:
+- **no `.gitlab-ci.yml`**: it is created with `include:` and the block;
+- **no `include:` in it**: an `include:` list with the block is added at the end;
+- **an `include:` list**, items indented by two spaces: the block goes at the top of that list, and the project's own includes, jobs and stages stay byte for byte;
+- **an `include:` written as a string, a map, or a list at another indentation**: nothing is written. The block is a conflict, and the `.rej` holds the lines to add by hand.
+
+An update replaces only the lines between the markers. Turning a job off (`ci.loop`, `ci.gate`, `ci.retro`, `ci.labels`, `ci.securityWatch`, `artifacts.pages`) removes its line.
+

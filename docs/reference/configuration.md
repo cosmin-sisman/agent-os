@@ -144,6 +144,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `ci.labels` | team | boolean | `false` | Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels) |
 | `ci.securityWatch` | team | string: `off`, `daily`, `weekly` | `"off"` | Install the scheduled job that keeps the Security digest issue current |
 | `ci.labelsEnvironment` | team | string |  | GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret) |
+| `milestones` | team | object | `{}` | Milestones agent-os manages |
+| `milestones.rolling` | team | boolean | `true` | Keep a rolling "Stage 0 - Release N" milestone: setup creates it and release finish closes and opens it. Turn it off when the project plans with its own milestones (v0.x) |
 | `adoption` | team | object | `{}` | Adoption mode for projects new to agent-os |
 | `adoption.warnOnlyUntil` | team | string |  | Until this date (YYYY-MM-DD) guards only warn instead of refusing |
 | `adoption.cutoff` | team | string |  | Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD) |

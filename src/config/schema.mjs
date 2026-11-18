@@ -133,6 +133,9 @@ export const SCHEMA = obj({
     securityWatch: oneOf(['off', 'daily', 'weekly'], 'Install the scheduled job that keeps the Security digest issue current', { default: 'off' }),
     labelsEnvironment: str('GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret)'),
   }, 'How generated CI jobs run: image and runners', { default: {} }),
+  milestones: obj({
+    rolling: bool('Keep a rolling "Stage 0 - Release N" milestone: setup creates it and release finish closes and opens it. Turn it off when the project plans with its own milestones (v0.x)', { default: true }),
+  }, 'Milestones agent-os manages', { default: {} }),
   adoption: obj({
     warnOnlyUntil: str('Until this date (YYYY-MM-DD) guards only warn instead of refusing', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
     cutoff: str('Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD)', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),

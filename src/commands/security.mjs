@@ -15,14 +15,20 @@ import { securityPass } from '../security/pass.mjs'
 import { changedFiles } from '../gate/gate.mjs'
 import { systemGit } from '../workflow/start.mjs'
 import { EXERCISES, exercise, refreshThreatModel } from '../security/threats.mjs'
+import { reportSpec } from '../security/report.mjs'
+import { readFileSync, existsSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 
-export const usage = 'agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--report <sarif|gitleaks.json>…]   ·   threat-model [--force] [--dry-run]   ·   exercise [<name>]'
+export const usage = 'agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--report <sarif|gitleaks.json>…]   ·   threat-model [--force] [--dry-run]   ·   exercise [<name>]   ·   report --title <t> --body-file <f> [--severity low|medium|high|critical] [--dry-run]'
 
 export const options = {
   issue: { type: 'boolean', description: 'watch: create or update the one Security digest issue' },
   base: { type: 'string', description: 'pass: the branch to compare with (default branches.integration)' },
   report: { type: 'string', multiple: true, description: 'pass: a scanner report to read (SARIF, gitleaks JSON); adds to security.reports' },
   force: { type: 'boolean', description: 'threat-model: regenerate even when it is current' },
+  title: { type: 'string', description: 'report: the vulnerability in a few words' },
+  'body-file': { type: 'string', description: 'report: the details (what, where, how to reproduce, impact)' },
+  severity: { type: 'string', description: 'report: low, medium, high or critical' },
 }
 
 /** @param {import('../cli/context.mjs').Context} ctx */
@@ -30,6 +36,17 @@ export async function run(ctx) {
   const [action] = ctx.positionals
   const { merged } = loadConfig(ctx.cwd)
   if (action === 'pass') return pass(ctx, merged)
+  if (action === 'report') {
+    // A vulnerability goes to the platform's private channel, never a public issue (#111).
+    const body = ctx.values['body-file'] ? readFileSync(resolve(ctx.cwd, ctx.values['body-file']), 'utf8') : ''
+    const pkgFile = join(ctx.cwd, 'package.json')
+    const pkgName = existsSync(pkgFile) ? (() => { try { return JSON.parse(readFileSync(pkgFile, 'utf8')).name } catch { return null } })() : null
+    const spec = reportSpec({ title: ctx.values.title, body, severity: ctx.values.severity, pkg: pkgName ? { ecosystem: 'npm', name: pkgName } : null })
+    const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
+    const r = tracker.reportVulnerability(spec, { dryRun: ctx.dryRun })
+    ctx.output(r, r.dryRun ? `would report it privately as a ${r.channel}; nothing public` : `reported privately as a ${r.channel}${r.id ? ` (${r.id})` : ''}${r.url ? `: ${r.url}` : ''}. Fix it on a private fork or branch; publish the advisory with the fix.`)
+    return EXIT.OK
+  }
   if (action === 'threat-model') {
     const r = refreshThreatModel(ctx.cwd, { lang: languageFor(merged, 'docs'), now: ctx.io.now ?? new Date(), dryRun: ctx.dryRun, force: ctx.values.force })
     const verb = { current: 'is current', create: 'would be created', refresh: 'would be refreshed', created: 'created', refreshed: 'refreshed from stack.yaml' }[r.action]
