@@ -40,6 +40,12 @@ export class GitHubTracker {
     return (this.gh.rest('GET', `repos/${this.repo}/issues/${number}/dependencies/blocked_by?per_page=100`) ?? []).map((i) => ({ number: i.number, title: i.title, state: i.state }))
   }
 
+  /** Issues matching a search query (title and body, open and closed), most relevant first. */
+  search(query, { limit = 20 } = {}) {
+    const q = encodeURIComponent(`repo:${this.repo} is:issue ${query}`)
+    return (this.gh.rest('GET', `search/issues?q=${q}&per_page=${limit}`)?.items ?? []).map((i) => ({ number: i.number, title: i.title, state: i.state, body: i.body ?? '', url: i.html_url }))
+  }
+
   /** Open and closed issue counts per milestone (or one milestone by title). */
   progress(milestone) {
     const all = this.milestones()
@@ -131,6 +137,23 @@ export class GitHubTracker {
       if (ALREADY.test(err.output ?? err.message)) return { ...result, created: false, note: 'already linked' }
       throw err
     }
+  }
+
+  /** Adds a comment to an issue. */
+  comment(number, body, { dryRun = false } = {}) {
+    const request = { method: 'POST', path: `repos/${this.repo}/issues/${number}/comments`, body: { body } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    const c = this.gh.rest(request.method, request.path, request.body)
+    return { number, comment: c?.html_url ?? null }
+  }
+
+  /** Appends a line to an issue's body (used by fallbacks such as "Blocked by #N"). */
+  appendToBody(number, line, { dryRun = false } = {}) {
+    if (dryRun) return { dryRun: true, requests: [{ method: 'PATCH', path: `repos/${this.repo}/issues/${number}`, body: { body: `<current body>\n${line}` } }] }
+    const current = this.gh.rest('GET', `repos/${this.repo}/issues/${number}`)?.body ?? ''
+    if (current.split('\n').includes(line)) return { number, unchanged: true }
+    this.gh.rest('PATCH', `repos/${this.repo}/issues/${number}`, { body: `${current}${current.endsWith('\n') || !current ? '' : '\n'}${line}` })
+    return { number, appended: line }
   }
 
   /** Adds assignees. */
