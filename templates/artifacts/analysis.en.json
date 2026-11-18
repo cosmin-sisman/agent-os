@@ -1,0 +1,24 @@
+{
+  "kind": "analysis",
+  "lang": "en",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Question",
+      "items": []
+    },
+    {
+      "heading": "Options",
+      "cards": []
+    },
+    {
+      "heading": "Findings",
+      "items": []
+    },
+    {
+      "heading": "Recommendation",
+      "items": []
+    }
+  ]
+}

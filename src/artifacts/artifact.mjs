@@ -5,6 +5,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { CliError } from '../cli/errors.mjs'
 import { parse } from '../yaml/yaml.mjs'
 import { LANGUAGES } from '../i18n/i18n.mjs'
@@ -115,7 +116,14 @@ const q = (s) => JSON.stringify(String(s))
 const list = (xs) => `[${xs.map(q).join(', ')}]`
 
 /** Creates artifacts/<date>-<slug>/ with artifact.yaml (status draft) and the type's page. */
-export function newArtifact(root, { type, slug, title, kind, authors = [], refs = [], now = new Date(), dryRun = false }) {
+/** The package's page template and the data skeleton for a type, when there is one (templates/artifacts/). */
+export function templateFor(type, lang = 'en') {
+  const dir = fileURLToPath(new URL('../../templates/artifacts/', import.meta.url))
+  const data = join(dir, `${type}.${lang}.json`)
+  return existsSync(data) ? { page: readFileSync(join(dir, 'page.html'), 'utf8'), data: JSON.parse(readFileSync(data, 'utf8')) } : null
+}
+
+export function newArtifact(root, { type, slug, title, kind, authors = [], refs = [], now = new Date(), lang = 'en', data: given, dryRun = false }) {
   const t = oneOf('the type', type, TYPES)
   if (t) throw new CliError(t)
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug ?? '')) throw new CliError(`the slug must be lowercase words joined by hyphens, got "${slug ?? ''}"`, { hint: 'agent-os artifact new analysis auth-options' })
@@ -132,6 +140,20 @@ export function newArtifact(root, { type, slug, title, kind, authors = [], refs 
     `summary: ${q(`What this ${type} shows, in one sentence.`)}`,
     'languages: [en]', `authors: ${list(authors)}`, `refs: ${list(refs)}`, 'sources: []', '',
   ].join('\n')
+  // A type with a package template (#86) gets template.html and data.json, built into index.html from the data.
+  const tpl = templateFor(type, lang)
+  if (tpl) {
+    const data = given ?? { ...tpl.data, title: name, updated: now.toISOString().slice(0, 10) }
+    const dataText = `${JSON.stringify(data, null, 2)}\n`
+    const h = (t) => createHash('sha256').update(t).digest('hex')
+    const meta = yaml.replace('languages: [en]', `languages: [${lang}]`).replace('sources: []', `sources:\n  - path: ${folder}/data.json\n    sha256: "${h(dataText)}"\n  - path: ${folder}/template.html\n    sha256: "${h(tpl.page)}"`)
+    const files = { [`${folder}/artifact.yaml`]: meta, [`${folder}/template.html`]: tpl.page, [`${folder}/data.json`]: dataText }
+    if (!dryRun) {
+      mkdirSync(join(root, folder), { recursive: true })
+      for (const [p, c] of Object.entries(files)) writeFileSync(join(root, p), c)
+    }
+    return { id, folder, type, kind: k, files: [...Object.keys(files), `${folder}/index.html`], template: true, dryRun }
+  }
   const files = { [`${folder}/artifact.yaml`]: yaml, [`${folder}/index.html`]: scaffoldPage({ title: name, type }) }
   if (!dryRun) {
     mkdirSync(join(root, folder), { recursive: true })

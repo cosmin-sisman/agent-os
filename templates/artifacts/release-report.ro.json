@@ -1,0 +1,24 @@
+{
+  "kind": "release-report",
+  "lang": "ro",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Ce s-a livrat",
+      "items": []
+    },
+    {
+      "heading": "Reparatii",
+      "items": []
+    },
+    {
+      "heading": "Decizii",
+      "items": []
+    },
+    {
+      "heading": "Lectii",
+      "items": []
+    }
+  ]
+}

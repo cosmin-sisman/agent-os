@@ -8,6 +8,7 @@ import { buildArtifact, verifyArtifacts } from '../artifacts/build.mjs'
 import { buildSite, webUrlOf } from '../artifacts/site.mjs'
 import { vocabularyFor } from '../platform/vocabulary.mjs'
 import { linkArtifact } from '../artifacts/link.mjs'
+import { releaseData } from '../artifacts/release.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 import { languageFor } from '../i18n/i18n.mjs'
 import { loadConfig } from '../config/config.mjs'
@@ -17,7 +18,7 @@ import { systemGit } from '../workflow/start.mjs'
 import { ghClient } from '../tracker/gh.mjs'
 
 export const usage = [
-  `agent-os artifact new <${TYPES.join('|')}> <slug> [--title <t>] [--kind ${KINDS.join('|')}] [--author <login>…] [--ref <#N>…] [--dry-run]`,
+  `agent-os artifact new <${TYPES.join('|')}> <slug> [--title <t>] [--kind ${KINDS.join('|')}] [--author <login>…] [--ref <#N>…] [--from-journal [--since <date>] [--until <date>]] [--dry-run]`,
   'agent-os artifact list [--type <type>]   ·   check   ·   log <id>',
   'agent-os artifact build <id> | --living [--dry-run]   ·   verify [<id>] [--strict]   ·   site [<out>] [--strict]',
   'agent-os artifact link <id> <#N | !N> [--dry-run]   (a comment with the repository link first, in the thread language)',
@@ -29,6 +30,9 @@ export const options = {
   author: { type: 'string', multiple: true, description: 'new: an author login (default: your platform login)' },
   ref: { type: 'string', multiple: true, description: 'new: an issue, PR or decision it belongs to' },
   type: { type: 'string', description: 'list: only this type' },
+  'from-journal': { type: 'boolean', description: 'new release-report: fill it from the journal entries (with --since and --until)' },
+  since: { type: 'string', description: 'new --from-journal: entries from this date (YYYY-MM-DD)' },
+  until: { type: 'string', description: 'new --from-journal: entries up to this date' },
   living: { type: 'boolean', description: 'build: every living artifact made from a template (what CI rebuilds)' },
   strict: { type: 'boolean', description: 'verify, site: exit 1 when an artifact is stale' },
 }
@@ -42,8 +46,14 @@ export async function run(ctx) {
       if (!a || !b) throw new CliError('new needs a type and a slug', { hint: `usage: ${usage}` })
       let authors = v.author ?? []
       if (!authors.length) { try { const me = ghClient(ctx.io.gh).rest('GET', 'user')?.login; if (me) authors = [me] } catch { /* no login: no author */ } }
-      const r = newArtifact(ctx.cwd, { type: a, slug: b, title: v.title, kind: v.kind, authors, refs: v.ref ?? [], now: ctx.io.now ?? new Date(), dryRun: ctx.dryRun })
-      ctx.output(r, `${r.dryRun ? 'would create' : 'created'} ${r.folder}/ (${r.type}, ${r.kind}, draft): ${r.files.map((f) => f.split('/').pop()).join(', ')}. Fill in the page and the summary; status current when it is ready.`)
+      const { merged } = loadConfig(ctx.cwd)
+      const lang = languageFor(merged, 'docs')
+      const now = ctx.io.now ?? new Date()
+      if (v['from-journal'] && a !== 'release-report') throw new CliError('--from-journal builds a release-report', { hint: 'agent-os artifact new release-report <slug> --from-journal --since <date>' })
+      const data = v['from-journal'] ? releaseData(ctx.cwd, { since: v.since, until: v.until, lang, title: v.title ?? b, now }) : undefined
+      const r = newArtifact(ctx.cwd, { type: a, slug: b, title: v.title, kind: v.kind, authors, refs: v.ref ?? [], now, lang, data, dryRun: ctx.dryRun })
+      if (r.template && !ctx.dryRun) buildArtifact(ctx.cwd, r.id)
+      ctx.output(r, `${r.dryRun ? 'would create' : 'created'} ${r.folder}/ (${r.type}, ${r.kind}, draft): ${r.files.map((f) => f.split('/').pop()).join(', ')}. ${r.template ? 'Fill in data.json, then agent-os artifact build' : 'Fill in the page and the summary'}; status current when it is ready.`)
       return EXIT.OK
     }
     case 'list':

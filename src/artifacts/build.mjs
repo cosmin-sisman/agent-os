@@ -12,8 +12,8 @@ import { DIR, listArtifacts } from './artifact.mjs'
 const sha = (buf) => createHash('sha256').update(buf).digest('hex')
 const PLACEHOLDER = '__DATA__'
 
-/** JSON safe to embed in an HTML script element: ASCII only, and no "</" that could close it. */
-export const embedJson = (data) => JSON.stringify(data).replace(/[\u007f-￿]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`).replace(/<\//g, '<\\/')
+/** JSON safe to embed in an HTML script element: ASCII only, and no "<" at all, so nothing can close or confuse it. */
+export const embedJson = (data) => JSON.stringify(data).replace(/[\u007f-\uffff]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`).replace(/</g, '\\u003c')
 
 /** A page from a template: a full document stays as it is, a fragment gets the document skeleton. */
 export function pageFrom(template, data) {

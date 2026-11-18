@@ -31,6 +31,29 @@ agent-os artifact log <id>         # the folder's git history
 - **list** shows each artifact with its type, kind and status, its stale sources and its problems, newest first.
 - **log** lists commit, date, author and subject for the artifact's folder.
 
+## Templates
+
+`discovery`, `analysis`, `comparison`, `release-report` and `retro` come with a template. `artifact new` creates three files in the artifact folder:
+- `template.html`: one shared page that draws the data;
+- `data.json`: the type's sections in the docs language (en or ro), with the title filled in;
+- `index.html`: built at once from the other two.
+
+You fill in `data.json` and run `agent-os artifact build <id>`. The data has a `title`, a `subtitle` and `sections`. Each section has a `heading` plus any of `text`, `items`, `table` (`columns` and `rows`, cells may carry a `tone` of good, bad, warn or muted) and `cards` (`title`, `text`, `tag`).
+
+The page follows the light or dark theme and is self-contained, so every template passes the doctor artifact checks. **Data only ever reaches the page as text:** the renderer builds the page with `textContent`, never as HTML. The embedded JSON is ASCII with every `<` escaped, so no value can add markup, a script or a link. The other types (stack-map, architecture, dashboard, decision-support) start as a static page you write.
+
+```sh
+agent-os artifact new release-report v0-5-0 --title "Release 0.5.0" --from-journal --since 2026-11-01 --until 2026-11-18
+```
+
+`--from-journal` fills a release report from the journal entries in that range:
+- notes and releases go under What shipped;
+- incidents under Fixes;
+- decisions under Decisions;
+- lessons under Lessons.
+
+Each entry keeps its references and author.
+
 ## Build and verify
 
 ```sh

@@ -1,0 +1,31 @@
+{
+  "kind": "comparison",
+  "lang": "en",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Options",
+      "cards": []
+    },
+    {
+      "heading": "Criteria",
+      "items": []
+    },
+    {
+      "heading": "Comparison",
+      "table": {
+        "columns": [
+          "Criterion",
+          "Option A",
+          "Option B"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Verdict",
+      "items": []
+    }
+  ]
+}

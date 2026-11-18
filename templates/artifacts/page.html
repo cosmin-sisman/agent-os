@@ -1,0 +1,56 @@
+<title>Artifact</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--fg:#161a22;--muted:#5b6475;--line:#d9dde5;--accent:#3b5bdb;--good:#15803d;--bad:#b91c1c;--warn:#b45309}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--surface:#171b23;--fg:#e6e9ef;--muted:#9aa3b5;--line:#2a303c;--accent:#8ea2ff;--good:#4ade80;--bad:#f87171;--warn:#fbbf24;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:900px;margin:0 auto;padding:32px 16px}
+.kicker{color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.06em;font-size:.78rem}
+h1{margin:.2em 0 .2em;font-size:1.9rem}.lead{color:var(--muted);margin:0 0 20px}
+section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+h2{margin:0 0 .5em;font-size:1.15rem}p{margin:.4em 0}ul{margin:.4em 0;padding-left:20px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-top:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.card{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.tag{display:inline-block;font:600 11px ui-monospace,Consolas,monospace;padding:1px 6px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}.muted{color:var(--muted)}footer{color:var(--muted);font-size:.8rem;margin-top:24px}
+</style>
+<main id="page"></main>
+<script id="artifact-data" type="application/json">__DATA__</script>
+<script>
+// Renders the embedded data with DOM methods only: every value goes in through textContent, never as HTML, so the
+// data cannot add markup, scripts or links. Nothing is loaded from anywhere else.
+(function () {
+  var all = JSON.parse(document.getElementById('artifact-data').textContent)
+  var d = all.data || {}
+  var lang = d.lang === 'ro' ? 'ro' : 'en'
+  var words = { en: { updated: 'Updated', none: 'Nothing yet.' }, ro: { updated: 'Actualizat', none: 'Nimic inca.' } }[lang]
+  var root = document.getElementById('page')
+  document.documentElement.lang = lang
+  if (d.title) document.title = String(d.title)
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined && text !== null) e.textContent = String(text); return e }
+  var TONES = { good: 1, bad: 1, warn: 1, muted: 1 }
+  root.appendChild(el('div', 'kicker', d.kind || ''))
+  root.appendChild(el('h1', null, d.title || ''))
+  if (d.subtitle) root.appendChild(el('p', 'lead', d.subtitle))
+  ;(d.sections || []).forEach(function (s) {
+    var sec = el('section')
+    sec.appendChild(el('h2', null, s.heading || ''))
+    ;(Array.isArray(s.text) ? s.text : s.text ? [s.text] : []).forEach(function (t) { sec.appendChild(el('p', null, t)) })
+    if (s.items) { var ul = el('ul'); s.items.forEach(function (i) { ul.appendChild(el('li', null, typeof i === 'object' ? (i.text || '') : i)) }); sec.appendChild(ul) }
+    if (s.table && s.table.columns) {
+      var t = el('table'); var hr = el('tr')
+      s.table.columns.forEach(function (c) { hr.appendChild(el('th', null, c)) }); t.appendChild(hr)
+      ;(s.table.rows || []).forEach(function (r) { var tr = el('tr'); r.forEach(function (c) { var cell = c && typeof c === 'object' ? c : { text: c }; tr.appendChild(el('td', TONES[cell.tone] ? cell.tone : null, cell.text)) }); t.appendChild(tr) })
+      sec.appendChild(t)
+    }
+    if (s.cards) {
+      var g = el('div', 'cards')
+      s.cards.forEach(function (c) { var card = el('div', 'card'); if (c.tag) card.appendChild(el('span', 'tag', c.tag)); card.appendChild(el('h3', null, c.title || '')); if (c.text) card.appendChild(el('p', 'muted', c.text)); g.appendChild(card) })
+      sec.appendChild(g)
+    }
+    var has = function (x) { return Array.isArray(x) ? x.length > 0 : Boolean(x) }
+    if (!has(s.text) && !has(s.items) && !(s.table && has(s.table.rows)) && !has(s.cards)) sec.appendChild(el('p', 'muted', words.none))
+    root.appendChild(sec)
+  })
+  if (d.updated) root.appendChild(el('footer', null, words.updated + ': ' + d.updated))
+})()
+</script>
