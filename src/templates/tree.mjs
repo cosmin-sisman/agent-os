@@ -91,7 +91,10 @@ export function renderTree(dir, config) {
     if (g.plain && variants.length) throw new TemplateError(`${g.out} has both a plain file and language variants; keep one kind`, { file: g.plain, line: 1, col: 1 })
     if (!variants.length) {
       const source = readFileSync(join(dir, g.plain), 'utf8')
-      results.push({ path: outPath(g.out, g.plain), content: render(source, context, { file: g.plain, format: formatFor(g.out) }), area: source.match(AREA_DECL)?.[1] ?? null, lang: null })
+      const content = render(source, context, { file: g.plain, format: formatFor(g.out) })
+      // A template that renders to nothing (all of it inside a false {{#if}}) is an optional file: not installed.
+      if (!content.trim()) continue
+      results.push({ path: outPath(g.out, g.plain), content, area: source.match(AREA_DECL)?.[1] ?? null, lang: null })
       continue
     }
     const areas = new Set()

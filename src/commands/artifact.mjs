@@ -5,6 +5,9 @@
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { TYPES, KINDS, artifactLog, listArtifacts, newArtifact } from '../artifacts/artifact.mjs'
 import { buildArtifact, verifyArtifacts } from '../artifacts/build.mjs'
+import { buildSite, webUrlOf } from '../artifacts/site.mjs'
+import { vocabularyFor } from '../platform/vocabulary.mjs'
+import { loadConfig } from '../config/config.mjs'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { systemGit } from '../workflow/start.mjs'
@@ -13,7 +16,7 @@ import { ghClient } from '../tracker/gh.mjs'
 export const usage = [
   `agent-os artifact new <${TYPES.join('|')}> <slug> [--title <t>] [--kind ${KINDS.join('|')}] [--author <login>…] [--ref <#N>…] [--dry-run]`,
   'agent-os artifact list [--type <type>]   ·   check   ·   log <id>',
-  'agent-os artifact build <id> | --living [--dry-run]   ·   verify [<id>] [--strict]',
+  'agent-os artifact build <id> | --living [--dry-run]   ·   verify [<id>] [--strict]   ·   site [<out>] [--strict]',
 ].join('\n       ')
 
 export const options = {
@@ -23,7 +26,7 @@ export const options = {
   ref: { type: 'string', multiple: true, description: 'new: an issue, PR or decision it belongs to' },
   type: { type: 'string', description: 'list: only this type' },
   living: { type: 'boolean', description: 'build: every living artifact made from a template (what CI rebuilds)' },
-  strict: { type: 'boolean', description: 'verify: exit 1 when an artifact is stale' },
+  strict: { type: 'boolean', description: 'verify, site: exit 1 when an artifact is stale' },
 }
 
 /** @param {import('../cli/context.mjs').Context} ctx */
@@ -70,6 +73,15 @@ export async function run(ctx) {
       const lines = r.artifacts.map((x) => `${x.id}  ${x.kind ?? '?'}  ${x.stale.length ? `STALE: ${x.stale.join(', ')} changed; ${x.buildable ? `agent-os artifact build ${x.id}` : 'update the page and its source hashes'}${x.kind === 'snapshot' ? ' (a snapshot: a new date is a new artifact)' : ''}` : 'sources verified'}`)
       ctx.output(r, lines.join('\n') || 'no artifacts')
       return v.strict && !r.ok ? EXIT.CHECK_FAILED : EXIT.OK
+    }
+    case 'site': {
+      const { merged } = loadConfig(ctx.cwd)
+      const out = a ?? '.agent-os/cache/site'
+      if (ctx.dryRun) { const all = listArtifacts(ctx.cwd); ctx.output({ dryRun: true, out, artifacts: all.length }, `would build the site into ${out}/ with ${all.length} artifact(s)`); return EXIT.OK }
+      const r = buildSite(ctx.cwd, out, { title: merged.platform?.project ? `${merged.platform.project} artifacts` : 'Artifacts', webUrl: webUrlOf(merged), vocab: vocabularyFor(merged.platform?.type) })
+      const stale = r.items.filter((x) => x.stale.length)
+      ctx.output({ out, artifacts: r.items.map((x) => x.folder), stale: stale.map((x) => x.folder), skipped: r.skipped }, `site: ${r.items.length} artifact(s), ${stale.length} stale${r.skipped.length ? `, ${r.skipped.length} skipped for invalid metadata (${r.skipped.join(', ')})` : ''} → ${out}/`)
+      return v.strict && (stale.length || r.skipped.length) ? EXIT.CHECK_FAILED : EXIT.OK
     }
     default: throw new CliError(action ? `unknown action "${action}"` : 'which action?', { hint: `usage: ${usage}` })
   }

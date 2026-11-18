@@ -71,7 +71,7 @@ test('list shows each artifact with its problems and stale sources; check fails 
     writeFileSync(join(cwd, 'data.csv'), 'a,b\n')
     await cli(cwd, ['artifact', 'new', 'comparison', 'queues'])
     const file = join(cwd, 'artifacts/2026-11-18-queues/artifact.yaml')
-    writeFileSync(file, readFileSync(file, 'utf8').replace('sources: []', `sources:\n  - path: data.csv\n    sha256: ${'0'.repeat(64)}`))
+    writeFileSync(file, readFileSync(file, 'utf8').replace('sources: []', `sources:\n  - path: data.csv\n    sha256: "${'0'.repeat(64)}"`))
     mkdirSync(join(cwd, 'artifacts/2026-11-17-broken'))
     writeFileSync(join(cwd, 'artifacts/2026-11-17-broken/artifact.yaml'), 'id: 2026-11-17-other\ntitle: "B"\ntype: retro\nkind: snapshot\nstatus: draft\nsummary: "S"\n')
     const all = listArtifacts(cwd)

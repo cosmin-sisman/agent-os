@@ -42,7 +42,7 @@ test('every kind of external load is found; links, data URIs and relative paths 
 test('invalid metadata fails; unknown refs, an oversized page and stale sources warn; a clean artifact is ok', () => {
   const cwd = repo({
     '2026-11-18-bad': { meta: META('2026-11-17-other'), html: '<p>x</p>' },
-    '2026-11-18-refs': { meta: META('2026-11-18-refs', 'refs: ["#12", "!3", "2026-01-01-nope", "JIRA-7"]\nsources:\n  - path: gone.csv\n    sha256: ' + '0'.repeat(64) + '\n'), html: `<p>${'x'.repeat(20 * 1024)}</p>` },
+    '2026-11-18-refs': { meta: META('2026-11-18-refs', 'refs: ["#12", "!3", "2026-01-01-nope", "JIRA-7"]\nsources:\n  - path: gone.csv\n    sha256: "' + '0'.repeat(64) + '"\n'), html: `<p>${'x'.repeat(20 * 1024)}</p>` },
     '2026-11-18-nopage': {},
   })
   try {

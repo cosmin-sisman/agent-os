@@ -14,7 +14,7 @@ export const DIR = 'artifacts'
 export const TYPES = ['discovery', 'analysis', 'stack-map', 'comparison', 'decision-support', 'release-report', 'retro', 'architecture', 'dashboard']
 export const KINDS = ['snapshot', 'living']
 export const STATUSES = ['draft', 'current', 'stale', 'superseded']
-export const KEYS = ['id', 'title', 'type', 'kind', 'status', 'summary', 'languages', 'authors', 'refs', 'build', 'sources']
+export const KEYS = ['id', 'title', 'type', 'kind', 'status', 'summary', 'languages', 'authors', 'refs', 'areas', 'build', 'sources']
 const ID = /^(\d{4})-(\d{2})-(\d{2})-[a-z0-9]+(-[a-z0-9]+)*$/
 const LIVING = new Set(['stack-map', 'dashboard'])
 
@@ -33,7 +33,7 @@ export function validateArtifact(meta, folder) {
   for (const k of ['title', 'summary']) if (typeof meta[k] !== 'string' || !meta[k].trim()) out.push(`${k} is required`)
   for (const [k, list] of [['type', TYPES], ['kind', KINDS], ['status', STATUSES]]) { const p = oneOf(k, meta[k], list); if (p) out.push(p) }
   if (meta.languages !== undefined && !(strings(meta.languages) && meta.languages.every((l) => LANGUAGES.includes(l)))) out.push(`languages must be a list of ${LANGUAGES.join(', ')}`)
-  for (const k of ['authors', 'refs']) if (meta[k] !== undefined && !strings(meta[k])) out.push(`${k} must be a list of strings`)
+  for (const k of ['authors', 'refs', 'areas']) if (meta[k] !== undefined && !strings(meta[k])) out.push(`${k} must be a list of strings`)
   if (meta.build !== undefined && typeof meta.build !== 'string') out.push('build must be a string')
   if (meta.sources !== undefined) {
     if (!Array.isArray(meta.sources)) out.push('sources must be a list')

@@ -4,8 +4,8 @@
 /** @param {'github' | 'gitlab'} type */
 export function vocabularyFor(type = 'github') {
   return type === 'gitlab'
-    ? { platform: 'GitLab', changeRequest: 'merge request', changeRequests: 'merge requests', cr: 'MR', crSkill: 'mr', crRef: '!', issueRef: '#', epicRef: '&', cli: 'glab', templatesDir: '.gitlab' }
-    : { platform: 'GitHub', changeRequest: 'pull request', changeRequests: 'pull requests', cr: 'PR', crSkill: 'pr', crRef: '#', issueRef: '#', epicRef: '#', cli: 'gh', templatesDir: '.github' }
+    ? { platform: 'GitLab', changeRequest: 'merge request', changeRequests: 'merge requests', cr: 'MR', crSkill: 'mr', crRef: '!', issueRef: '#', epicRef: '&', cli: 'glab', templatesDir: '.gitlab', host: 'https://gitlab.com', crPath: 'merge_requests' }
+    : { platform: 'GitHub', changeRequest: 'pull request', changeRequests: 'pull requests', cr: 'PR', crSkill: 'pr', crRef: '#', issueRef: '#', epicRef: '#', cli: 'gh', templatesDir: '.github', host: 'https://github.com', crPath: 'pull' }
 }
 
 /** Skill aliases per platform: the alias name and the skill it stands for. */
