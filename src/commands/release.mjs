@@ -77,7 +77,8 @@ async function flow(ctx, action) {
     try { author = ghClient(ctx.io.gh).rest('GET', 'user')?.login ?? author } catch { /* default */ }
     const r = openRelease(deps, { version: v.version, author, now: ctx.io.now ?? new Date(), dryRun: ctx.dryRun })
     if (r.problems) { ctx.output(r, `not opened:\n${r.problems.map((p) => `  - ${p}`).join('\n')}`); return EXIT.CHECK_FAILED }
-    ctx.output(r, r.dryRun ? `would:\n${r.steps.map((s) => `  ${s}`).join('\n')}` : `${r.updated ? 'updated' : 'opened'} ${vocab.cr} ${vocab.crRef}${r.changeRequest.number}: ${r.changeRequest.url ?? ''}`)
+    ctx.output(r, r.dryRun ? `would:\n${r.steps.map((s) => `  ${s}`).join('\n')}` : [`${r.updated ? 'updated' : 'opened'} ${vocab.cr} ${vocab.crRef}${r.changeRequest.number}: ${r.changeRequest.url ?? ''}`, ...(r.conflicts ? [`it CONFLICTS with ${merged.branches.production}: the platform runs no checks on it until the conflicts are resolved. Merge origin/${merged.branches.production} into ${r.plan.branch}, resolve, push, then run release open again`] : [])].join('\n'))
+    if (r.conflicts) return EXIT.CHECK_FAILED
     return EXIT.OK
   }
   const r = finishRelease(deps, { version: v.version, hotfix: v.hotfix, accept: v.accept ?? [], now: ctx.io.now ?? new Date(), probe: ctx.io.probe ?? systemProbe(ctx.io.env), exec: ctx.io.exec, dryRun: ctx.dryRun })

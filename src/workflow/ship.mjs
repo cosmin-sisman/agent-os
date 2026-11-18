@@ -62,6 +62,17 @@ const TEXT = {
 }
 
 const ok = (r) => r.status === 0
+/**
+ * A sync brings production (or a release or hotfix branch) back into integration. It is always merged with a merge
+ * commit, whatever branches.mergeMethod says: a squash would leave production's history out of integration, and
+ * the next release would conflict (#240).
+ */
+export function isSync(s, config) {
+  const { integration = 'development', production = 'main' } = config.branches ?? {}
+  if (s.base !== integration) return false
+  return String(s.body ?? '').includes('<!-- agent-os:sync -->') || s.branch === production || /^(release|hotfix)\//.test(s.branch ?? '')
+}
+const methodFor = (s, config) => (isSync(s, config) ? 'merge' : config.branches.mergeMethod ?? 'squash')
 /** A synchronous pause: ship is synchronous, and the wait is short and bounded. */
 const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
 /** How long to watch referenced issues after the merge: a branch linked to an issue closes it a moment later (#232). */
@@ -88,14 +99,14 @@ export function ship({ config, tracker, caps, git, vocab, sleep = pause }, { num
   const before = new Map(refs.map((n) => [n, tracker.get(n).state]))
   const t = TEXT[issuesLang] ?? TEXT.en
   const steps = [
-    `merge ${cr} into ${s.base} (${config.branches.mergeMethod ?? 'squash'}, head ${String(s.head).slice(0, 7)})`,
+    `merge ${cr} into ${s.base} (${methodFor(s, config)}${isSync(s, config) ? ': a sync is never squashed' : ''}, head ${String(s.head).slice(0, 7)})`,
     ...closes.map((n) => `close #${n} with a comment${has(caps, 'board') ? ' and set it to Done' : ''}`),
     ...refs.map((n) => `comment on #${n}${before.get(n) === 'closed' ? ' (already closed)' : '; it stays open'}`),
     ...(keepBranch || s.fork ? [] : [`delete the branch ${s.branch}`]),
   ]
   if (dryRun) return { shipped: false, dryRun: true, number, steps, closes, refs }
 
-  const merged = tracker.mergePullRequest(number, { method: config.branches.mergeMethod ?? 'squash', sha: s.head, title: s.title })
+  const merged = tracker.mergePullRequest(number, { method: methodFor(s, config), sha: s.head, title: s.title })
   if (!merged.merged) throw new CliError(`${cr} was not merged`, { hint: 'agent-os pr status' })
   const issues = []
   for (const n of closes) {

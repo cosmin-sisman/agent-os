@@ -21,6 +21,8 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const ok = (r) => r.status === 0
+/** Marks the change request release finish opens to bring production back into integration (#240). */
+export const SYNC_MARKER = '<!-- agent-os:sync -->'
 const out = (r) => (ok(r) ? r.stdout.trim() : null)
 const must = (git, args) => { const r = git(args); if (!ok(r)) throw new CliError(`git ${args.join(' ')} failed: ${(r.stderr || r.stdout).trim().split('\n')[0]}`); return r.stdout.trim() }
 
@@ -136,8 +138,13 @@ const checked = (body, id) => new RegExp(`^\\s*[-*]\\s+\\[[xX]\\]\\s+${id.replac
 export function openRelease(deps, { version, author = 'agent-os', now = new Date(), dryRun = false }) {
   const { git, tracker, cwd, config, vocab } = deps
   const plan = planRelease(deps, { version })
-  if (plan.problems.length) return { opened: false, plan, problems: plan.problems }
   const { integration, production } = config.branches
+  // The release branch must start from a descendant of production, or its change request conflicts and the platform
+  // runs no checks on it (#240): a squashed or missing sync is caught here, with the fix.
+  if (!ok(git(['merge-base', '--is-ancestor', `origin/${production}`, `origin/${integration}`]))) {
+    plan.problems.push(`${production} is not an ancestor of ${integration}: the last release was not synced back with a merge commit, so the release ${vocab.changeRequest} would conflict. Open a ${vocab.changeRequest} from ${production} into ${integration} and merge it with a merge commit (agent-os ship merges syncs that way), then run release open again`)
+  }
+  if (plan.problems.length) return { opened: false, plan, problems: plan.problems }
   const body = releaseBody(plan, vocab)
   const existing = tracker.findPullRequest({ head: plan.branch, base: production })
   const remote = ok(git(['rev-parse', '--verify', '--quiet', `refs/remotes/origin/${plan.branch}`]))
@@ -162,7 +169,10 @@ export function openRelease(deps, { version, author = 'agent-os', now = new Date
     } finally { git(['switch', start]) }
   }
   const cr = existing ? { ...tracker.updatePullRequest(existing.number, { title: plan.title, body }), number: existing.number } : tracker.createPullRequest({ title: plan.title, body, head: plan.branch, base: production })
-  return { opened: true, plan, steps, changeRequest: { number: cr.number, url: cr.url ?? existing?.url ?? null }, updated: Boolean(existing) }
+  // A conflicting change request gets no checks at all on GitHub: say so instead of leaving it silent.
+  let conflicts = false
+  try { conflicts = tracker.pullRequestStatus(cr.number)?.mergeable === 'CONFLICTING' } catch { /* status unknown yet: nothing to report */ }
+  return { opened: true, plan, steps, changeRequest: { number: cr.number, url: cr.url ?? existing?.url ?? null }, updated: Boolean(existing), conflicts }
 }
 
 /**
@@ -224,8 +234,11 @@ export function finishRelease(deps, { version, hotfix = false, accept = [], now 
   const env = checkEnvironment(config, { cwd, probe: probe ?? systemProbe(process.env), mode: 'ci' })
   const suites = Object.keys(config.gate ?? {}).filter((s) => s.startsWith('release:'))
   const checks = runSuites(config, suites, { cwd, exec })
-  const syncHead = hotfix ? production : plan.branch
+  // The sync comes from production itself: only that brings its release merge commit into integration, so the next
+  // release branch starts from a descendant of production and does not conflict (#240). ship merges it with a merge
+  // commit, never squashed; the marker tells it this is a sync.
+  const syncHead = production
   const existingSync = tracker.findPullRequest({ head: syncHead, base: integration })
-  const sync = existingSync ?? tracker.createPullRequest({ title: `chore(release): sync ${plan.tag} into ${integration}`, body: `## What\n\nBrings ${syncHead} (${plan.tag}) back into ${integration}: the changelog entry, the release journal entry${hotfix ? ' and the hotfix' : ''}.\n\n## Why\n\nThe release (${plan.tag}) is on ${production}; ${integration} must not fall behind it.\n\n## How it was tested\n\nThe release checks ran after tagging.\n\n## Lessons\n\nNone: the release sync.`, head: syncHead, base: integration })
+  const sync = existingSync ?? tracker.createPullRequest({ title: `chore(release): sync ${plan.tag} into ${integration}`, body: `${SYNC_MARKER}\n## What\n\nBrings ${production} (${plan.tag}) back into ${integration}: the release merge commit, the changelog entry, the release journal entry${hotfix ? ' and the hotfix' : ''}.\n\n## Why\n\nThe release (${plan.tag}) is on ${production}; ${integration} must contain it, or the next release conflicts. Merge it with a merge commit (agent-os ship does), never squashed.\n\n## How it was tested\n\nThe release checks ran after tagging.\n\n## Lessons\n\nNone: the release sync.`, head: syncHead, base: integration })
   return { released: true, plan, sha, tag, release, milestone: { closed: rolled, opened: next.title }, checks: { env: env.summary, suites: checks.map((s) => ({ name: s.name, passed: s.passed })) }, sync: { number: sync.number, url: sync.url ?? null, existed: Boolean(existingSync) } }
 }

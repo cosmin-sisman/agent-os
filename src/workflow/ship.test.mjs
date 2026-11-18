@@ -1,7 +1,7 @@
 // Tests for /ship: readiness (checks, review, behind, Before merge), Closes vs Refs after the merge, and clean-up.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readiness, ship, uncheckedBeforeMerge } from './ship.mjs'
+import { isSync, readiness, ship, uncheckedBeforeMerge } from './ship.mjs'
 import { vocabularyFor } from '../platform/vocabulary.mjs'
 
 const CONFIG = { branches: { integration: 'development', production: 'main', requiredChecks: ['ci'], requiredApprovals: 0, mergeMethod: 'squash' } }
@@ -81,6 +81,19 @@ test('given a referenced issue the platform closes a moment after the merge, shi
   sleeps.length = 0
   run(fakeTracker({ s: status({ body: 'Closes #4\n\n## Lessons\n\nNone: x.\n' }) }))
   assert.equal(sleeps.length, 0, 'no wait without referenced issues')
+})
+
+test('given a sync pull request and mergeMethod squash, ship merges it with a merge commit', () => {
+  const body = '<!-- agent-os:sync -->\n## What\n\nBrings main back.\n\n## Lessons\n\nNone: the release sync.\n'
+  for (const s of [status({ branch: 'main', base: 'development', body }), status({ branch: 'release/0.2.0', base: 'development', body: 'x\n\n## Lessons\n\nNone: sync.\n' }), status({ branch: 'chore/x', base: 'development', body })]) {
+    const t = fakeTracker({ s })
+    run(t)
+    assert.equal(t.calls.find((c) => c[0] === 'merge')[2].method, 'merge', `${s.branch}: a sync is never squashed`)
+  }
+  const t = fakeTracker()
+  run(t)
+  assert.equal(t.calls.find((c) => c[0] === 'merge')[2].method, 'squash', 'a feature still follows mergeMethod')
+  assert.equal(isSync(status({ branch: 'release/0.2.0', base: 'main' }), CONFIG), false, 'a release into production is not a sync')
 })
 
 test('an issue the platform already closed is not closed twice, but still gets the comment', () => {
