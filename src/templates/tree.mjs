@@ -5,6 +5,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { render, formatFor, TemplateError } from './engine.mjs'
 import { AREAS, LANGUAGES, languageFor, labelSet } from '../i18n/i18n.mjs'
+import { slotsFor } from '../registry/slots.mjs'
 import { vocabularyFor } from '../platform/vocabulary.mjs'
 
 const VARIANT = new RegExp(`^(.*)\\.(${LANGUAGES.join('|')})(\\.[^./]+)$`)
@@ -27,6 +28,7 @@ export function buildContext(config) {
     ...config,
     pack: Object.fromEntries((config.packs ?? []).map((p) => [p, true])),
     lang: Object.fromEntries(AREAS.map((a) => [a.id, languageFor(config, a.id)])),
+    slots: slotsFor(config),
     labels,
     vocab: vocabularyFor(config.platform?.type),
     // CI expressions such as ${{ secrets.GITHUB_TOKEN }} use the same braces as templates: write {{{expr.open}}} … {{{expr.close}}}.

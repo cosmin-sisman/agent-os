@@ -9,6 +9,7 @@ import { AREAS } from '../i18n/i18n.mjs'
 import { installRoutes } from '../managed/install.mjs'
 import { runDoctor } from '../doctor/doctor.mjs'
 import { addEntry } from '../journal/journal.mjs'
+import { SLOT_DEFAULTS } from '../registry/slots.mjs'
 
 export const TEAM_IGNORES = [...GITIGNORE_ENTRIES, '.claude/settings.local.json', '.claude/worktrees/']
 const DAY = 86400e3
@@ -34,6 +35,8 @@ export function buildConfig(a) {
     branches: { integration: a.integration, production: a.production, requiredApprovals: a.team ? 1 : 0 },
     languages,
     gate: suggestGate(a.cwd),
+    // Every slot written out, bound or explicitly empty, so the choice is visible and swapping is one line (#40).
+    slots: { ...SLOT_DEFAULTS },
     adoption: { warnOnlyUntil: new Date(now.getTime() + 14 * DAY).toISOString().slice(0, 10), ...(a.methodology === 'forward-only' ? { cutoff: now.toISOString().slice(0, 10) } : {}) },
   }
   const local = { languages: { chat: a.chat } }

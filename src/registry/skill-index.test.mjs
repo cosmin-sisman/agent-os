@@ -24,15 +24,14 @@ test('three tables: core from the install, external (with plugin and builtin), l
   try {
     skill(cwd, 'impeccable', 'Reviews UI design. Long details follow.')
     registerSkill(cwd, { name: 'impeccable', origin: 'external', source: 'github:pbakaus/impeccable@4f2a9c1', version: '4.5.0', provides: ['ui-design'] })
-    registerSkill(cwd, { name: 'code-review', origin: 'builtin', provides: ['review'] })
     skill(cwd, 'deploy', 'Deploys to staging.')
     registerSkill(cwd, { name: 'deploy', origin: 'local' })
     const i = skillIndex(cwd)
     assert.ok(i.core.some((r) => r.name === 'start' && /^Start work on an issue/.test(r.description)))
-    assert.deepEqual(i.external.map((r) => [r.name, r.origin]), [['code-review', 'builtin'], ['impeccable', 'external']])
+    assert.deepEqual(i.external.map((r) => [r.name, r.origin]), [['code-review', 'builtin'], ['impeccable', 'external'], ['security-review', 'builtin']], 'the built-ins the slots bind are registered by the install')
     assert.deepEqual(i.local.map((r) => r.name), ['deploy'])
     const md = indexMarkdown(i)
-    assert.match(md, /## External\n\n\| Skill \| What it does \| Source \| Provides \|\n\|---\|---\|---\|---\|\n\| \/code-review \| — \| builtin \| review \|\n\| \/impeccable \| Reviews UI design\. \| github:pbakaus\/impeccable@4f2a9c1 \(4\.5\.0\) \| ui-design \|/)
+    assert.match(md, /## External\n\n\| Skill \| What it does \| Source \| Provides \|\n\|---\|---\|---\|---\|\n\| \/code-review \| Claude Code built-in code review\. \| builtin: claude-code \| review \|\n\| \/impeccable \| Reviews UI design\. \| github:pbakaus\/impeccable@4f2a9c1 \(4\.5\.0\) \| ui-design \|/)
     assert.match(md, /## Local\n\n\| Skill \| What it does \| Provides \|\n\|---\|---\|---\|\n\| \/deploy \| Deploys to staging\. \| — \|/)
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
@@ -53,6 +52,6 @@ test('the SessionStart line lists the groups in one line', () => {
   try {
     const line = indexLine(skillIndex(cwd))
     const core = readdirSync(join(cwd, '.claude/skills')).sort().map((n) => `/${n}`).join(' ')
-    assert.equal(line, `Skills: core ${core} (agent-os skills for what each does).`, 'every installed core skill, in one line')
+    assert.equal(line, `Skills: core ${core}; external /code-review /security-review (agent-os skills for what each does).`, 'every installed skill, in one line')
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })

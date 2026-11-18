@@ -60,6 +60,7 @@ export async function run(ctx) {
       try { t = merged.platform?.project ? tracker() : null } catch { t = null }
       const r = preflight({ config: merged, git, cwd: ctx.cwd, tracker: t }, input)
       const recalled = r.lessons.length ? `\nLessons that apply to this change (check the diff follows them):\n${lessonLines(r.lessons).join('\n')}` : ''
+      for (const w of r.warnings ?? []) ctx.io.stderr(`agent-os: warning: ${w}\n`)
       const overlapping = r.overlaps.length ? `\nOther changes touch the same files (say so in the description and talk to them):\n${overlapLines(r.overlaps, vocab).join('\n')}` : ''
       ctx.output(r, `${r.ok ? `ready to open: gate passed on ${r.head.slice(0, 7)}, journal entry present, title and body follow the conventions` : `not ready:\n${r.problems.map((p) => `  - ${p}`).join('\n')}${r.suggestion ? `\nsuggested title: ${r.suggestion}` : ''}`}${recalled}${overlapping}`)
       return r.ok ? EXIT.OK : EXIT.CHECK_FAILED
