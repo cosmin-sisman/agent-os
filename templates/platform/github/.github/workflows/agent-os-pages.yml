@@ -7,7 +7,7 @@ name: agent-os pages
 on:
   push:
     branches: ["{{{branches.integration}}}"]
-    paths: ["artifacts/**", "stack.yaml", ".github/workflows/agent-os-pages.yml"]
+    paths: ["artifacts/**", "stack.yaml", "system.yaml", "**/openapi*.yaml", "**/openapi*.json", "**/asyncapi*.yaml", ".github/workflows/agent-os-pages.yml"]
   workflow_dispatch:
 
 permissions:

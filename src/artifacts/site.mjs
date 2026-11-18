@@ -3,10 +3,11 @@
 // output folder and never committed; the index is self-contained like the artifacts themselves.
 
 import { cpSync, mkdirSync, writeFileSync } from 'node:fs'
-import { basename, isAbsolute, join, relative, resolve } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
 import { DIR, listArtifacts } from './artifact.mjs'
 import { vocabularyFor } from '../platform/vocabulary.mjs'
+import { systemPages } from '../system/docs.mjs'
 
 const BUILD_ONLY = new Set(['template.html'])
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
@@ -27,7 +28,7 @@ export function webUrlOf(config) {
 }
 
 /** The index page: sections by type, newest first, with areas, refs and verification; an index by linked item. */
-export function renderIndex(items, { title = 'Artifacts', webUrl = null, vocab = vocabularyFor() } = {}) {
+export function renderIndex(items, { title = 'Artifacts', webUrl = null, vocab = vocabularyFor(), pages = [] } = {}) {
   const link = (r) => refLink(r, webUrl, vocab)
   const byType = new Map()
   for (const a of items) byType.set(a.type ?? 'other', [...(byType.get(a.type ?? 'other') ?? []), a])
@@ -60,7 +61,8 @@ h2{font-size:1.1rem;margin:28px 0 10px;text-transform:capitalize}h2 small{color:
 .area{color:var(--accent)}.ok{color:var(--ok)}.stale{color:var(--warn)}.refs a,.refs span{margin-right:8px}.byref{padding-left:18px}
 </style></head><body><div class="wrap">
 <h1>${esc(title)}</h1><p class="lead">${items.length} artifact(s), ${stale ? `${stale} stale` : 'all verified against their sources'}. Built from <code>artifacts/</code> in CI; this index is never committed.</p>
-${sections || '<p>No artifacts yet.</p>'}
+${pages.length ? `<section><h2>System <small>${pages.length}</small></h2>${pages.map((p) => `<article class="card"><div class="meta"><span>${esc(p.kind)}</span><span>${esc(p.source)}</span></div><h3><a href="${esc(p.path.replace(/index\.html$/, ''))}">${esc(p.title)}</a></h3></article>`).join('')}</section>` : ''}
+${sections || (pages.length ? '' : '<p>No artifacts yet.</p>')}
 ${byRef}
 </div></body></html>
 `
@@ -77,6 +79,9 @@ export function buildSite(root, out, { title, webUrl, vocab } = {}) {
   const items = listArtifacts(root).filter((a) => !a.problems.length)
   mkdirSync(target, { recursive: true })
   for (const a of items) cpSync(join(root, DIR, a.folder), join(target, a.folder), { recursive: true, filter: (p) => !BUILD_ONLY.has(basename(p)) })
-  writeFileSync(join(target, 'index.html'), renderIndex(items, { title, webUrl, vocab }))
-  return { out: target, items, skipped: listArtifacts(root).filter((a) => a.problems.length).map((a) => a.folder) }
+  // Pages from the system map (#118): API references per spec and the system map diagram, rebuilt on every build.
+  const pages = systemPages(root)
+  for (const p of pages) { mkdirSync(join(target, dirname(p.path)), { recursive: true }); writeFileSync(join(target, p.path), p.html) }
+  writeFileSync(join(target, 'index.html'), renderIndex(items, { title, webUrl, vocab, pages }))
+  return { out: target, items, pages: pages.map(({ html, ...p }) => p), skipped: listArtifacts(root).filter((a) => a.problems.length).map((a) => a.folder) }
 }
