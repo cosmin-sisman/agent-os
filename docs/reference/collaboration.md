@@ -61,3 +61,23 @@ At the end of a session or a day, each issue **assigned to you with work in flig
 - the next step you give with `--next`.
 
 One `handoff` journal entry lists them all. Issues assigned to someone else never get a comment, and neither do yours that have nothing in flight. The next person continues from the comments alone.
+
+## Comment-driven work: `agent-os thread`
+
+People decide things in comments. Skills read the conversation before acting:
+
+```sh
+agent-os thread 34           # an issue (on GitHub a pull request number works too)
+agent-os thread !12          # a change request where its numbers are separate (GitLab)
+```
+
+It prints:
+- the participants, the conversation's language and the number of comments (and open review threads);
+- the **decisions** made in comments, quoted verbatim with who made them, when and the link;
+- the latest comments.
+
+A decision is a paragraph that says so: `Decision:`, `Decided:`, `Agreed:`, `Decizie:`, "we decided", "am decis", "am hotarat", "mergem pe". Bots' comments and code blocks are ignored.
+
+- **Decisions into the journal:** `agent-os journal add … --thread '#34'` adds a "Decisions from the conversation" section (in ro, "Decizii din discutie"). Each decision is quoted verbatim, with author, date and link. This is how a decision taken in a comment reaches the journal entry of the change request that implements it.
+- **Replies in the comment's language:** `agent-os pr reply` (review threads) and `agent-os issue comment` detect the language of the comment being answered (the last one by someone else). A reply in another language is refused (exit 1, nothing posted). A ro reply has its diacritics replaced with ASCII.
+- **@mentions only for real people:** a handle that is not among the participants (author, assignees, commenters) loses its `@` and goes in backticks, so a typo or an invented name pings no one. Emails and code are left alone.

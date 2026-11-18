@@ -33,7 +33,7 @@ Add `--worktree` only when the person runs several sessions in parallel; by defa
 
 ## 4. Before writing code
 
-- Read the issue, its comments and its test scenarios. Unclear acceptance criteria are a question in the issue, not a guess.
+- Read the issue, its test scenarios and its conversation: `agent-os thread {{vocab.issueRef}}<n>` lists the participants, the language and the decisions made in comments; follow those decisions. Unclear acceptance criteria are a question in the issue, not a guess.
 - Done means tested: the scenarios become tests in this branch.
 
 ## 5. Learn

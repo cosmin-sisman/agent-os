@@ -8,8 +8,10 @@ import { loadConfig } from '../config/config.mjs'
 import { languageFor } from '../i18n/i18n.mjs'
 import { addEntry, filterEntries, readJournal, TYPES, validate } from '../journal/journal.mjs'
 import { ghClient } from '../tracker/gh.mjs'
+import { createTracker } from '../tracker/tracker.mjs'
+import { decisionsSection, readThread } from '../collab/thread.mjs'
 
-export const usage = 'agent-os journal [list [filters] | show <id> | add --type <t> --title <text> --area <a>… [--ref <#N>…] [--body-file <f>] | check]'
+export const usage = 'agent-os journal [list [filters] | show <id> | add --type <t> --title <text> --area <a>… [--ref <#N>…] [--body-file <f>] [--thread <#N|!N>…] | check]'
 
 export const options = {
   type: { type: 'string', description: `Entry type: ${TYPES.join(', ')} (add; a filter for list)` },
@@ -22,6 +24,7 @@ export const options = {
   at: { type: 'string', description: 'add: the time of the entry (ISO 8601, default now)' },
   since: { type: 'string', description: 'list: from this date or time' },
   until: { type: 'string', description: 'list: up to this date or time' },
+  thread: { type: 'string', multiple: true, description: 'add: quote the decisions made in the comments of this issue (#N) or change request (!N), verbatim' },
 }
 
 /** @param {import('../cli/context.mjs').Context} ctx */
@@ -29,7 +32,7 @@ export async function run(ctx) {
   const [action = 'list'] = ctx.positionals
   if (action === 'list') return list(ctx)
   if (action === 'show') return show(ctx)
-  if (action === 'add') return add(ctx)
+  if (action === 'add') return await add(ctx)
   if (action === 'check') return check(ctx)
   throw new CliError(`unknown action "${action}"`, { hint: `usage: ${usage}` })
 }
@@ -63,7 +66,7 @@ function whoami(ctx, config) {
   } catch { return null }
 }
 
-function add(ctx) {
+async function add(ctx) {
   const v = ctx.values
   const { merged } = loadConfig(ctx.cwd)
   if (!v.type || !TYPES.includes(v.type)) throw new CliError(`--type is required: one of ${TYPES.join(', ')}`)
@@ -73,9 +76,21 @@ function add(ctx) {
   const body = v['body-file'] ? readFileSync(resolve(ctx.cwd, v['body-file']), 'utf8') : v.body ?? ''
   const at = v.at ? new Date(v.at) : new Date()
   if (Number.isNaN(at.getTime())) throw new CliError(`--at "${v.at}" is not a date or time`, { hint: 'for example 2026-11-18T14:02:00Z' })
+  let decisions = ''
+  if (v.thread?.length) {
+    const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
+    const threads = v.thread.map((raw) => {
+      const n = Number(String(raw).replace(/^[#!]/, ''))
+      if (!Number.isInteger(n) || n < 1) throw new CliError(`--thread "${raw}" is not an issue or change request number`)
+      return readThread(tracker, n, { changeRequest: String(raw).startsWith('!') })
+    })
+    decisions = decisionsSection(threads, { lang: languageFor(merged, 'journal') })
+    if (!decisions) ctx.io.stderr(`agent-os: warning: no decisions found in the comments of ${v.thread.join(', ')}\n`)
+  }
+  const fullBody = decisions ? `${body.replace(/\s*$/, '')}${body.trim() ? '\n\n' : ''}${decisions}` : body
   const author = v.author ?? whoami(ctx, merged)
   if (!author) throw new CliError('could not tell who you are', { hint: 'pass --author <login>, or log in: gh auth login' })
-  const r = addEntry(ctx.cwd, { type: v.type, title: v.title, body, refs: v.ref ?? [], areas: v.area, author, at, lang: languageFor(merged, 'journal'), dryRun: ctx.dryRun })
+  const r = addEntry(ctx.cwd, { type: v.type, title: v.title, body: fullBody, refs: v.ref ?? [], areas: v.area, author, at, lang: languageFor(merged, 'journal'), dryRun: ctx.dryRun })
   if (r.problems) throw new CliError(`the entry is not valid: ${r.problems.join('; ')}`)
   ctx.output(r, `${r.dryRun ? 'would write' : 'wrote'} ${r.path}`)
   return EXIT.OK

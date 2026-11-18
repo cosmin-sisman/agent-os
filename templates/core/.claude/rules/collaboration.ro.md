@@ -16,9 +16,10 @@ In acest repository lucreaza mai multi oameni, fiecare cu sesiunile lui de agent
 
 ## Comentarii
 
-- Citeste tot firul inainte sa actionezi pe un issue sau pe un {{vocab.changeRequest}}.
+- Citeste tot firul inainte sa actionezi pe un issue sau pe un {{vocab.changeRequest}}: `agent-os thread <n>` arata participantii, limba si deciziile luate in comentarii.
 - Raspunde in limba comentariului la care raspunzi. Comentariile noi folosesc limba issue-urilor (**{{lang.issues}}**) si limba {{vocab.changeRequests}} (**{{lang.prs}}**).
-- Spune ce ai facut si ce a ramas. O decizie luata intr-un fir se citeaza in intrarea de jurnal a {{vocab.changeRequest}} care o implementeaza.
+- Spune ce ai facut si ce a ramas. O decizie luata intr-un fir se citeaza cuvant cu cuvant in intrarea de jurnal a {{vocab.changeRequest}} care o implementeaza (`agent-os journal add … --thread <n>`).
+- Mentioneaza cu @ doar oamenii care participa sau carora le ceri ceva: `agent-os issue comment` si `agent-os pr reply` scot @ de la orice alt nume si refuza un raspuns in alta limba decat a comentariului.
 
 ## Starea personala si starea echipei
 

@@ -16,9 +16,10 @@ Several people work in this repository, each with their own agent sessions on th
 
 ## Comments
 
-- Read the whole thread before acting on an issue or a {{vocab.changeRequest}}.
+- Read the whole thread before acting on an issue or a {{vocab.changeRequest}}: `agent-os thread <n>` shows its participants, its language and the decisions made in comments.
 - Answer in the language of the comment you answer. New comments use the issues language (**{{lang.issues}}**) and the {{vocab.changeRequests}} language (**{{lang.prs}}**).
-- Say what you did and what is left. A decision made in a thread is quoted in the journal entry of the {{vocab.changeRequest}} that implements it.
+- Say what you did and what is left. A decision made in a thread is quoted verbatim in the journal entry of the {{vocab.changeRequest}} that implements it (`agent-os journal add … --thread <n>`).
+- @mention only people taking part or asked to: `agent-os issue comment` and `agent-os pr reply` take the @ off any other handle and refuse a reply in another language than the comment's.
 
 ## Personal and team state
 

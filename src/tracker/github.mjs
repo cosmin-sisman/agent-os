@@ -60,6 +60,17 @@ export class GitHubTracker {
     return { number: i.number, title: i.title, body: i.body ?? '', state: i.state, url: i.html_url, labels: i.labels.map((l) => l.name), milestone: i.milestone?.title ?? null, assignees: i.assignees.map((a) => a.login), isPullRequest: Boolean(i.pull_request) }
   }
 
+  /** The conversation on an issue or pull request: its comments, oldest first ({ author, bot, body, at, url }). */
+  comments(number) {
+    const out = []
+    for (let page = 1; page <= 10; page++) {
+      const batch = this.gh.rest('GET', `repos/${this.repo}/issues/${number}/comments?per_page=100&page=${page}`) ?? []
+      out.push(...batch)
+      if (batch.length < 100) break
+    }
+    return out.map((c) => ({ author: c.user?.login ?? null, bot: c.user?.type === 'Bot', body: c.body ?? '', at: c.created_at, url: c.html_url ?? null }))
+  }
+
   /** The sub-issues of an issue. */
   children(number) {
     return (this.gh.rest('GET', `repos/${this.repo}/issues/${number}/sub_issues?per_page=100`) ?? []).map((i) => ({ number: i.number, title: i.title, state: i.state }))

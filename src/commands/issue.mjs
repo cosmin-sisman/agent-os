@@ -11,6 +11,8 @@ import { createTracker } from '../tracker/tracker.mjs'
 import { validateTicket, resolveLabels, findSimilar, relationshipPlan, applyActions } from '../tracker/ticket.mjs'
 import { capabilitiesFor } from '../platform/probe.mjs'
 import { EXIT } from '../cli/errors.mjs'
+import { languageFor } from '../i18n/i18n.mjs'
+import { prepareReply } from '../collab/thread.mjs'
 
 export const usage = [
   'agent-os issue new --title "<Area>: <problem>" --body-file <f> --label <type> --label <priority> --label <area> --milestone <m> [--assignee <u>…] [--parent <n>] [--blocked-by <n>…] [--blocks <n>…] [--extend <n> | --force-new]',
@@ -64,7 +66,23 @@ export async function run(ctx) {
     case 'similar': result = findSimilar(tracker, args.join(' ') || v.title || ''); break
     case 'comment': {
       if (!v['body-file']) throw new CliError('missing --body-file', { hint: `usage: ${usage}` })
-      result = tracker.comment(num(args[0], 'the issue'), body(), dry)
+      const n = num(args[0], 'the issue')
+      // A comment answers the conversation: in the language of the last comment by someone else, @mentioning only
+      // the people in it. Without a readable conversation it is posted as written.
+      let text = body()
+      let convo = null
+      try { convo = tracker.comments ? tracker.comments(n) : null } catch { convo = null }
+      if (convo) {
+        let me = null
+        try { me = tracker.whoami?.() ?? null } catch { me = null }
+        const issue = tracker.get(n)
+        const to = [...convo].reverse().find((c) => !c.bot && c.author !== me) ?? null
+        const people = [...new Set([...(issue.assignees ?? []), ...convo.filter((c) => !c.bot).map((c) => c.author)].filter(Boolean))]
+        const reply = prepareReply(text, { to, people, fallback: languageFor(loadConfig(ctx.cwd).merged, 'issues') })
+        if (reply.problems.length) { ctx.output({ posted: false, ...reply }, `not posted: ${reply.problems.join('; ')}`); return EXIT.CHECK_FAILED }
+        text = reply.body
+      }
+      result = tracker.comment(n, text, dry)
       break
     }
     case 'create':
