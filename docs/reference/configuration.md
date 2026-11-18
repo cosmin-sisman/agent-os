@@ -107,6 +107,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `security.advisories.enabled` | team | boolean |  | Let the advisory watch ask OSV.dev and CISA KEV about package names and versions (default: on, off on a self-managed host) |
 | `security.advisories.osvUrl` | team | string |  | An OSV-compatible querybatch endpoint, e.g. an internal mirror |
 | `security.advisories.kevUrl` | team | string |  | Where the CISA KEV catalog (JSON) is read from, e.g. an internal mirror |
+| `security.scanners` | team | array | `[]` | Scanners the team runs; agent-os env reports the missing ones (agent-os never installs or runs them) |
+| `security.reports` | team | array | `[]` | Scanner reports the security pass reads |
 | `security.acceptedRisks` | team | array | `[]` | Advisories the owners accepted in writing; the release gate lets them through |
 | `security.acceptedRisks[].id` | team | string |  | The advisory id (GHSA-…, CVE-…, OSV id) |
 | `security.acceptedRisks[].reason` | team | string |  | Why the risk is accepted |

@@ -510,6 +510,24 @@
           },
           "additionalProperties": false
         },
+        "scanners": {
+          "type": "array",
+          "description": "Scanners the team runs; agent-os env reports the missing ones (agent-os never installs or runs them)",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A scanner command, e.g. gitleaks, osv-scanner, semgrep"
+          }
+        },
+        "reports": {
+          "type": "array",
+          "description": "Scanner reports the security pass reads",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A path to a scanner report (SARIF or gitleaks JSON)"
+          }
+        },
         "acceptedRisks": {
           "type": "array",
           "description": "Advisories the owners accepted in writing; the release gate lets them through",

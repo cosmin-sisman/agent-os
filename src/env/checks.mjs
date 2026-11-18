@@ -130,6 +130,13 @@ export function checkCli(config, { probe }) {
   })
 }
 
+/** The scanners the team runs (security.scanners) are on this laptop; agent-os never installs or runs them. */
+export function checkScanners(config, { probe }) {
+  return (config.security?.scanners ?? []).map((name) => (probe.run(name, ['--version']).found
+    ? { side: 'laptop', level: 'ok', message: `scanner ${name} is installed` }
+    : { side: 'laptop', level: 'warn', message: `scanner ${name} is not installed, so the security pass has no ${name} results`, fix: `install ${name} and write its report where security.reports points` }))
+}
+
 /** Scopes from `gh auth status` output; the token line itself is ignored. */
 export function parseScopes(text) {
   const m = String(text).match(/Token scopes:\s*(.*)/i)
@@ -169,7 +176,7 @@ export function checkEnvironment(config, { cwd, probe, mode = 'full' }) {
   const findings = [
     ...checkRepo(config, { cwd, probe }),
     ...(mode === 'ci' ? [] : checkEnvVars(config, { probe })),
-    ...(mode === 'full' ? [...checkPlatformAuth(config, { probe }), ...checkCli(config, { probe }), ...checkMcpServers(config, { probe })] : []),
+    ...(mode === 'full' ? [...checkPlatformAuth(config, { probe }), ...checkCli(config, { probe }), ...checkScanners(config, { probe }), ...checkMcpServers(config, { probe })] : []),
   ]
   const summary = { ok: 0, warn: 0, fail: 0 }
   for (const f of findings) summary[f.level]++
