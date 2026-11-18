@@ -10,6 +10,17 @@
 #       refs: ["#43"]
 #       migration: 0.2.0
 releases:
+  - version: 0.1.1
+    date: 2026-11-18
+    changes:
+      - group: chore
+        text: "chore(release): sync v0.1.0 into development"
+        refs:
+          - "#237"
+      - group: chore
+        text: "chore(distribution): publish to npm from tags with provenance"
+        refs:
+          - "#238"
   - version: 0.1.0
     date: 2026-11-18
     changes:

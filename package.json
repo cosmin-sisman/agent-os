@@ -1,6 +1,6 @@
 {
   "name": "@cosmin-sisman/agent-os",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "description": "A working agreement between people, coding agents and GitHub, installed into any repository with one command.",
   "type": "module",
   "bin": {
