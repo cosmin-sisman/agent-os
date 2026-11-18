@@ -68,6 +68,24 @@ jobs:
           printf '%s' "$BODY" > "$RUNNER_TEMP/body.md"
           node bin/agent-os.mjs check title "$TITLE" --body-file "$RUNNER_TEMP/body.md"
 
+  loop:
+    # The self-improvement loop (agent-os/loop): doctor --ci, a non-empty Lessons section, and a journal entry for a
+    # lesson or decision. Not in the `ci` aggregator: making it required is a ruleset setting (agent-os setup).
+    if: github.event_name == 'pull_request'
+    name: agent-os/loop
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # The description, author and base branch are read from the event file, never interpolated into the script.
+      - run: node bin/agent-os.mjs check loop --from-ci
+
   ci:
     if: always()
     needs: [test, actionlint, pr-title]

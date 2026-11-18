@@ -18,13 +18,17 @@ function all(client, path) {
   }
 }
 
+import { LOOP_CHECK } from '../workflow/loop.mjs'
+
 const exists = (client, path) => {
   try { client.rest('GET', path); return true } catch (err) { if (/HTTP 404/.test(err.output ?? err.message)) return false; throw err }
 }
 
 /** The ruleset agent-os wants, for the configured branches. */
 export function desiredRuleset(config) {
-  const { integration, production, requiredChecks = [], requiredApprovals = 0 } = config.branches
+  const { integration, production, requiredApprovals = 0 } = config.branches
+  // The loop check has no exceptions (design §10), so setup always makes it required next to the project's checks.
+  const requiredChecks = [...new Set([...(config.branches.requiredChecks ?? []), LOOP_CHECK])]
   return {
     name: RULESET_NAME,
     target: 'branch',
@@ -76,7 +80,7 @@ export function planGitHubSetup(config, client, { only } = {}) {
     const covering = details.find((r) => r.name !== RULESET_NAME && r.target === 'branch' && desired.conditions.ref_name.include.every((ref) => r.conditions?.ref_name?.include?.includes(ref)))
     const target = mine ?? covering
     if (!target) {
-      steps.push(step('ruleset', 'create', `protect ${production} and ${integration}: no direct push, no force push, no deletion${desired.rules.length > 3 ? `, required checks: ${(config.branches.requiredChecks ?? []).join(', ')}` : ''}`, () => client.rest('POST', `repos/${repo}/rulesets`, desired)))
+      steps.push(step('ruleset', 'create', `protect ${production} and ${integration}: no direct push, no force push, no deletion${desired.rules.length > 3 ? `, required checks: ${[...new Set([...(config.branches.requiredChecks ?? []), LOOP_CHECK])].join(', ')}` : ''}`, () => client.rest('POST', `repos/${repo}/rulesets`, desired)))
     } else {
       const missingTypes = ruleTypes(desired) !== ruleTypes({ rules: target.rules.filter((r) => desired.rules.some((d) => d.type === r.type)) })
       const checksDiffer = checksOf(desired) !== checksOf(target) && desired.rules.some((r) => r.type === 'required_status_checks')
