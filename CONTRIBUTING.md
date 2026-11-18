@@ -37,7 +37,7 @@ Adding or changing a layer, technology, language, provider, runtime or blueprint
 ## Checks
 
 Every PR runs two required checks:
-- `ci`: `npm test`, `agent-os stack catalog check` and `npm run site` on Linux, macOS and Windows with Node 22, 24 and 26, plus `actionlint` on the workflows. On pull requests macOS runs Node 22 only; pushes to `development` and `main` run the full matrix;
+- `ci`: `npm test`, `agent-os stack catalog check` and `npm run site` on Linux, macOS and Windows with Node 22, 24 and 26, plus `actionlint` on the workflows. On pull requests macOS does not run; pushes to `development` and `main` run the full matrix, macOS included;
 - `agent-os/loop`: a valid Lessons section, a journal entry, and `doctor --ci`.
 
 The loop and gate jobs live in `ci.yml`, so the package's own loop, gate and retro workflows are turned off in `agent-os.json` (`ci.loop`, `ci.gate`, `ci.retro`). Before you push:

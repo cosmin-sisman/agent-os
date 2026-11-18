@@ -1,4 +1,4 @@
-# Tests on Linux, macOS and Windows with every supported Node LTS (macOS on Node 22 only for pull requests), plus actionlint.
+# Tests on Linux, macOS and Windows with every supported Node LTS (macOS on pushes only, not on pull requests), plus actionlint.
 # The `ci` job is a required check (with agent-os/loop); it passes only when every other job passed (pr-title runs on PRs only).
 name: ci
 
@@ -27,9 +27,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         node: [22, 24, 26]
-        # Pull requests run macOS on Node 22 only: macOS runners often wait past the timeout (#250). Linux and Windows
-        # keep every Node version on pull requests; a push to development or main runs the full matrix.
-        exclude: ${{ github.event_name == 'pull_request' && fromJSON('[{"os":"macos-latest","node":24},{"os":"macos-latest","node":26}]') || fromJSON('[]') }}
+        # Pull requests run no macOS job: macOS runners often wait past the timeout (#250, #253). Linux and Windows keep
+        # every Node version on pull requests; a push to development or main runs the full matrix, macOS included.
+        exclude: ${{ github.event_name == 'pull_request' && fromJSON('[{"os":"macos-latest"}]') || fromJSON('[]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
