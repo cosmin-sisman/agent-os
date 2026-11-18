@@ -66,3 +66,7 @@ test('allowed types and the length are configurable', () => {
   assert.equal(checkTitle('feature: add x', '', custom).ok, true)
   assert.match(checkTitle('feat: add x', '', custom).problems[0], /use one of feature/)
 })
+
+test('references inside inline code and code blocks are examples, not references', () => {
+  assert.deepEqual(referencedIssues('Closes #19\n\nA body with `Closes #3` and a title ending `[#4]`.\n\n```\nFixes #8\n```'), [19])
+})

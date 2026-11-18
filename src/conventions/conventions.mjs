@@ -6,10 +6,12 @@ import { findDiacritics } from '../i18n/i18n.mjs'
 
 const CLOSING = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|refs?|references?|part of)\b[:\s]+((?:[\w.-]+\/[\w.-]+)?#\d+(?:\s*,\s*(?:and\s+)?#\d+)*)/gi
 
-/** Issue numbers a description closes or references (Closes, Fixes, Resolves, Refs, Part of; comma lists too). */
+/** Issue numbers a description closes or references (Closes, Fixes, Resolves, Refs, Part of; comma lists too), outside comments and code. */
 export function referencedIssues(body = '') {
   const out = new Set()
-  for (const m of String(body).replace(/<!--[\s\S]*?-->/g, '').matchAll(CLOSING)) {
+  // HTML comments, fenced code blocks and inline code hold examples, not references.
+  const text = String(body).replace(/<!--[\s\S]*?-->/g, '').replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '')
+  for (const m of text.matchAll(CLOSING)) {
     if (m[1].includes('/')) continue
     for (const n of m[1].matchAll(/#(\d+)/g)) out.add(Number(n[1]))
   }
