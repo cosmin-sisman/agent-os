@@ -41,4 +41,24 @@ agent-os stack new --from b2b-saas [--project <name>] [--force] [--dry-run]
 - **EU check.** With `compliance.euOnly`, `show` flags every layer that isn't rejected whose provider's `euRegions` is `verify` or unknown, so you can confirm it before strict GDPR work.
 - **new --from** writes `stack.yaml` from a blueprint, one layer per row. Interactively it asks whether each layer is chosen now (otherwise `optional`). It refuses to replace an existing file without `--force`. `--dry-run` prints the file.
 
-Changing layers (`set`, `status`), `detect`, `drift`, `import` and `render` come with later issues.
+## Changing a layer: decisions, not edits
+
+```sh
+agent-os stack set data-layer prisma-neon-postgres [--why "<reason>"] [--dry-run]
+agent-os stack status payments rejected [--why "<reason>"]
+```
+
+Changing a layer is an architecture decision, so each change does three things:
+- **Edits stack.yaml in place.** Only that key changes; comments and layout stay, in block (`data-layer:` with indented keys) or inline (`auth: { tech: …, status: … }`) form. A layer that isn't there yet is added.
+- **Writes a decision record** in `docs/decisions/` (proposed, in the docs language). It holds the catalog comparison of the old and new choice: complexity, AI-friendliness, language and its learning curve, provider and its cost, EU regions. It also has the reason from `--why`, and the consequences (the code under the layer's paths, a provider change).
+- **Proposes follow-up issues:**
+  - a migration (with acceptance criteria and a test scenario);
+  - adopting a newly chosen layer;
+  - removing a rejected one;
+  - the environment for a new provider.
+
+  They are printed and in `--json`, never created. Create them with `/ticket` or `agent-os issue new`.
+
+Unknown layers and technologies are refused with the closest match. Setting what is already there changes nothing.
+
+`detect`, `drift`, `import` and `render` come with later issues.

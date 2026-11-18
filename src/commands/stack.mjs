@@ -9,14 +9,18 @@ import { ask } from '../cli/prompt.mjs'
 import { parse } from '../yaml/yaml.mjs'
 import { closest } from '../util/closest.mjs'
 import { catalogFiles, KINDS, mergeCatalog, problemText, validateCatalog } from '../stack/catalog.mjs'
+import { changeLayer } from '../stack/change.mjs'
+import { loadConfig } from '../config/config.mjs'
+import { languageFor } from '../i18n/i18n.mjs'
 import { loadCatalog, readStack, stackFromBlueprint, stackSummary, validateStack } from '../stack/stack.mjs'
 
-export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run]   (set, status, detect, drift, import, render: later issues)'
+export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run] | set <layer> <tech> [--why <text>] | status <layer> <status> [--why <text>]   (detect, drift, import, render: later issues)'
 
 export const options = {
   from: { type: 'string', description: 'new: the blueprint id (catalog/blueprints.yaml)' },
   project: { type: 'string', description: 'new: the project name' },
   force: { type: 'boolean', description: 'new: replace an existing stack.yaml' },
+  why: { type: 'string', description: 'set, status: why, for the decision record' },
 }
 
 const pad = (rows) => {
@@ -67,6 +71,19 @@ ${problems.length} problem(s):
     const { rows, summary } = stackSummary(stack, catalog)
     ctx.output({ rows, summary, problems: v.problems, warnings: v.warnings }, `${showText(rows, summary)}${v.problems.length ? `\n\nstack.yaml has ${v.problems.length} problem(s): agent-os stack check` : ''}`)
     return v.problems.length ? EXIT.CHECK_FAILED : EXIT.OK
+  }
+  if (action === 'set' || action === 'status') {
+    const [, layer, value] = ctx.positionals
+    if (!layer || !value) throw new CliError(`${action} needs a layer and a ${action === 'set' ? 'technology' : 'status'}`, { hint: `usage: ${usage}` })
+    const r = changeLayer(ctx.cwd, catalog, { layer, ...(action === 'set' ? { tech: value } : { status: value }), why: ctx.values.why }, { lang: languageFor(loadConfig(ctx.cwd).merged, 'docs'), now: ctx.io.now ?? new Date(), dryRun: ctx.dryRun })
+    if (!r.changed) { ctx.output(r, `nothing to change: ${r.reason}`); return EXIT.OK }
+    const lines = [
+      `${r.dryRun ? 'would change' : 'changed'} ${r.layer}: ${r.from.tech ?? '-'} (${r.from.status ?? '-'}) → ${r.to.tech ?? '-'} (${r.to.status})`,
+      `${r.dryRun ? 'would write' : 'wrote'} the decision record ${r.decision} (proposed): ${r.after.name} vs ${r.before.name}, complexity ${r.before.complexity ?? '-'} → ${r.after.complexity ?? '-'}, AI-friendliness ${r.before.aiFriendly ?? '-'} → ${r.after.aiFriendly ?? '-'}, provider cost ${r.before.cost ?? '-'} → ${r.after.cost ?? '-'}`,
+      ...(r.proposed.length ? ['', 'proposed follow-up issues (create them with /ticket or agent-os issue new):', ...r.proposed.map((p) => `  - ${p.title}`)] : []),
+    ]
+    ctx.output(r, lines.join('\n'))
+    return EXIT.OK
   }
   if (action === 'new') {
     const id = ctx.values.from
