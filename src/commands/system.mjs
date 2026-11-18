@@ -12,16 +12,19 @@ import { readStack } from '../stack/stack.mjs'
 import { contractReview } from '../system/contracts.mjs'
 import { inventory } from '../system/endpoints.mjs'
 import { systemChecks } from '../system/checks.mjs'
+import { draftSpec } from '../system/docs.mjs'
+import { dirname } from 'node:path'
 import { changedFiles } from '../gate/gate.mjs'
 import { systemGit } from '../workflow/start.mjs'
 import { loadConfig } from '../config/config.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 
-export const usage = 'agent-os system detect [--write] | check | show | contracts [--base <branch>] | endpoints [--undocumented] | checks'
+export const usage = 'agent-os system detect [--write] | check | show | contracts [--base <branch>] | endpoints [--undocumented] | checks | spec <component> [--write <file>]'
 
 export const options = {
   write: { type: 'boolean', description: 'detect: write system.yaml (only when there is none)' },
   base: { type: 'string', description: 'contracts: the branch to compare with (default branches.integration)' },
+  'write-to': { type: 'string', description: 'spec: where to write the drafted OpenAPI file (default: print it)' },
   undocumented: { type: 'boolean', description: 'endpoints: only the routes no spec documents, and spec operations no code declares' },
 }
 
@@ -41,6 +44,21 @@ export async function run(ctx) {
       lines.push('', `${ctx.dryRun ? 'would write' : 'wrote'} ${FILE}: answer the questions in it, then agent-os system check`)
     }
     ctx.output(d, lines.join('\n'))
+    return EXIT.OK
+  }
+  if (action === 'spec') {
+    const component = ctx.positionals[1]
+    if (!component) throw new CliError('which component?', { hint: 'agent-os system spec <component> [--write-to apps/api/openapi.json]' })
+    const draft = draftSpec(ctx.cwd, component)
+    const text = `${JSON.stringify(draft, null, 2)}\n`
+    const n = Object.values(draft.paths).reduce((a, p) => a + Object.keys(p).length, 0)
+    if (!n) throw new CliError(`no routes found for ${component}`, { hint: 'agent-os system endpoints lists the routes and their components' })
+    const to = ctx.values['write-to']
+    if (to) {
+      if (existsSync(join(ctx.cwd, to))) throw new CliError(`${to} already exists: a draft never replaces a spec`)
+      if (!ctx.dryRun) { mkdirSync(dirname(join(ctx.cwd, to)), { recursive: true }); writeFileSync(join(ctx.cwd, to), text) }
+    }
+    ctx.output(draft, to ? `${ctx.dryRun ? 'would write' : 'wrote'} ${to}: ${n} operation(s) drafted from the code; describe each, add the schemas, then list it under ${component}.provides in system.yaml` : text.trimEnd())
     return EXIT.OK
   }
   if (action === 'checks') {

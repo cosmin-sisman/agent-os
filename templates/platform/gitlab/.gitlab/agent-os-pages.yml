@@ -12,7 +12,7 @@ pages:
   timeout: 10m
   rules:
     - if: $CI_COMMIT_BRANCH == "{{{branches.integration}}}"
-      changes: ["artifacts/**/*", "stack.yaml", ".gitlab/agent-os-pages.yml"]
+      changes: ["artifacts/**/*", "stack.yaml", "system.yaml", "**/openapi*.{yaml,json}", "**/asyncapi*.yaml", ".gitlab/agent-os-pages.yml"]
 {{#if runner.npmRegistry}}
   variables:
     npm_config_registry: "{{{runner.npmRegistry}}}"
