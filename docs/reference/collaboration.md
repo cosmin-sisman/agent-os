@@ -25,3 +25,24 @@ It lists every open change request, and every pushed branch without one, that to
   - `agent-os start` checks the paths the issue mentions, before you touch anything.
   - `agent-os pr preflight` checks the files the branch changes.
   - Both name the overlapping work so you can talk to its author (in the issue or the change request) and say so in your description.
+
+## The collaboration rule
+
+agent-os installs `.claude/rules/collaboration.md` (in the `docs` language) for every agent session. It covers:
+- **Claiming:** claim before the first edit with `agent-os start`; one change request closes one issue; check overlap.
+- **Someone else's issue:** ask in the issue first, use `--force` only after they agree, and never update another person's branch.
+- **Comments:** read the whole thread, answer in the comment's language, and quote decisions in the journal.
+- **Personal and team state:** what is committed and what never is.
+- **CI is the guarantee:** the required checks can't be skipped, and nobody works around them.
+
+## Personal state never enters git
+
+| Committed (team agreement or history) | Never committed (per laptop) |
+|---|---|
+| `agent-os.json`, `.claude/` rules and skills, `.agent-os/journal/`, `.agent-os/lessons/`, `.agent-os/registry/`, `.agent-os/lock.json`, `.agent-os/base/` | `.agent-os/local.json`, `.agent-os/cache/`, `.claude/settings.local.json`, `.claude/worktrees/`, secrets |
+
+`agent-os doctor` has two checks for this:
+- **`gitignore`:** these paths must be ignored; `--fix` adds them to `.gitignore`.
+- **`personal`:** git must track none of them.
+
+When `personal` finds a tracked file, it fails and proposes `git rm --cached -r -- <paths>` in a change request. The file stays on the laptop. `--fix` never runs it, because removing files from the index changes the team's tree.

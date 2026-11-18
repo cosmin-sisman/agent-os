@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { loadConfig } from '../config/config.mjs'
 import { installRoutes } from '../managed/install.mjs'
@@ -143,5 +144,28 @@ test('the score counts ok as 1 and warn as half; a failing check that throws bec
     assert.match(issues.findings[0].message, /could not run: HTTP 401/)
     const n = r.summary.ok + r.summary.warn + r.summary.fail
     assert.equal(r.score, Math.round((100 * (r.summary.ok + r.summary.warn / 2)) / n))
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('given .agent-os/local.json committed by mistake, doctor fails, names it and suggests git rm --cached; --fix leaves the index alone', () => {
+  const cwd = freshInstall()
+  try {
+    const env = { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: join(cwd, '.gitconfig-test'), GIT_AUTHOR_NAME: 'T', GIT_AUTHOR_EMAIL: 't@example.com', GIT_COMMITTER_NAME: 'T', GIT_COMMITTER_EMAIL: 't@example.com' }
+    writeFileSync(join(cwd, '.gitconfig-test'), '')
+    const g = (...args) => spawnSync('git', args, { cwd, env, encoding: 'utf8' })
+    g('init', '-q')
+    write(cwd, { '.agent-os/local.json': '{"languages":{"chat":"ro"}}', '.claude/worktrees/feat-1/x.txt': 'x' })
+    g('add', '-A'); g('add', '-f', '.agent-os/local.json', '.claude/worktrees/feat-1/x.txt'); g('commit', '-qm', 'oops')
+    const git = (args) => g(...args)
+    const r = doctor(cwd, { git })
+    const f = findings(r, 'personal')
+    assert.equal(f[0].level, 'fail')
+    assert.match(f[0].message, /git tracks personal file\(s\): \.agent-os\/local\.json, \.claude\/worktrees\/feat-1\/x\.txt/)
+    assert.match(f[0].fix, /git rm --cached -r -- \.agent-os\/local\.json \.claude\/worktrees/)
+    assert.equal(f[0].fixable, false)
+    doctor(cwd, { git }, { offline: true, fix: true })
+    assert.match(g('ls-files').stdout, /\.agent-os\/local\.json/, '--fix never removes tracked files')
+    g('rm', '-q', '--cached', '-r', '--', '.agent-os/local.json', '.claude/worktrees'); g('commit', '-qm', 'untrack')
+    assert.deepEqual(findings(doctor(cwd, { git }), 'personal'), [])
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
