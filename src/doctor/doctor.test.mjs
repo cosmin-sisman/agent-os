@@ -135,7 +135,7 @@ test('platform checks: issues without type, priority or milestone, a blocked lab
     assert.match(findings(r, 'labels')[0].message, /convention label\(s\) are missing/)
     assert.match(findings(r, 'titles')[0].message, /^Fix it\.: /)
     const offline = doctor(cwd, { tracker }, { ci: true })
-    assert.deepEqual(offline.checks.filter((c) => c.skipped).map((c) => c.id), ['issues', 'labels', 'titles'])
+    assert.deepEqual(offline.checks.filter((c) => c.skipped).map((c) => c.id), ['issues', 'labels', 'titles', 'protection'])
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
 
@@ -187,5 +187,21 @@ test('doctor names the Claude Code-only parts as an info note: never a warning, 
     assert.equal(r.score, Math.round((100 * (without.summary.ok + 1 + without.summary.warn / 2)) / (without.summary.ok + without.summary.warn + without.summary.fail + 1)))
     assert.match(report(r), /^info {2}\[agents\] only Claude Code runs the hooks/m)
     assert.ok(report(r).indexOf('info  [agents]') > report(r).lastIndexOf('warn  ['), 'info notes come after the warnings')
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('missing branch protection is a warning with its reason, never a failure (#274)', () => {
+  const cwd = freshInstall()
+  try {
+    const tracker = { openIssues: () => [], pullRequests: () => [], labels: () => [] }
+    const check = (steps) => doctor(cwd, { tracker, me: 'ana', platformPlan: () => steps }, {}).checks.find((c) => c.id === 'protection')
+    const free = check([{ area: 'ruleset', action: 'keep', unavailable: true, description: 'branch protection is not available here (a private repository on GitHub Free …)' }])
+    assert.equal(free.level, 'warn')
+    assert.match(free.findings[0].message, /branch protection is not available here/)
+    assert.match(free.findings[0].fix, /GitHub Pro or Team[\s\S]*review every change request/)
+    const missing = check([{ area: 'ruleset', action: 'create', description: 'protect main and development: no direct push' }])
+    assert.equal(missing.level, 'warn')
+    assert.match(missing.findings[0].fix, /agent-os setup --only ruleset/)
+    assert.equal(check([]).level, 'ok')
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })

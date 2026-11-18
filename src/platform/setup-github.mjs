@@ -8,6 +8,10 @@ export const RULESET_NAME = 'agent-os: protect branches'
 
 const step = (area, action, description, apply) => ({ area, action, description, apply })
 
+/** GitHub's answer when the plan has no rulesets or branch protection (a private repository on GitHub Free). */
+const PLAN_LIMIT = /Upgrade to GitHub Pro|make this repository public to enable this feature/i
+export const PROTECTION_UNAVAILABLE = 'branch protection is not available here (a private repository on GitHub Free has neither rulesets nor protected branches): only the local hooks and the required CI checks remain, and without protection a failing check does not block a merge. GitHub Pro or Team, or a public repository, enables it; labels, milestones and branches are set up as usual'
+
 /** All pages of a GitHub list endpoint. */
 function all(client, path) {
   const out = []
@@ -59,20 +63,31 @@ export function planGitHubSetup(config, client, { only, areas = [] } = {}) {
 
   if (want('branches')) {
     const info = client.rest('GET', `repos/${repo}`)
-    if (!exists(client, `repos/${repo}/branches/${encodeURIComponent(integration)}`)) {
-      steps.push(step('branches', 'create', `create branch ${integration} from ${production}`, () => {
-        const sha = client.rest('GET', `repos/${repo}/git/ref/heads/${encodeURIComponent(production)}`).object.sha
-        client.rest('POST', `repos/${repo}/git/refs`, { ref: `refs/heads/${integration}`, sha })
-      }))
-    }
+    const has = (b) => exists(client, `repos/${repo}/branches/${encodeURIComponent(b)}`)
+    const branchFrom = (to, from) => step('branches', 'create', `create branch ${to} from ${from}`, () => {
+      const sha = client.rest('GET', `repos/${repo}/git/ref/heads/${encodeURIComponent(from)}`).object.sha
+      client.rest('POST', `repos/${repo}/git/refs`, { ref: `refs/heads/${to}`, sha })
+    })
+    const [hasIntegration, hasProduction] = [has(integration), has(production)]
+    // A new repository has only the branch of its first push (#274): the other long-lived branch starts from it.
+    if (!hasIntegration && hasProduction) steps.push(branchFrom(integration, production))
+    else if (hasIntegration && !hasProduction) steps.push(branchFrom(production, integration))
+    else if (!hasIntegration && !hasProduction) steps.push(step('branches', 'keep', `neither ${integration} nor ${production} is on GitHub yet: push the first commit (git push -u origin ${integration}), then run agent-os setup again`, () => {}))
     if (info.default_branch !== integration) {
       steps.push(step('branches', 'update', `make ${integration} the default branch (now ${info.default_branch}), so "Closes #N" closes issues on merge`, () => client.rest('PATCH', `repos/${repo}`, { default_branch: integration })))
     }
   }
 
+  // The rulesets, or null when the plan has none (#274): then only a note, and the rest of the setup goes on.
+  let listed = null
   if (want('ruleset')) {
+    try { listed = client.rest('GET', `repos/${repo}/rulesets?per_page=100`) ?? [] } catch (err) {
+      if (!PLAN_LIMIT.test(`${err.output ?? ''}\n${err.message}`)) throw err
+      steps.push({ ...step('ruleset', 'keep', PROTECTION_UNAVAILABLE, () => {}), unavailable: true })
+    }
+  }
+  if (listed) {
     const desired = desiredRuleset(config)
-    const listed = client.rest('GET', `repos/${repo}/rulesets?per_page=100`) ?? []
     const details = listed.map((r) => client.rest('GET', `repos/${repo}/rulesets/${r.id}`))
     const mine = details.find((r) => r.name === RULESET_NAME)
     const covering = details.find((r) => r.name !== RULESET_NAME && r.target === 'branch' && desired.conditions.ref_name.include.every((ref) => r.conditions?.ref_name?.include?.includes(ref)))

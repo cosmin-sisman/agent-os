@@ -92,3 +92,11 @@ test('sanitize keeps agent-os commands, keys and skills, and removes the rest', 
   assert.match(d.body, /### Skill or command\n\n_not given_/)
   assert.doesNotMatch(d.body, /not\.a\.key/)
 })
+
+test('an <Area>: <problem> title is kept whole; a later colon or sentence still ends the clause', () => {
+  const title = (t) => draftUpstream({ title: t, what: 'y' }, { cwd: '/w/shopfront', config: { platform: {} }, version: '0.2.0', terms: [] }).title
+  assert.equal(title('Doctor: name the missing hook'), 'Doctor: name the missing hook')
+  assert.equal(title('Release notes: group by type: then by area'), 'Release notes: group by type')
+  assert.equal(title('The gate skips suites. It also ignores gatePaths.'), 'The gate skips suites', 'two sentences keep the first, as before')
+  assert.equal(title('When the board is missing and the hook runs on every push of a long branch: it fails'), 'When the board is missing and the hook runs on every push of a long branch', 'a long lead before a colon is not an area')
+})

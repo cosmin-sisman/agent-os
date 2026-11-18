@@ -136,3 +136,26 @@ test('an existing required check with an integration_id, and existing rule param
   assert.equal(after.rules.length, 4)
   assert.deepEqual(planGitHubSetup(config({ branches: { requiredChecks: ['ci'] } }), client, { only: ['ruleset'] }), [], 'a second run plans nothing')
 })
+
+test('a private repo on GitHub Free: no ruleset and a clear note, while branches, labels and milestones go through (#274)', () => {
+  const gh = fakeGitHubRepo({ branches: { development: 'sha-dev' }, defaultBranch: 'development' })
+  const free = (args, opts) => (args.some((a) => /\/rulesets/.test(a)) ? { status: 1, stdout: '', stderr: 'gh: Upgrade to GitHub Pro or make this repository public to enable this feature. (HTTP 403)' } : gh.run(args, opts))
+  const steps = planGitHubSetup(config(), ghClient(free, { retries: 0 }))
+  const note = steps.find((s) => s.area === 'ruleset')
+  assert.deepEqual([note.action, note.unavailable], ['keep', true])
+  assert.match(note.description, /branch protection is not available here[\s\S]*only the local hooks and the required CI checks remain[\s\S]*a failing check does not block a merge/)
+  assert.equal(steps.some((s) => s.area === 'ruleset' && s.action !== 'keep'), false)
+  apply(steps)
+  assert.equal(gh.state.branches.main, 'sha-dev', 'main starts from development, the only branch pushed')
+  assert.equal(gh.state.labels.length, LABELS.length)
+  assert.equal(gh.state.milestones.length, 1)
+  assert.equal(gh.writes.some((w) => w.includes('rulesets')), false)
+  const other = (args, opts) => (args.some((a) => /\/rulesets/.test(a)) ? { status: 1, stdout: '', stderr: 'gh: Bad credentials (HTTP 401)' } : gh.run(args, opts))
+  assert.throws(() => planGitHubSetup(config(), ghClient(other, { retries: 0 })), /Bad credentials/, 'any other error still stops the plan')
+})
+
+test('an empty GitHub repository: setup says to push the first commit instead of failing', () => {
+  const gh = fakeGitHubRepo({ branches: {}, defaultBranch: 'development' })
+  const steps = planGitHubSetup(config(), ghClient(gh.run), { only: ['branches'] })
+  assert.match(steps[0].description, /neither development nor main is on GitHub yet: push the first commit/)
+})

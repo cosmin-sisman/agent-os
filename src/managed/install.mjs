@@ -98,15 +98,18 @@ export function agentsBlock(config) {
   const v = config.version ? ` ${config.version}` : ''
   const int = integration ?? 'development'
   const prod = production ?? 'main'
+  const cli = hookCommand(config)
   const lines = languageFor(config, 'docs') === 'ro'
     ? [
       `Acest repository urmeaza agent-os${v}. Reguli in \`.claude/rules/\`, skill-uri in \`.claude/skills/\` (incepe cu /next, /start, /pr si /ship), setarile echipei in \`agent-os.json\`.`,
       `Munca ajunge in \`${int}\` prin change requests; \`${prod}\` se schimba doar prin /release. \`agent-os doctor\` verifica setup-ul.`,
+      `Daca \`agent-os\` nu e instalat, ruleaza fiecare comanda ca \`${cli} <comanda>\` (niciodata un pachet \`agent-os\` fara scope).`,
       'Alt agent decat Claude Code: o cerere pentru `/<name>` inseamna sa citesti `.claude/skills/<name>/SKILL.md` si sa il urmezi; fiecare pas din el este o comanda `agent-os`.',
     ]
     : [
       `This repository follows agent-os${v}. Rules in \`.claude/rules/\`, skills in \`.claude/skills/\` (start with /next, /start, /pr and /ship), team settings in \`agent-os.json\`.`,
       `Work goes to \`${int}\` through change requests; \`${prod}\` changes only through /release. \`agent-os doctor\` checks the setup.`,
+      `Where \`agent-os\` is not installed, run each command as \`${cli} <command>\` (never an unscoped \`agent-os\` package).`,
       'In an agent other than Claude Code, a request for `/<name>` means reading `.claude/skills/<name>/SKILL.md` and following it; every step in it is an `agent-os` command.',
     ]
   return ['## agent-os', '', ...lines].join('\n')

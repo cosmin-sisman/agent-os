@@ -4,10 +4,13 @@
 
 import { spawnSync } from 'node:child_process'
 import { CliError } from '../cli/errors.mjs'
+import { MAX_OUTPUT, excerpt, spawnProblem } from '../util/spawn.mjs'
 
 export function systemGlab(args, { input, env } = {}) {
-  const r = spawnSync(process.platform === 'win32' ? 'glab.exe' : 'glab', args, { input, encoding: 'utf8', timeout: 60000, windowsHide: true, ...(env ? { env: { ...process.env, ...env } } : {}) })
+  const r = spawnSync(process.platform === 'win32' ? 'glab.exe' : 'glab', args, { input, encoding: 'utf8', timeout: 60000, maxBuffer: MAX_OUTPUT, windowsHide: true, ...(env ? { env: { ...process.env, ...env } } : {}) })
   if (r.error?.code === 'ENOENT') throw new CliError('the GitLab CLI (glab) is not installed', { hint: 'install it from https://gitlab.com/gitlab-org/cli, then run "glab auth login --hostname <host>"' })
+  const problem = spawnProblem(r, 'glab')
+  if (problem) return { status: r.status ?? 1, stdout: '', stderr: problem }
   return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' }
 }
 
@@ -26,7 +29,7 @@ export function glabClient(run = systemGlab, { host, retries = 4, backoffMs = 50
       if (r.status === 0) return r.stdout.trim() ? JSON.parse(r.stdout) : null
       const out = `${r.stderr}\n${r.stdout}`
       if (attempt < retries && RETRYABLE.test(out)) { sleep(backoffMs * 2 ** attempt); continue }
-      const e = new CliError(`GitLab API: ${(r.stderr || r.stdout).trim().split('\n')[0] || `glab exited ${r.status}`}`)
+      const e = new CliError(`GitLab API: ${excerpt(r.stderr || r.stdout) || `glab exited ${r.status}`}`)
       e.output = out
       throw e
     }

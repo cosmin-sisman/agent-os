@@ -3,11 +3,14 @@
 
 import { spawnSync } from 'node:child_process'
 import { CliError } from '../cli/errors.mjs'
+import { MAX_OUTPUT, excerpt, spawnProblem } from '../util/spawn.mjs'
 
 /** The real gh: returns { status, stdout, stderr }. */
 export function systemGh(args, { input, env } = {}) {
-  const r = spawnSync(process.platform === 'win32' ? 'gh.exe' : 'gh', args, { input, encoding: 'utf8', timeout: 60000, windowsHide: true, ...(env ? { env: { ...process.env, ...env } } : {}) })
+  const r = spawnSync(process.platform === 'win32' ? 'gh.exe' : 'gh', args, { input, encoding: 'utf8', timeout: 60000, maxBuffer: MAX_OUTPUT, windowsHide: true, ...(env ? { env: { ...process.env, ...env } } : {}) })
   if (r.error?.code === 'ENOENT') throw new CliError('the GitHub CLI (gh) is not installed', { hint: 'install it from https://cli.github.com, then run "gh auth login"' })
+  const problem = spawnProblem(r, 'gh')
+  if (problem) return { status: r.status ?? 1, stdout: '', stderr: problem }
   return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' }
 }
 
@@ -27,7 +30,7 @@ export function ghClient(run = systemGh, { host, retries = 4, backoffMs = 500 } 
       if (r.status === 0) return r.stdout.trim() ? JSON.parse(r.stdout) : null
       const err = `${r.stderr}\n${r.stdout}`
       if (attempt < retries && RETRYABLE.test(err)) { sleep(backoffMs * 2 ** attempt); continue }
-      const e = new CliError(`GitHub API: ${(r.stderr || r.stdout).trim().split('\n')[0] || `gh exited ${r.status}`}`)
+      const e = new CliError(`GitHub API: ${excerpt(r.stderr || r.stdout) || `gh exited ${r.status}`}`)
       e.output = err
       throw e
     }
