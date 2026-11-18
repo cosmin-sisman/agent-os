@@ -64,7 +64,7 @@ test('an existing ruleset covering both branches is reused and completed, never 
   assert.deepEqual(planGitHubSetup(config(), client, { only: ['ruleset'] }), [], 'already covered')
   const steps = planGitHubSetup(config({ branches: { requiredChecks: ['ci'] } }), client, { only: ['ruleset'] })
   assert.equal(steps.length, 1)
-  assert.match(steps[0].description, /update ruleset "protect main and development" \(#100\): add required checks agent-os\/loop,ci/)
+  assert.match(steps[0].description, /update ruleset "protect main and development" \(#100\): required checks: agent-os\/loop \(existing\) \+ ci \(new\); other rules and checks are kept as they are/)
   apply(steps)
   assert.equal(gh.state.rulesets.length, 1)
   assert.equal(gh.state.rulesets[0].name, 'protect main and development')
@@ -92,4 +92,26 @@ test('planning reads but never writes', () => {
   const gh = fakeGitHubRepo()
   planGitHubSetup(config(), ghClient(gh.run))
   assert.deepEqual(gh.writes, [])
+})
+
+test('an existing required check with an integration_id, and existing rule parameters, are kept as they are; only the new check is added', () => {
+  const live = {
+    name: 'protect main and development', target: 'branch', enforcement: 'active', conditions: { ref_name: { include: ['refs/heads/main', 'refs/heads/development'], exclude: [] } },
+    rules: [
+      { type: 'deletion' }, { type: 'non_fast_forward' },
+      { type: 'pull_request', parameters: { allowed_merge_methods: ['merge', 'squash', 'rebase'], required_approving_review_count: 0, require_extra_approval_for_unattributed_changes: true, required_review_thread_resolution: true } },
+      { type: 'required_status_checks', parameters: { do_not_enforce_on_create: false, strict_required_status_checks_policy: false, required_status_checks: [{ context: 'ci', integration_id: 15368 }] } },
+    ],
+  }
+  const gh = fakeGitHubRepo({ branches: { main: 's', development: 's' }, defaultBranch: 'development', rulesets: [structuredClone(live)] })
+  const client = ghClient(gh.run)
+  const steps = planGitHubSetup(config({ branches: { requiredChecks: ['ci'] } }), client, { only: ['ruleset'] })
+  assert.equal(steps.length, 1)
+  assert.match(steps[0].description, /required checks: ci \(existing\) \+ agent-os\/loop \(new\)/)
+  apply(steps)
+  const after = gh.state.rulesets[0]
+  assert.deepEqual(after.rules.slice(0, 3), live.rules.slice(0, 3), 'deletion, non_fast_forward and pull_request (with its parameters) untouched')
+  assert.deepEqual(after.rules[3].parameters, { do_not_enforce_on_create: false, strict_required_status_checks_policy: false, required_status_checks: [{ context: 'ci', integration_id: 15368 }, { context: 'agent-os/loop' }] })
+  assert.equal(after.rules.length, 4)
+  assert.deepEqual(planGitHubSetup(config({ branches: { requiredChecks: ['ci'] } }), client, { only: ['ruleset'] }), [], 'a second run plans nothing')
 })

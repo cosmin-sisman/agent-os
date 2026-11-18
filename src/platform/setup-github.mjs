@@ -44,8 +44,6 @@ export function desiredRuleset(config) {
   }
 }
 
-const ruleTypes = (rs) => (rs.rules ?? []).map((r) => r.type).sort().join(',')
-const checksOf = (rs) => ((rs.rules ?? []).find((r) => r.type === 'required_status_checks')?.parameters?.required_status_checks ?? []).map((c) => c.context).sort().join(',')
 
 /**
  * Plans the setup of a GitHub repository.
@@ -82,11 +80,23 @@ export function planGitHubSetup(config, client, { only } = {}) {
     if (!target) {
       steps.push(step('ruleset', 'create', `protect ${production} and ${integration}: no direct push, no force push, no deletion${desired.rules.length > 3 ? `, required checks: ${[...new Set([...(config.branches.requiredChecks ?? []), LOOP_CHECK])].join(', ')}` : ''}`, () => client.rest('POST', `repos/${repo}/rulesets`, desired)))
     } else {
-      const missingTypes = ruleTypes(desired) !== ruleTypes({ rules: target.rules.filter((r) => desired.rules.some((d) => d.type === r.type)) })
-      const checksDiffer = checksOf(desired) !== checksOf(target) && desired.rules.some((r) => r.type === 'required_status_checks')
-      if (missingTypes || checksDiffer) {
-        const merged = { ...desired, name: target.name, bypass_actors: target.bypass_actors ?? desired.bypass_actors, rules: [...target.rules.filter((r) => !desired.rules.some((d) => d.type === r.type)), ...desired.rules] }
-        steps.push(step('ruleset', 'update', `update ruleset "${target.name}" (#${target.id}): add ${[missingTypes ? 'missing rules' : null, checksDiffer ? `required checks ${checksOf(desired)}` : null].filter(Boolean).join(' and ')}`, () => client.rest('PUT', `repos/${repo}/rulesets/${target.id}`, merged)))
+      // Existing rules and checks are kept exactly as they are (parameters, integration_id); only what is missing is added.
+      const missingRules = desired.rules.filter((d) => !target.rules.some((r) => r.type === d.type))
+      const existingChecks = target.rules.find((r) => r.type === 'required_status_checks')?.parameters?.required_status_checks ?? []
+      const wantedChecks = desired.rules.find((r) => r.type === 'required_status_checks')?.parameters?.required_status_checks ?? []
+      const newChecks = wantedChecks.filter((c) => !existingChecks.some((e) => e.context === c.context))
+      const hadChecksRule = target.rules.some((r) => r.type === 'required_status_checks')
+      if (missingRules.length || (hadChecksRule && newChecks.length)) {
+        const rules = [
+          ...target.rules.map((r) => (r.type === 'required_status_checks' ? { ...r, parameters: { ...r.parameters, required_status_checks: [...existingChecks, ...newChecks] } } : r)),
+          ...missingRules,
+        ]
+        const merged = { name: target.name, target: target.target ?? 'branch', enforcement: target.enforcement ?? 'active', conditions: target.conditions, bypass_actors: target.bypass_actors ?? desired.bypass_actors, rules }
+        const parts = [
+          missingRules.filter((r) => r.type !== 'required_status_checks').length ? `add rules ${missingRules.filter((r) => r.type !== 'required_status_checks').map((r) => r.type).join(', ')}` : null,
+          newChecks.length ? `required checks: ${[...existingChecks.map((c) => `${c.context} (existing)`), ...newChecks.map((c) => `${c.context} (new)`)].join(' + ')}` : null,
+        ].filter(Boolean)
+        steps.push(step('ruleset', 'update', `update ruleset "${target.name}" (#${target.id}): ${parts.join('; ')}; other rules and checks are kept as they are`, () => client.rest('PUT', `repos/${repo}/rulesets/${target.id}`, merged)))
       }
     }
   }
