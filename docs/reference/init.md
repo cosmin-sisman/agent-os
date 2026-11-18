@@ -57,3 +57,14 @@ The questions, in this order. Each one has a flag, so `--yes` with flags never a
 A file that already exists and differs is left alone, and agent-os's version goes next to it as `.rej`. Init then runs `doctor`, which reports 0 FAIL on a fresh setup.
 
 **The platform** (default branch, protection, labels, milestone) is shown as a plan and applied only with `--setup`, because it changes settings other people rely on. Otherwise run `agent-os setup --dry-run`, then `agent-os setup`.
+
+## Existing repositories: forward-only
+
+For a repository with history (any profile but greenfield), init asks how to adopt (`--methodology`):
+
+- **forward-only** (the default): conventions apply from today on. Init records `adoption.cutoff` and a baseline journal entry: a snapshot of commits, tags, code, documents, CI, agent files and open change requests, so later readers know what predates the conventions. After that, `doctor`:
+  - ignores issues and journal entries older than the cutoff;
+  - reports problems in files agent-os does not manage (a broken link in an old README, a long existing AGENTS.md, diacritics in old docs) as warnings marked *pre-existing*, not failures.
+
+  So doctor passes on a legacy repository right after init. Failures in managed files, and risks such as tracked personal files, stay failures.
+- **retrofit**: brings the history into the system (#50, not available yet).

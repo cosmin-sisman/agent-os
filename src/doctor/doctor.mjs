@@ -2,6 +2,21 @@
 // platform checks), --offline (local only), --ci (local only, deterministic: what the CI loop check runs).
 
 import { CHECKS } from './checks.mjs'
+import { readLock } from '../managed/managed.mjs'
+
+/** Checks whose failures on files agent-os does not manage are history, not breakage, in a forward-only adoption. */
+const HISTORY_CHECKS = new Set(['links', 'budgets', 'language'])
+
+/**
+ * Forward-only adoption (adoption.cutoff): what was already in the repository is reported, not failed. A failure on
+ * a file agent-os manages, or on anything outside these checks, stays a failure.
+ */
+function forwardOnly({ cwd, config }, checkId, f) {
+  if (!config.adoption?.cutoff || f.level !== 'fail' || !HISTORY_CHECKS.has(checkId) || !f.path) return f
+  const managed = Object.keys(readLock(cwd).items).map((k) => k.split('#')[0])
+  if (managed.includes(f.path) || f.path.startsWith('.agent-os/') || f.path.startsWith('.claude/')) return f
+  return { ...f, level: 'warn', message: `${f.message} (pre-existing; forward-only since ${config.adoption.cutoff})` }
+}
 
 /**
  * @param {{ cwd: string, config: object, tracker?: object, caps?: object, me?: string, running: string }} deps
@@ -20,7 +35,7 @@ export function runDoctor(deps, { offline = false, ci = false, fix = false, only
       for (const f of findings.filter((x) => x.apply)) fixed.push(f.apply())
       findings = check.run(deps)
     }
-    results.push({ id: check.id, area: check.area, findings: findings.map(({ apply, ...f }) => ({ ...f, fixable: Boolean(apply) })) })
+    results.push({ id: check.id, area: check.area, findings: findings.map(({ apply, ...f }) => forwardOnly(deps, check.id, { ...f, fixable: Boolean(apply) })) })
   }
   const ran = results.filter((r) => !r.skipped)
   const levelOf = (r) => (r.findings.some((f) => f.level === 'fail') ? 'fail' : r.findings.some((f) => f.level === 'warn') ? 'warn' : 'ok')
