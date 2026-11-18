@@ -187,15 +187,30 @@ npx @cosmin-sisman/agent-os next      # what to work on next, and why
 
 ```mermaid
 flowchart LR
-  N["/next"] --> T["/ticket"] --> S["/start"] --> W(work) --> X["/test"] --> P["/pr"] --> SH["/ship"] --> R["/release"]
-  T -. "test plan" .-> X
+  subgraph CTX["Project context"]
+    direction TB
+    ST[("stack.yaml")]
+    SY[("system.yaml")]
+    PL(["GitHub · GitLab"])
+  end
+
+  N["/next"] --> T["/ticket"] --> S["/start"] --> W["work"] --> X["/test"] --> P["/pr · /mr"] --> SH["/ship"] --> R["/release"]
+
+  CTX -. "areas · gate · env · recall" .-> S
+  T -. "test plan + abuse cases" .-> X
+  Q{{"/standards · /security · /system"}} -. "checks" .-> P
+  W -. "always on" .-> Q
+
   P -. "journal + lessons" .-> J[(".agent-os/journal")]
   W -. "Learn" .-> I[("lessons inbox")]
   R --> RE["/retro"]
   I --> RE
-  RE -- "rules & lesson cards" --> RULES[(".claude/rules")]
+  RE -- "rules + lesson cards" --> RULES[(".claude/rules")]
   RULES -. "recall" .-> S
-  ST[["stack.yaml"]] -. "areas · gate · env · recall" .-> S
+
+  A["/audit"] -. "findings" .-> T
+  SW["/security watch"] -. "digest" .-> T
+  CTX -.-> A
 ```
 
 | Layer | Holds | Where |
