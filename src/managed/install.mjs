@@ -42,6 +42,10 @@ export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
       items.push({ key: f.path, content: f.content, route })
     }
   }
+  // A route that installs .gitlab/agent-os-*.yml job files wires them into .gitlab-ci.yml include list, as a
+  // managed block inside the project's own list, never a second include key (#233).
+  const jobs = items.filter((i) => /^\.gitlab\/agent-os-[\w-]+\.yml$/.test(i.key)).map((i) => i.key).sort()
+  if (jobs.length) items.push({ key: '.gitlab-ci.yml#include', content: jobs.map((k) => `  - local: ${k}`).join('\n'), route: `platform/${platform}` })
   // Language rules for the stack in use, scoped to the layers' paths (#101).
   if (cwd) for (const r of stackRules(config, { templatesRoot, cwd })) items.push(r)
   // Packs the project added (#55): their rules and subagents are managed files like the rest.

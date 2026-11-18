@@ -1,7 +1,7 @@
 {{#if ci.securityWatch != "off"}}
 # The advisory watch (agent-os, design §23): it asks OSV.dev (GitHub and GitLab advisories included) and CISA KEV about
 # the lockfiles' packages and keeps the one "Security digest" issue current. Only package names and versions leave the
-# project. Include it from .gitlab-ci.yml and add a {{{ci.securityWatch}}} pipeline schedule on {{{branches.integration}}} (CI/CD > Schedules).
+# project. agent-os includes it from .gitlab-ci.yml (the managed `include` block) and add a {{{ci.securityWatch}}} pipeline schedule on {{{branches.integration}}} (CI/CD > Schedules).
 # Writing the issue needs AGENT_OS_SECURITY_TOKEN, a project access token with the api scope in a protected, masked
 # variable; without it the job still reports and writes nothing.
 agent-os/security:
