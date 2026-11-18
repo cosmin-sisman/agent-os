@@ -41,7 +41,7 @@ export const COMMANDS = [
   { name: 'gate', summary: 'Run the checks the current diff needs', status: 'planned', issue: 43 },
   { name: 'check', summary: 'Check a pull or merge request title against its description, or a commit message', status: 'new', issue: 19, load: () => import('../commands/check.mjs') },
   { name: 'map', summary: 'Render a map of one area of the code, on demand', status: 'planned', issue: 26 },
-  { name: 'journal', summary: 'Add to or read the project journal', status: 'planned', issue: 22 },
+  { name: 'journal', summary: 'Add to or read the project journal', status: 'new', issue: 22, load: () => import('../commands/journal.mjs') },
   { name: 'lessons', summary: 'Capture, recall, search and triage lessons learned', status: 'planned', issue: 24 },
   { name: 'decision', summary: 'Create a decision record', status: 'planned', issue: 23 },
   { name: 'chronicle', summary: 'One timeline from git, the platform and the journal', status: 'planned', issue: 25 },
