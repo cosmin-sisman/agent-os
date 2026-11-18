@@ -82,3 +82,19 @@ The merge uses `branches.mergeMethod` (`squash` by default) and is pinned to the
 | `Refs #N` (Part of) | comments that the change is merged and the issue stays open; reopens it if it was closed by the merge |
 
 Then it deletes the branch on the remote (never a fork's, never a long-lived branch), removes its worktree, switches away if you are on it, and deletes the local branch.
+
+## `/test`
+
+```bash
+agent-os test plan 42 [--write]     # scenarios for issue 42; a bug starts with its regression scenario
+agent-os test local [--all]         # the suites the diff needs (the gate)
+agent-os test gaps                  # changed source files with no changed test naming them
+agent-os test pr [<n>]              # the gate's results table into the change request, in its own block
+```
+
+- **plan:** reads the issue's form sections (What happens, What should happen, How to reproduce, Acceptance criteria) and proposes `- [ ] Given …, when …, then …` lines it does not have yet. A bug gets its regression scenario first, the one that must fail before the fix. `--write` adds them to the issue's Test scenarios section.
+- **gaps:** test files are recognised as `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.go` and `tests/` folders. Docs and fixtures are left out, and so is anything under `testing.exclude`.
+- **pr:** writes the results between `<!-- agent-os:test-results -->` markers under How it was tested, and replaces them on every run.
+- **`/ship`** refuses while a scenario of an issue it closes is unticked.
+
+`/ticket` drafts scenarios with `test plan`, and `/pr` runs `test gaps` and `test pr`. The `testing` slot can bind a skill for writing the tests themselves.

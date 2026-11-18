@@ -29,6 +29,7 @@ Collect the evidence before writing: the exact error, `file:line`, command outpu
 ## 4. Title and body
 
 - Title: `<Area>: <the problem in short>`, at most 70 characters, no final period.
+- Scenarios: draft them with `agent-os test plan` once the issue exists, or write them yourself.
 - Body: the sections of the project's issue form, plus **{{#if lang.issues == "ro"}}## Scenarii de test{{else}}## Test scenarios{{/if}}** with Given / When / Then lines, including the edge cases and, for a bug, the regression test that will prove the fix.
 - Code, commands, file names and errors stay verbatim in backticks.
 - Write the body to a file in the scratchpad.

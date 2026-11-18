@@ -292,6 +292,23 @@
         "description": "The command that runs this suite"
       }
     },
+    "testing": {
+      "type": "object",
+      "description": "Test planning and gaps",
+      "default": {},
+      "properties": {
+        "exclude": {
+          "type": "array",
+          "description": "Paths agent-os test gaps leaves out",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A path prefix that needs no tests (generated code, vendored files)"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "gatePaths": {
       "type": "object",
       "description": "Path globs and the gate suites a change to them needs (\"docs/**\": [\"docs\"]); without it every suite runs",

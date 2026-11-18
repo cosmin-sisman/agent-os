@@ -7,6 +7,7 @@ import { CliError } from '../cli/errors.mjs'
 import { issueRefs } from '../conventions/conventions.mjs'
 import { has } from '../platform/capabilities.mjs'
 import { section } from './pr.mjs'
+import { untickedScenarios } from '../testing/test.mjs'
 
 const BEFORE_MERGE = { en: 'Before merge', ro: 'Inainte de merge' }
 
@@ -77,6 +78,9 @@ export function ship({ config, tracker, caps, git, vocab }, { number, issuesLang
     return { shipped: false, number, problems, notified, backToAuthor: theirs.length > 0 }
   }
   const { closes, refs } = issueRefs(s.body)
+  // The scenarios planned into the issues it closes must be ticked: the tests that cover them are in this change.
+  const unticked = closes.flatMap((n) => { try { return untickedScenarios(tracker.get(n).body).map((x) => `#${n}: ${x}`) } catch { return [] } })
+  if (unticked.length) return { shipped: false, number, problems: [{ owner: 'body', problem: `${unticked.length} test scenario(s) not ticked: ${unticked.slice(0, 3).join('; ')}${unticked.length > 3 ? '; …' : ''} (tick each one the tests cover, or move it to a follow-up issue)` }], notified: false, backToAuthor: false }
   const before = new Map(refs.map((n) => [n, tracker.get(n).state]))
   const t = TEXT[issuesLang] ?? TEXT.en
   const steps = [
