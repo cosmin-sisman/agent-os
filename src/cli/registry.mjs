@@ -47,7 +47,7 @@ export const COMMANDS = [
   { name: 'journal', summary: 'Add to or read the project journal', status: 'new', issue: 22, load: () => import('../commands/journal.mjs') },
   { name: 'lessons', summary: 'Capture, recall, search and triage lessons learned', status: 'new', issue: 24, load: () => import('../commands/lessons.mjs') },
   { name: 'decision', summary: 'Create, list and check decision records with date-based ids', status: 'new', issue: 23, load: () => import('../commands/decision.mjs') },
-  { name: 'chronicle', summary: 'One timeline from git, the platform and the journal', status: 'planned', issue: 25 },
+  { name: 'chronicle', summary: 'One timeline from the platform and the journal, rendered into the cache', status: 'new', issue: 25, load: () => import('../commands/chronicle.mjs') },
   { name: 'stack', summary: 'Show, change, detect or import the stack map', status: 'planned', issue: 74 },
   { name: 'system', summary: 'Map components, interfaces, exposure and contracts', status: 'planned', issue: 113 },
   { name: 'artifact', summary: 'Create, build, verify and link artifacts', status: 'planned', issue: 82 },
