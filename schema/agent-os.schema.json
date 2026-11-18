@@ -1,0 +1,343 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cosmin-sisman/agent-os/schema/agent-os.schema.json",
+  "title": "agent-os team configuration (agent-os.json)",
+  "type": "object",
+  "description": "agent-os configuration",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Path or URL of the JSON Schema, for editors"
+    },
+    "version": {
+      "type": "string",
+      "description": "The exact agent-os version this project is pinned to",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "greenfield",
+        "spec-first",
+        "active",
+        "maintenance"
+      ],
+      "description": "Where the project is in its life",
+      "default": "active"
+    },
+    "platform": {
+      "type": "object",
+      "description": "Which platform and project agent-os talks to",
+      "default": {},
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "github",
+            "gitlab"
+          ],
+          "description": "The code platform",
+          "default": "github"
+        },
+        "host": {
+          "type": "string",
+          "description": "Base URL for GitHub Enterprise Server or GitLab self-managed; omit for github.com and gitlab.com",
+          "pattern": "^https?://"
+        },
+        "project": {
+          "type": "string",
+          "description": "owner/name (GitHub) or group/subgroup/name (GitLab)",
+          "pattern": "^[^/\\s]+(/[^/\\s]+)+$"
+        },
+        "caFile": {
+          "type": "string",
+          "description": "Private CA bundle for a self-managed host, relative to the repository"
+        }
+      },
+      "additionalProperties": false
+    },
+    "branches": {
+      "type": "object",
+      "description": "Branch roles",
+      "default": {},
+      "properties": {
+        "integration": {
+          "type": "string",
+          "description": "Feature PRs and MRs target this branch; it is the default branch",
+          "default": "development"
+        },
+        "production": {
+          "type": "string",
+          "description": "Releases merge into this branch",
+          "default": "main"
+        }
+      },
+      "additionalProperties": false
+    },
+    "languages": {
+      "type": "object",
+      "description": "Language per area",
+      "default": {},
+      "properties": {
+        "issues": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Issue titles, bodies and comments the agent starts (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "prs": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Pull or merge request titles, descriptions and comments (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "commits": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Commit messages (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "branches": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Branch slugs (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "labels": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Label names and descriptions (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "milestones": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Milestone titles and descriptions (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "releases": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Release notes (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "codeComments": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Comments written in code (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "docs": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Human documentation in docs/ (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "journal": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Journal entries and decision records (en, or ro written without diacritics)",
+          "default": "en"
+        }
+      },
+      "additionalProperties": false
+    },
+    "packs": {
+      "type": "array",
+      "description": "Optional packs installed in this project",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "A pack id"
+      }
+    },
+    "slots": {
+      "type": "object",
+      "description": "Capability slots and the skills bound to them",
+      "default": {},
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The skill bound to this slot, or null for none"
+      }
+    },
+    "gate": {
+      "type": "object",
+      "description": "Test and check suites by name",
+      "default": {},
+      "additionalProperties": {
+        "type": "string",
+        "description": "The command that runs this suite"
+      }
+    },
+    "requires": {
+      "type": "object",
+      "description": "What a working setup needs, checked by agent-os env",
+      "default": {},
+      "properties": {
+        "mcp": {
+          "type": "array",
+          "description": "MCP servers the project needs",
+          "default": [],
+          "items": {
+            "type": "object",
+            "description": "One MCP server",
+            "required": [
+              "name",
+              "scope"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Server name as registered in Claude Code"
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "project",
+                  "user"
+                ],
+                "description": "Where the server is configured"
+              },
+              "transport": {
+                "type": "string",
+                "enum": [
+                  "stdio",
+                  "http",
+                  "sse"
+                ],
+                "description": "How the server is reached"
+              },
+              "optional": {
+                "type": "boolean",
+                "description": "A missing optional server is a warning, not a failure",
+                "default": false
+              },
+              "why": {
+                "type": "string",
+                "description": "What needs it"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "cli": {
+          "type": "object",
+          "description": "Command-line tools and their versions",
+          "default": {},
+          "additionalProperties": {
+            "type": "string",
+            "description": "A semver range, or * for any version"
+          }
+        },
+        "platformScopes": {
+          "type": "array",
+          "description": "Token scopes the platform CLI needs",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A token scope"
+          }
+        },
+        "env": {
+          "type": "array",
+          "description": "Variables that must be set (values are never read)",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "An environment variable name",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          }
+        },
+        "plugins": {
+          "type": "array",
+          "description": "Plugins the project expects",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A Claude Code plugin"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "upstream": {
+      "type": "object",
+      "description": "Feedback to the agent-os project",
+      "default": {},
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Allow /upstream to file issues on the public agent-os repository",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "compliance": {
+      "type": "object",
+      "description": "Compliance constraints",
+      "default": {},
+      "properties": {
+        "euOnly": {
+          "type": "boolean",
+          "description": "Flag providers without confirmed EU regions",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "contextBudgets": {
+      "type": "object",
+      "description": "Size budgets per file or glob",
+      "default": {},
+      "additionalProperties": {
+        "type": "string",
+        "description": "A size such as 8KB",
+        "pattern": "^\\d+(\\.\\d+)?\\s?(B|KB|MB)$"
+      }
+    },
+    "legacy": {
+      "type": "array",
+      "description": "Legacy features this project keeps enabled",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "A legacy feature id"
+      }
+    }
+  },
+  "additionalProperties": false
+}
