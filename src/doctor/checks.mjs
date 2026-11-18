@@ -16,6 +16,7 @@ import { headerOf } from '../map/map.mjs'
 import { standardsFindings } from '../standards/checks.mjs'
 import { readLock } from '../managed/managed.mjs'
 import { OUTSIDE, readRegistry } from '../registry/registry.mjs'
+import { SLOTS, slotsFor } from '../registry/slots.mjs'
 import { matches } from '../util/glob.mjs'
 import { legacyFeatures, lifecycleOf, noticeFor } from '../lifecycle/legacy.mjs'
 import { readExceptions, deprecatedInUse } from '../lifecycle/manifest.mjs'
@@ -89,11 +90,18 @@ function skills({ cwd }) {
   return out.length ? out : [ok(`${folders.length} skill(s), all registered`)]
 }
 
-/** Slots point at skills that exist (on disk or registered as plugin/builtin). */
+/** Every slot core uses is bound or explicitly empty, and every bound skill exists (on disk or registered). */
 function slots({ cwd, config }) {
   const known = new Set([...dirs(cwd, SKILLS), ...walk(cwd, REGISTRY).filter((p) => p.endsWith('.json')).map((p) => p.split('/').pop().slice(0, -5))])
-  const out = Object.entries(config.slots ?? {}).filter(([, skill]) => skill && !known.has(skill)).map(([slot, skill]) => ({ level: 'warn', message: `slot "${slot}" is bound to "${skill}", which is neither in ${SKILLS}/ nor registered`, fix: `register it (${REGISTRY}/${skill}.json with origin plugin or builtin if it lives outside the repo) or rebind: agent-os config set slots.${slot} <skill>` }))
-  return out.length ? out : [ok('every bound slot has its skill')]
+  const effective = slotsFor(config)
+  const out = []
+  for (const slot of SLOTS) {
+    if (!Object.hasOwn(config.slots ?? {}, slot) && effective[slot] === null) out.push({ level: 'warn', message: `slot "${slot}" is neither bound nor explicitly empty`, fix: `agent-os config set slots.${slot} <skill>, or set it to null to say the project has none` })
+  }
+  for (const [slot, skill] of Object.entries(effective)) {
+    if (skill && !known.has(skill)) out.push({ level: 'warn', message: `slot "${slot}" is bound to "${skill}", which is neither in ${SKILLS}/ nor registered`, fix: `register it (agent-os skill register ${skill} --origin plugin|builtin if it lives outside the repo) or rebind: agent-os config set slots.${slot} <skill>` })
+  }
+  return out.length ? out : [ok(`${SLOTS.length} slot(s): ${SLOTS.map((s) => `${s}=${effective[s] ?? 'none'}`).join(', ')}`)]
 }
 
 /** The configuration is valid and the version pin matches what runs. */

@@ -9,6 +9,7 @@ import { readResult } from '../gate/gate.mjs'
 import { labelId } from './next.mjs'
 import { lessonsForChange } from '../lessons/lessons.mjs'
 import { findOverlap } from '../collab/overlap.mjs'
+import { UI_FILE, slotsFor } from '../registry/slots.mjs'
 
 /** Section headings of the change-request template, per language. */
 export const SECTIONS = {
@@ -69,7 +70,10 @@ export function preflight({ config, git, cwd, tracker }, { title, body, base = c
   const files = changed ? changed.split(/\r?\n/).filter(Boolean) : []
   let overlaps = []
   if (files.length) { try { overlaps = findOverlap({ tracker, git, cwd, config }, { files, branch }).overlaps } catch { overlaps = [] } }
-  return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion, lessons, overlaps }
+  // A slot that is not bound is a warning, never a stop: the change request goes ahead without that pass.
+  const warnings = []
+  if (!slotsFor(config)['ui-design'] && files.some((f) => UI_FILE.test(f))) warnings.push('this change touches the user interface and no ui-design skill is bound (slots.ui-design): review the UI by hand, or bind one')
+  return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion, lessons, overlaps, warnings }
 }
 
 /**

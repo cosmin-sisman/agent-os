@@ -35,3 +35,27 @@ agent-os skills --json
 ```
 
 It is rendered every time from the registry and `.claude/skills/`, with each skill's first sentence from its front matter, and it is never committed. Adding a skill needs no edit to `AGENTS.md` or any other index. A new folder shows up under Local at once, marked *unregistered* until `agent-os skill register` records it. The SessionStart context carries one line from it: `Skills: core /next /start …; external …; local …`.
+
+## Capability slots
+
+Core skills never name another skill: they call a **slot**, and `agent-os.json` binds it.
+
+| Slot | Default | Used by |
+|---|---|---|
+| `review` | `code-review` (Claude Code built-in) | /pr before opening |
+| `security-review` | `security-review` (built-in) | /pr, /audit |
+| `standards` | none (/standards itself) | /pr, /standards |
+| `testing` | none | /test |
+| `ui-design` | none | /pr, when the diff touches the user interface |
+| `ci` | none | /ci |
+| `docs` | none | documentation skills |
+
+```bash
+agent-os config set slots.ui-design impeccable      # swapping a design skill is this one line
+agent-os config set slots.docs null                 # explicitly none
+```
+
+- **init** writes every slot, bound or `null`, so the choice is visible.
+- **Built-ins:** the ones bound by default are registered as `builtin` by the install, so doctor and `agent-os skills` know them.
+- **doctor** warns about a slot that is neither bound nor explicitly empty, and about a bound skill that is neither on disk nor registered.
+- **Unbound means skipped, not stopped:** with `ui-design` unbound, `/pr` on a change that touches the UI warns and continues, and the description says the UI was reviewed by hand.

@@ -15,6 +15,7 @@ import { settingsHooks } from '../hooks/runner.mjs'
 import { hookCommand } from '../version/pin.mjs'
 import { CliError } from '../cli/errors.mjs'
 import { coreEntry, REGISTRY_DIR } from '../registry/registry.mjs'
+import { BUILTIN_SKILLS, slotsFor } from '../registry/slots.mjs'
 
 export const TEMPLATES = fileURLToPath(new URL('../../templates/', import.meta.url))
 
@@ -47,6 +48,11 @@ export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
     if (!m) continue
     const description = it.content.match(/^description:\s*(.+)$/m)?.[1].trim().replace(/^["']|["']$/g, '').split(/(?<=\.)\s/)[0]
     items.push({ key: `${REGISTRY_DIR}/${m[1]}.json`, content: `${JSON.stringify(coreEntry(m[1], { version: config.version ?? null, description }), null, 2)}\n`, route: it.route })
+  }
+  // The built-in skills the slots bind by default, registered so doctor and the index know them (#40).
+  const bound = new Set(Object.values(slotsFor(config)).filter(Boolean))
+  for (const [name, b] of Object.entries(BUILTIN_SKILLS)) {
+    if (bound.has(name)) items.push({ key: `${REGISTRY_DIR}/${name}.json`, content: `${JSON.stringify({ name, origin: 'builtin', source: 'claude-code', provides: b.provides, managed: true, description: b.description }, null, 2)}\n`, route: 'core' })
   }
   // Managed blocks in the agent files: the team's own text around them is never touched (#49).
   items.push({ key: 'AGENTS.md#agent-os', content: agentsBlock(config), route: 'core' })
