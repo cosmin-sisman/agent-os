@@ -36,3 +36,18 @@ An optional server that is missing is a warning, not a failure.
 **Secrets are never shown.** Variables are reported as set or not set, never by their value. Platform tokens are reported by their scopes and source (`gh auth (github.com)`), never their value. A literal secret in `.mcp.json` is reported by its key path (`mcpServers.github.env.GITHUB_TOKEN`). The output of `gh`, `glab` and `claude` is parsed, never echoed. Tests plant fake tokens on every input and check that none reaches stdout, stderr, `--json` or the SessionStart reminder.
 
 At session start, the fast check runs as a hook and warns once about anything missing. The `/env` skill explains the findings and applies fixes only with your consent.
+
+## Requirements the stack suggests: `agent-os env propose`
+
+The stack map implies some requirements. A provider the catalog marks with `mcpHint` (Sentry, Vercel, Supabase, Stripe, …) suggests looking for its MCP server, and a provider with a well-known command-line tool suggests that tool (`vercel`, `wrangler`, `supabase`, `stripe`, `sentry-cli`, `gh`, …).
+
+```sh
+agent-os env propose                                   # list what the layers in use suggest; adds nothing
+agent-os env propose --accept mcp:sentry --accept cli:supabase
+agent-os env propose --accept-all [--dry-run]
+```
+
+- Nothing is ever added silently. `propose` lists, and only `--accept <id>`, `--accept-all` or a "yes" at the interactive question writes to `agent-os.json` → `requires`.
+- An accepted MCP server is added as `optional` and user-scoped, with a `why` naming the layers. agent-os never assumes the server exists: `agent-os env` checks it like any other requirement, and the team can make it required or project-scoped later.
+- Accepted CLIs are added with the range `*`; tighten it to a version range when the team needs one.
+- Only layers in use (status `chosen`) count, and what `requires` already lists is not proposed again.
