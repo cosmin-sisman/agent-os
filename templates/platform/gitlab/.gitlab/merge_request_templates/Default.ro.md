@@ -15,6 +15,10 @@ Closes #
 
 <!-- Obligatoriu. O lectie pentru reguli, sau "Niciuna: <motiv>". -->
 
+## Artefacte
+
+<!-- Optional. Artefactele pe care le adauga sau le actualizeaza schimbarea: artifacts/<id>/ (agent-os artifact link <id> <ref> comenteaza cu linkul). -->
+
 ## Note pentru revieweri
 
 <!-- Optional. -->

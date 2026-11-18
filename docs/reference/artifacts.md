@@ -66,4 +66,19 @@ Both pass `agent-os ci review`, and they use `ci.image`, `ci.tags` and `npmRegis
 - GitHub Pages for a private repository needs a plan that supports it (Enterprise Cloud can restrict it to members).
 - On GitLab, the Pages access control setting limits the site to project members. If the administrator disabled Pages, the job still keeps the site as its artifact (30 days), linked from the pipeline.
 
-`link` and `publish` come with later issues.
+## Link: `agent-os artifact link`
+
+```sh
+agent-os artifact link 2026-11-18-queues '#42'    # an issue
+agent-os artifact link 2026-11-18-queues '!7'     # a change request (the CR reference of your platform)
+```
+
+This posts one comment with the artifact's title, type, status and summary:
+- **The repository copy always comes first** (`…/tree/<integration branch>/artifacts/<id>`), since it is the source of truth.
+- The published site comes second, when `artifacts.siteUrl` is set.
+- The comment is written in the thread's language, detected from its comments, else the issues or change requests language. Romanian is written without diacritics.
+- The ref is added to the artifact's `refs`, once.
+
+`--dry-run` shows the comment and changes nothing. The pull and merge request templates have an optional `## Artifacts` section, and the `/artifact` skill covers new, build, verify and link.
+
+**Publishing to an external host** (such as claude.ai) is not part of agent-os yet: those links are personal, and the repository copy stays the source of truth.

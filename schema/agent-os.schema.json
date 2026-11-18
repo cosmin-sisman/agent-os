@@ -601,6 +601,11 @@
           "minimum": 16,
           "default": 2048
         },
+        "siteUrl": {
+          "type": "string",
+          "description": "Where the artifact site is published (e.g. https://acme.github.io/app); artifact link adds it after the repository link",
+          "pattern": "^https?://"
+        },
         "pages": {
           "type": "boolean",
           "description": "Install the workflow that publishes artifacts to GitHub or GitLab Pages (the index is built in CI, never committed)",

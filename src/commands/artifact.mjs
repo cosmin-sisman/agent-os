@@ -7,6 +7,9 @@ import { TYPES, KINDS, artifactLog, listArtifacts, newArtifact } from '../artifa
 import { buildArtifact, verifyArtifacts } from '../artifacts/build.mjs'
 import { buildSite, webUrlOf } from '../artifacts/site.mjs'
 import { vocabularyFor } from '../platform/vocabulary.mjs'
+import { linkArtifact } from '../artifacts/link.mjs'
+import { createTracker } from '../tracker/tracker.mjs'
+import { languageFor } from '../i18n/i18n.mjs'
 import { loadConfig } from '../config/config.mjs'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -17,6 +20,7 @@ export const usage = [
   `agent-os artifact new <${TYPES.join('|')}> <slug> [--title <t>] [--kind ${KINDS.join('|')}] [--author <login>…] [--ref <#N>…] [--dry-run]`,
   'agent-os artifact list [--type <type>]   ·   check   ·   log <id>',
   'agent-os artifact build <id> | --living [--dry-run]   ·   verify [<id>] [--strict]   ·   site [<out>] [--strict]',
+  'agent-os artifact link <id> <#N | !N> [--dry-run]   (a comment with the repository link first, in the thread language)',
 ].join('\n       ')
 
 export const options = {
@@ -73,6 +77,16 @@ export async function run(ctx) {
       const lines = r.artifacts.map((x) => `${x.id}  ${x.kind ?? '?'}  ${x.stale.length ? `STALE: ${x.stale.join(', ')} changed; ${x.buildable ? `agent-os artifact build ${x.id}` : 'update the page and its source hashes'}${x.kind === 'snapshot' ? ' (a snapshot: a new date is a new artifact)' : ''}` : 'sources verified'}`)
       ctx.output(r, lines.join('\n') || 'no artifacts')
       return v.strict && !r.ok ? EXIT.CHECK_FAILED : EXIT.OK
+    }
+    case 'link': {
+      if (!a || !b) throw new CliError('link needs an artifact and an issue or change request', { hint: 'agent-os artifact link 2026-11-18-auth-options #42' })
+      const { merged } = loadConfig(ctx.cwd)
+      const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
+      const vocab = vocabularyFor(merged.platform?.type)
+      const isCr = String(b).startsWith('!')
+      const r = linkArtifact(ctx.cwd, { tracker, config: merged, vocab }, { id: a, target: b, dryRun: ctx.dryRun, fallbackLang: languageFor(merged, isCr ? 'prs' : 'issues') })
+      ctx.output(r, `${r.dryRun ? 'would comment' : 'commented'} on ${r.target} (${r.lang}) and record ${r.target} in its refs:\n\n${r.body}`)
+      return EXIT.OK
     }
     case 'site': {
       const { merged } = loadConfig(ctx.cwd)
