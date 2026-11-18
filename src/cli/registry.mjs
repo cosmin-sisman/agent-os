@@ -30,7 +30,7 @@ export const COMMANDS = [
   { name: 'update', summary: 'Plan and apply an agent-os upgrade as a pull or merge request', status: 'planned', issue: 68 },
   { name: 'eject', summary: 'Stop managing a file and hand it to the project', status: 'planned', issue: 6 },
   { name: 'platform', summary: 'Detect, probe or switch the code platform (GitHub, GitLab)', status: 'planned', issue: 90 },
-  { name: 'lang', summary: 'Show or change the language of an area', status: 'planned', issue: 7 },
+  { name: 'lang', summary: 'Show the language of each area, check ro text for diacritics, print the language rule', status: 'new', issue: 7, load: () => import('../commands/lang.mjs') },
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'planned', issue: 18 },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'planned', issue: 33 },
   { name: 'gate', summary: 'Run the checks the current diff needs', status: 'planned', issue: 43 },
