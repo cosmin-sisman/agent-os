@@ -31,6 +31,8 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 | `src/config/` | the configuration schema (one definition for validation, defaults and the published JSON Schemas) and the loader for `agent-os.json` + `.agent-os/local.json` |
 | `src/templates/` | the template engine (`engine.mjs`) and folder rendering with language variants (`tree.mjs`); test fixtures in `__fixtures__/` (not published) |
 | `src/platform/` | platform detection: remotes, known hosts, probing unknown hosts (`detect.mjs`); a fake network for tests in `__fixtures__/` |
+| `migrations/` | one migration per version that changes projects (`<version>.mjs`), with a fixture project each in `__fixtures__/`; contract in its README |
+| `src/migrations/` | the migrations runner: order, idempotency, dry runs, the lock record |
 | `src/lifecycle/` | the lifecycle manifest (`manifest.mjs`) and its exceptions (`lifecycle.yaml`); `manifest.json` at the root is the last release's baseline, rebuilt at release |
 | `src/version/` | the pinned version: the hook command, mismatch checks (`pin.mjs`) |
 | `src/managed/install.mjs` | the install plan: core plus the active platform route, rendered; the lock records the platform |

@@ -26,10 +26,10 @@ const eq = (a, b) => a.replace(/\r\n/g, '\n') === b.replace(/\r\n/g, '\n')
 
 export function readLock(cwd) {
   const path = join(cwd, LOCK_FILE)
-  if (!existsSync(path)) return { lockVersion: LOCK_VERSION, platform: null, items: {} }
+  if (!existsSync(path)) return { lockVersion: LOCK_VERSION, platform: null, migrations: [], items: {} }
   try {
     const lock = JSON.parse(readFileSync(path, 'utf8'))
-    return { lockVersion: lock.lockVersion ?? LOCK_VERSION, platform: lock.platform ?? null, items: lock.items ?? {} }
+    return { lockVersion: lock.lockVersion ?? LOCK_VERSION, platform: lock.platform ?? null, migrations: lock.migrations ?? [], items: lock.items ?? {} }
   } catch {
     throw new CliError(`${LOCK_FILE} is not valid JSON`, { hint: 'run "agent-os update --relock" to rebuild it from .agent-os/base/' })
   }
@@ -38,7 +38,7 @@ export function readLock(cwd) {
 export function writeLock(cwd, lock) {
   const items = Object.fromEntries(Object.entries(lock.items).sort(([a], [b]) => a.localeCompare(b)))
   mkdirSync(join(cwd, '.agent-os'), { recursive: true })
-  writeFileSync(join(cwd, LOCK_FILE), `${JSON.stringify({ lockVersion: LOCK_VERSION, ...(lock.platform ? { platform: lock.platform } : {}), items }, null, 2)}\n`)
+  writeFileSync(join(cwd, LOCK_FILE), `${JSON.stringify({ lockVersion: LOCK_VERSION, ...(lock.platform ? { platform: lock.platform } : {}), ...(lock.migrations?.length ? { migrations: lock.migrations } : {}), items }, null, 2)}\n`)
 }
 
 const baseFile = (cwd, key) => join(cwd, BASE_DIR, key.replace('#', '.__'))
@@ -227,7 +227,8 @@ export function eject(cwd, target, { dryRun = false } = {}) {
 /** Rebuilds the lock from .agent-os/base/ (for example after a merge conflict in lock.json), keeping known versions. */
 export function relock(cwd, { version }) {
   let oldPlatform = null
-  const old = (() => { try { const l = readLock(cwd); oldPlatform = l.platform; return l.items } catch { return {} } })()
+  let oldMigrations = []
+  const old = (() => { try { const l = readLock(cwd); oldPlatform = l.platform; oldMigrations = l.migrations; return l.items } catch { return {} } })()
   const dir = join(cwd, BASE_DIR)
   const items = {}
   const walk = (d) => {
@@ -239,6 +240,6 @@ export function relock(cwd, { version }) {
     }
   }
   walk(dir)
-  writeLock(cwd, { platform: oldPlatform, items })
+  writeLock(cwd, { platform: oldPlatform, migrations: oldMigrations, items })
   return Object.keys(items).sort()
 }

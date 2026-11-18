@@ -13,6 +13,7 @@
     "catalog/",
     "schema/",
     "templates/",
+    "migrations/",
     "manifest.json",
     "!**/*.test.mjs",
     "!**/__fixtures__/**"

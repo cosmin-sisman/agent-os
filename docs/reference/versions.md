@@ -44,3 +44,19 @@ agent-os manifest check     # the rules, against the last released manifest
 agent-os manifest build     # at release: write manifest.json
 agent-os manifest usage     # deprecated items this project still uses (config keys, commands and flags in its hooks)
 ```
+
+## Migrations
+
+When a new version changes something in projects (configuration keys, registry entries, journal or lesson formats, `stack.yaml`), it ships a migration: `migrations/<version>.mjs`. The update runs the ones between the project's pinned version and the new one, in version order (0.9.0 before 0.10.0).
+
+```bash
+agent-os update --migrate --dry-run   # what would change, per migration
+agent-os update --migrate             # run them
+```
+
+- Every migration is **idempotent**. A test runs each one twice against its fixture project (`migrations/__fixtures__/<version>/`), and the second run must change nothing.
+- The applied versions are recorded in `.agent-os/lock.json`, so a rerun skips them.
+- A failing migration stops the chain with its name. The ones before it stay applied, and a rerun continues from the failed one.
+- The full `agent-os update` (#68) runs migrations as one of its steps, on its own branch.
+
+How to write one: [migrations/README.md](../../migrations/README.md).
