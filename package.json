@@ -25,7 +25,8 @@
   "scripts": {
     "test": "node --test",
     "site": "node scripts/site/build.mjs _site --strict",
-    "schema": "node scripts/schema/build.mjs"
+    "schema": "node scripts/schema/build.mjs",
+    "docs": "node scripts/docs/build.mjs"
   },
   "license": "MIT",
   "repository": {

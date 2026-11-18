@@ -17,6 +17,8 @@
   <a href="#-quick-start">Quick start</a> ·
   <a href="#-what-you-get">Features</a> ·
   <a href="#-how-it-works">How it works</a> ·
+  <a href="docs/guides/README.md">Guides</a> ·
+  <a href="docs/reference/commands.md">Commands</a> ·
   <a href="https://cosmin-sisman.github.io/agent-os/">Stack map &amp; artifacts</a> ·
   <a href="docs/design/overview.md">Design</a> ·
   <a href="#-roadmap">Roadmap</a> ·
