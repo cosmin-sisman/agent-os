@@ -17,3 +17,4 @@ Decisions:
 - Optional "Before merge" checklists were added to the PR and MR templates (en and ro); an unchecked item blocks the merge.
 - Clean-up order follows the trap in the issue: remove the worktree first, switch away from the branch, then delete it locally. The remote branch is deleted only for the PR's own, non-fork head branch.
 - New config key `branches.mergeMethod` (squash by default).
+- Found by shipping this PR with `agent-os ship`: when a check is re-run on the same commit (here after a PR body edit), the commit keeps the old failed run, and GitHub's rollup state still says FAILURE. Checks are now counted one per name with the latest run winning, as for required checks (`checksOf`), in `pr status`, `ship` and `next`.
