@@ -32,7 +32,7 @@ For each risk, ask the person explicitly. For a migration: is there a backup, an
 agent-os release open --version <x.y.z>
 ```
 
-This creates `release/<x.y.z>` from `{{branches.integration}}`, with the changelog entry and a release journal entry, and opens it into `{{branches.production}}`. Running it again updates the same {{vocab.changeRequest}}. Wait for its checks and its review.
+This creates `release/<x.y.z>` from `{{branches.integration}}`, with the changelog entry and a release journal entry, and opens it into `{{branches.production}}`. It also sets `package.json` to the version, when there is one. Running it again updates the same {{vocab.changeRequest}}. It stops when `{{branches.production}}` is not an ancestor of `{{branches.integration}}` (a sync was squashed or never merged), and says when the {{vocab.changeRequest}} conflicts: the platform runs no checks on a conflicting one. Wait for its checks and its review.
 
 ## 4. Finish
 
@@ -47,7 +47,7 @@ It refuses while a check fails, a review is missing or a risk is not accepted. T
 - publishes the notes;
 - rolls the rolling milestone;
 - runs the release checks (environment, `release:*` gate suites);
-- opens the sync of the release branch back into `{{branches.integration}}`.
+- opens the sync of `{{branches.production}}` back into `{{branches.integration}}`. /ship merges it with a merge commit, never squashed. Otherwise `{{branches.integration}}` misses the release merge, and the next release {{vocab.changeRequest}} conflicts and gets no checks.
 
 It never deletes `{{branches.integration}}`.
 
