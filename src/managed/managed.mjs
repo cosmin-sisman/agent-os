@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { merge3 } from './merge3.mjs'
-import { CliError } from '../cli/errors.mjs'
+import { CliError, EXIT } from '../cli/errors.mjs'
 
 export const LOCK_FILE = '.agent-os/lock.json'
 export const BASE_DIR = '.agent-os/base'
@@ -190,6 +190,9 @@ export function applyManaged(cwd, items, { version, dryRun = false }) {
   if (!dryRun) writeLock(cwd, lock)
   return results
 }
+
+/** The exit code for a set of apply results: 1 (a check failed) when any item ended in a conflict, otherwise 0. */
+export const exitCodeFor = (results) => (results.some((r) => r.action === 'conflict') ? EXIT.CHECK_FAILED : EXIT.OK)
 
 /** Writes `<path>.rej` with the proposal; the local content and the base stay as they are, so the next update retries. */
 function conflict(cwd, key, base, local, content, version, dryRun, reason, merged) {

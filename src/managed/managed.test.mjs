@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { applyManaged, readLock, eject, relock, readBlock, writeBlock, readHooks, writeHooks, hooksContent, hash, LOCK_FILE } from './managed.mjs'
+import { applyManaged, exitCodeFor, readLock, eject, relock, readBlock, writeBlock, readHooks, writeHooks, hooksContent, hash, LOCK_FILE } from './managed.mjs'
 import { settingsHooks } from '../hooks/runner.mjs'
 
 function project(files = {}) {
@@ -65,6 +65,8 @@ test('a conflicting edit leaves the local file untouched, writes .rej, and retri
     assert.match(rej, /could not update .*1 conflicting change/)
     assert.match(rej, /<<<<<<< local\nours\n=======\ntheirs\n>>>>>>> agent-os 0\.2\.0/)
     assert.equal(readLock(dir).items[RULE].version, '0.1.0', 'the base stays, so the next update merges again')
+    assert.equal(exitCodeFor([r]), 1)
+    assert.equal(exitCodeFor([{ action: 'merged' }, { action: 'replaced' }]), 0)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 
