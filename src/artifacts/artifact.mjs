@@ -146,3 +146,22 @@ export function artifactLog(git, id) {
   if (r.status !== 0) throw new CliError(`git log failed: ${(r.stderr ?? '').trim()}`)
   return r.stdout.split(/\r?\n/).filter(Boolean).map((l) => { const [commit, date, author, ...s] = l.split('\t'); return { commit, date, author, subject: s.join('\t') } })
 }
+
+/**
+ * What a page loads from outside itself: scripts, styles, images, frames, media, CSS url()/@import, fetch, XHR and
+ * WebSocket targets with an absolute or protocol-relative URL. Plain links (<a href>) are navigation, not loads.
+ */
+export function externalLoads(html) {
+  const found = new Set()
+  const add = (u) => { if (u && /^(https?:)?\/\//i.test(u.trim())) found.add(u.trim()) }
+  for (const m of html.matchAll(/<(script|img|iframe|frame|source|video|audio|embed|track|input)\b[^>]*?\ssrc\s*=\s*["']?([^"'\s>]+)/gi)) add(m[2])
+  for (const m of html.matchAll(/<link\b[^>]*?\shref\s*=\s*["']?([^"'\s>]+)/gi)) add(m[1])
+  for (const m of html.matchAll(/<object\b[^>]*?\sdata\s*=\s*["']?([^"'\s>]+)/gi)) add(m[1])
+  for (const m of html.matchAll(/\bsrcset\s*=\s*["']([^"']+)["']/gi)) for (const part of m[1].split(',')) add(part.trim().split(/\s+/)[0])
+  for (const m of html.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)) add(m[1])
+  for (const m of html.matchAll(/@import\s+["']([^"']+)["']/gi)) add(m[1])
+  for (const m of html.matchAll(/\b(?:fetch|EventSource|WebSocket|importScripts|import)\s*\(\s*["'`]([^"'`]+)["'`]/g)) add(m[1])
+  for (const m of html.matchAll(/\.open\(\s*["'][A-Z]+["']\s*,\s*["'`]([^"'`]+)["'`]/g)) add(m[1])
+  for (const m of html.matchAll(/new\s+WebSocket\(\s*["'`](wss?:\/\/[^"'`]+)["'`]/g)) found.add(m[1])
+  return [...found]
+}

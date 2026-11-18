@@ -98,6 +98,9 @@ export const SCHEMA = obj({
     disable: list(str('The id of a built-in guard'), 'Built-in guards turned off for this project', { default: [] }),
   }, 'Guards that refuse risky shell commands before they run (PreToolUse)', { default: {} }),
   npmRegistry: str('The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs', { pattern: '^https?://' }),
+  artifacts: obj({
+    maxPageKb: int('doctor warns when an artifact page is larger than this', { minimum: 16, default: 2048 }),
+  }, 'Artifacts (artifacts/<date>-<slug>/)', { default: {} }),
   ci: obj({
     image: str('The container image generated CI jobs run in, e.g. from the internal registry (default node:22)'),
     tags: list(str('A runner tag'), 'Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels)', { default: [] }),

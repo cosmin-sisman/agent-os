@@ -566,6 +566,20 @@
       "description": "The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs",
       "pattern": "^https?://"
     },
+    "artifacts": {
+      "type": "object",
+      "description": "Artifacts (artifacts/<date>-<slug>/)",
+      "default": {},
+      "properties": {
+        "maxPageKb": {
+          "type": "integer",
+          "description": "doctor warns when an artifact page is larger than this",
+          "minimum": 16,
+          "default": 2048
+        }
+      },
+      "additionalProperties": false
+    },
     "ci": {
       "type": "object",
       "description": "How generated CI jobs run: image and runners",

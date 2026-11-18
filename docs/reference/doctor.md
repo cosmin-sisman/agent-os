@@ -26,6 +26,7 @@ It exits with 1 when any check fails and 0 otherwise. Warnings don't fail.
 | `budgets` | a file is over its size budget (fail) or above 80% of it (warn). Defaults are `AGENTS.md` and `CLAUDE.md` at 8 KB and `.claude/rules/*.md` at 6 KB; `contextBudgets` adds to or overrides them |
 | `language` | a file of an area set to `ro` contains diacritics (PR and issue templates, `docs/`); fixable |
 | `journal` | an entry does not follow the schema ([journal](journal.md)) |
+| `artifacts` | in `artifacts/`: invalid `artifact.yaml` or a missing `index.html` (fail); a page that loads anything from outside, naming the URLs: scripts, styles, images, frames, CSS `url()`/`@import`, `fetch`, WebSocket (fail; plain links are fine); a ref that is neither `#N`/`!N`/`&N` nor a decision id, a page over `artifacts.maxPageKb` (2048 KB by default) or stale sources (warn) |
 | `conflicts` | an update left a `.rej` file |
 | `version` | no version is pinned, or what runs differs from the pin (warn) |
 | `lifecycle` | a legacy feature is enabled (warn: debt, with its removal and replacement), an unknown legacy id (fail), or a deprecated item is still used (warn, with its replacement) |

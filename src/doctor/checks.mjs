@@ -11,7 +11,8 @@ import { checkTitle } from '../conventions/conventions.mjs'
 import { findDiacritics, languageFor, labelSet, toAscii } from '../i18n/i18n.mjs'
 import { readJournal, validate as validateEntry } from '../journal/journal.mjs'
 import { readLessons, validateCard } from '../lessons/lessons.mjs'
-import { checkDecisions } from '../decisions/decisions.mjs'
+import { checkDecisions, readDecisions } from '../decisions/decisions.mjs'
+import { DIR as ARTIFACTS_DIR, externalLoads, listArtifacts } from '../artifacts/artifact.mjs'
 import { headerOf } from '../map/map.mjs'
 import { standardsFindings } from '../standards/checks.mjs'
 import { readLock } from '../managed/managed.mjs'
@@ -309,6 +310,36 @@ function decisions({ cwd }) {
   return out.length ? out : [ok(`${r.records} decision record(s), all valid`)]
 }
 
+/**
+ * Artifacts stay trustworthy: valid metadata, refs that point somewhere, pages within their size budget that load
+ * nothing from outside, and sources that still match their hashes.
+ */
+function artifacts({ cwd, config }) {
+  const all = listArtifacts(cwd)
+  if (!all.length) return [ok('no artifacts')]
+  const out = []
+  const maxKb = config.artifacts?.maxPageKb ?? 2048
+  const decisionIds = new Set(readDecisions(cwd).map((d) => d.id))
+  for (const a of all) {
+    const at = `${ARTIFACTS_DIR}/${a.folder}`
+    for (const p of a.problems) out.push({ level: 'fail', path: `${at}/artifact.yaml`, message: `${at}: ${p}`, fix: 'agent-os artifact check lists what to correct' })
+    for (const r of Array.isArray(a.refs) ? a.refs : []) {
+      if (/^[#!&]\d+$/.test(r)) continue
+      if (!decisionIds.has(String(r))) out.push({ level: 'warn', path: `${at}/artifact.yaml`, message: `${at}: ref "${r}" is neither an issue, change request or epic (#N, !N, &N) nor a decision record`, fix: 'use #N, !N, &N or a docs/decisions id' })
+    }
+    const page = join(cwd, at, 'index.html')
+    if (!existsSync(page)) { out.push({ level: 'fail', path: at, message: `${at} has no index.html`, fix: 'build it (agent-os artifact build) or add the page' }); continue }
+    const kb = statSync(page).size / 1024
+    if (kb > maxKb) out.push({ level: 'warn', path: `${at}/index.html`, message: `${at}/index.html is ${Math.round(kb)} KB, over its ${maxKb} KB budget`, fix: 'move data to data/ files the page does not embed, or raise artifacts.maxPageKb' })
+    for (const f of readdirSync(join(cwd, at)).filter((n) => /\.html?$/.test(n) && n !== 'template.html')) {
+      const urls = externalLoads(readFileSync(join(cwd, at, f), 'utf8'))
+      if (urls.length) out.push({ level: 'fail', path: `${at}/${f}`, message: `${at}/${f} loads from outside: ${urls.slice(0, 5).join(', ')}${urls.length > 5 ? `, +${urls.length - 5}` : ''}`, fix: 'inline the script, style or image (artifacts are self-contained), or link to it with <a href> instead' })
+    }
+    if (a.stale.length) out.push({ level: 'warn', path: at, message: `${at} is stale: ${a.stale.join(', ')} changed since it was built`, fix: existsSync(join(cwd, at, 'template.html')) ? `agent-os artifact build ${a.folder}` : 'update the page and its source hashes' })
+  }
+  return out.length ? out : [ok(`${all.length} artifact(s): valid, self-contained, sources verified`)]
+}
+
 /** AGENTS.md has an area map that covers every top-level source directory. */
 function areaMap({ cwd }) {
   const text = read(cwd, 'AGENTS.md')
@@ -369,6 +400,7 @@ export const CHECKS = [
   { id: 'journal', area: 'history', run: journal },
   { id: 'lessons', area: 'history', run: lessons },
   { id: 'decisions', area: 'history', run: decisions },
+  { id: 'artifacts', area: 'history', run: artifacts },
   { id: 'conflicts', area: 'updates', run: conflicts },
   { id: 'version', area: 'updates', run: version },
   { id: 'lifecycle', area: 'updates', run: lifecycle },
