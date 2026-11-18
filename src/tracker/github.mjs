@@ -168,6 +168,28 @@ export class GitHubTracker {
     return nodes.filter((n) => n?.number).map((n) => ({ number: n.number, title: n.title, url: n.url, draft: Boolean(n.isDraft), review: n.reviewDecision ?? null, checks: (() => { const r = n.commits?.nodes?.[0]?.commit?.statusCheckRollup; return r ? { success: 'SUCCESS', pending: 'PENDING', failure: 'FAILURE', none: null }[checksOf(r).overall] : null })() }))
   }
 
+  /** Every pull request, open and closed (newest first, at most `max`): number, title, body, state, merged, labels, author. */
+  allPullRequests({ max = 2000 } = {}) {
+    const out = []
+    for (let page = 1; out.length < max; page++) {
+      const batch = this.gh.rest('GET', `repos/${this.repo}/pulls?state=all&sort=created&direction=desc&per_page=100&page=${page}`) ?? []
+      out.push(...batch.map((p) => ({ number: p.number, title: p.title, body: p.body ?? '', state: p.state, merged: Boolean(p.merged_at), mergedAt: p.merged_at ?? null, createdAt: p.created_at ?? null, labels: (p.labels ?? []).map((l) => l.name), author: p.user?.login ?? null, url: p.html_url })))
+      if (batch.length < 100) break
+    }
+    return out.slice(0, max)
+  }
+
+  /** Every issue, open and closed (pull requests left out, at most `max`): number, title, state, labels. */
+  allIssues({ max = 5000 } = {}) {
+    const out = []
+    for (let page = 1; out.length < max; page++) {
+      const batch = this.gh.rest('GET', `repos/${this.repo}/issues?state=all&per_page=100&page=${page}`) ?? []
+      out.push(...batch.filter((i) => !i.pull_request).map((i) => ({ number: i.number, title: i.title, state: i.state, labels: (i.labels ?? []).map((l) => l.name), url: i.html_url })))
+      if (batch.length < 100) break
+    }
+    return out.slice(0, max)
+  }
+
   /** The names of every label in the repository. */
   labels() {
     const out = []
