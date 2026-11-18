@@ -213,6 +213,61 @@ export class GitHubTracker {
     return { number, branch, base: base ?? null }
   }
 
+  // ── Change requests ──────────────────────────────────────────────────────
+
+  /** Opens a pull request. */
+  createPullRequest({ title, body, head, base, draft = false }, { dryRun = false } = {}) {
+    const request = { method: 'POST', path: `repos/${this.repo}/pulls`, body: { title, body, head, base, draft } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    const pr = this.gh.rest(request.method, request.path, request.body)
+    return { number: pr.number, url: pr.html_url }
+  }
+
+  /** The open pull request for a branch, or null. */
+  pullRequestFor(branch) {
+    const owner = this.repo.split('/')[0]
+    const list = this.gh.rest('GET', `repos/${this.repo}/pulls?state=open&head=${encodeURIComponent(`${owner}:${branch}`)}&per_page=1`) ?? []
+    return list[0] ? { number: list[0].number, url: list[0].html_url } : null
+  }
+
+  /** Adds labels to an issue or pull request (the issues endpoint works for both). */
+  addLabels(number, labels, { dryRun = false } = {}) {
+    const request = { method: 'POST', path: `repos/${this.repo}/issues/${number}/labels`, body: { labels } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    if (labels.length) this.gh.rest(request.method, request.path, request.body)
+    return { number, labels }
+  }
+
+  /** The state of a pull request: review decision and every check on its last commit. */
+  pullRequestStatus(number) {
+    const [owner, name] = this.repo.split('/')
+    const q = 'query($o:String!,$n:String!,$p:Int!){ repository(owner:$o,name:$n){ pullRequest(number:$p){ number url state isDraft mergeable reviewDecision commits(last:1){ nodes{ commit{ oid statusCheckRollup{ state contexts(first:100){ nodes{ __typename ... on CheckRun { name status conclusion detailsUrl } ... on StatusContext { context state targetUrl } } } } } } } } } }'
+    const pr = this.gh.graphql(q, { o: owner, n: name, p: number })?.repository?.pullRequest
+    if (!pr) throw new CliError(`pull request #${number} not found`)
+    const commit = pr.commits?.nodes?.[0]?.commit
+    const checks = (commit?.statusCheckRollup?.contexts?.nodes ?? []).map((c) => (c.__typename === 'StatusContext'
+      ? { name: c.context, state: c.state === 'SUCCESS' ? 'success' : c.state === 'PENDING' || c.state === 'EXPECTED' ? 'pending' : 'failure', url: c.targetUrl ?? null }
+      : { name: c.name, state: c.status !== 'COMPLETED' ? 'pending' : ['SUCCESS', 'NEUTRAL', 'SKIPPED'].includes(c.conclusion) ? 'success' : 'failure', url: c.detailsUrl ?? null }))
+    const overall = !checks.length ? 'none' : checks.some((c) => c.state === 'failure') ? 'failure' : checks.some((c) => c.state === 'pending') ? 'pending' : 'success'
+    return { number: pr.number, url: pr.url, state: pr.state.toLowerCase(), draft: Boolean(pr.isDraft), mergeable: pr.mergeable ?? null, review: pr.reviewDecision ?? null, head: commit?.oid ?? null, checks: overall, failing: checks.filter((c) => c.state === 'failure'), pending: checks.filter((c) => c.state === 'pending').map((c) => c.name), all: checks }
+  }
+
+  /** Review threads of a pull request, with every comment. */
+  reviewThreads(number) {
+    const [owner, name] = this.repo.split('/')
+    const q = 'query($o:String!,$n:String!,$p:Int!){ repository(owner:$o,name:$n){ pullRequest(number:$p){ reviewThreads(first:100){ nodes{ id isResolved isOutdated path line comments(first:50){ nodes{ author{ login } body url createdAt } } } } } } }'
+    const nodes = this.gh.graphql(q, { o: owner, n: name, p: number })?.repository?.pullRequest?.reviewThreads?.nodes ?? []
+    return nodes.map((t) => ({ id: t.id, resolved: Boolean(t.isResolved), outdated: Boolean(t.isOutdated), path: t.path ?? null, line: t.line ?? null, comments: (t.comments?.nodes ?? []).map((c) => ({ author: c.author?.login ?? null, body: c.body, url: c.url, at: c.createdAt })) }))
+  }
+
+  /** Replies in a review thread, and resolves it when asked. */
+  replyToThread(threadId, body, { resolve = false, dryRun = false } = {}) {
+    if (dryRun) return { dryRun: true, requests: [{ graphql: 'addPullRequestReviewThreadReply', threadId, body }, ...(resolve ? [{ graphql: 'resolveReviewThread', threadId }] : [])] }
+    const reply = this.gh.graphql('mutation($t:ID!,$b:String!){ addPullRequestReviewThreadReply(input:{pullRequestReviewThreadId:$t,body:$b}){ comment{ url } } }', { t: threadId, b: body })
+    if (resolve) this.gh.graphql('mutation($t:ID!){ resolveReviewThread(input:{threadId:$t}){ thread{ isResolved } } }', { t: threadId })
+    return { threadId, url: reply?.addPullRequestReviewThreadReply?.comment?.url ?? null, resolved: resolve }
+  }
+
   // ── Board (Projects v2) ──────────────────────────────────────────────────
 
   /** The board's ids and single-select fields, or null (with a warning) when there is no board or no scope. */

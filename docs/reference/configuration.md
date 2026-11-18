@@ -73,6 +73,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `slots.<name>` | team | string or null |  | The skill bound to this slot, or null for none |
 | `gate` | team | object | `{}` | Test and check suites by name |
 | `gate.<name>` | team | string |  | The command that runs this suite |
+| `gatePaths` | team | object | `{}` | Path globs and the gate suites a change to them needs ("docs/**": ["docs"]); without it every suite runs |
+| `gatePaths.<name>` | team | array |  |  |
 | `requires` | team | object | `{}` | What a working setup needs, checked by agent-os env |
 | `requires.mcp` | team | array | `[]` | MCP servers the project needs |
 | `requires.mcp[].name` | team | string |  | Server name as registered in Claude Code |
