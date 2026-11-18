@@ -44,6 +44,9 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `platform.host` | team | string |  | Base URL for GitHub Enterprise Server or GitLab self-managed; omit for github.com and gitlab.com |
 | `platform.project` | team | string |  | owner/name (GitHub) or group/subgroup/name (GitLab) |
 | `platform.caFile` | team | string |  | Private CA bundle for a self-managed host, relative to the repository |
+| `platform.board` | team | object |  | The planning board (GitHub Projects v2) issues are placed on, when there is one |
+| `platform.board.owner` | team | string |  | The user or organization that owns the board |
+| `platform.board.number` | team | integer |  | The board (GitHub Project) number |
 | `branches` | team | object | `{}` | Branch roles |
 | `branches.integration` | team | string | `"development"` | Feature PRs and MRs target this branch; it is the default branch |
 | `branches.production` | team | string | `"main"` | Releases merge into this branch |

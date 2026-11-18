@@ -52,6 +52,22 @@
         "caFile": {
           "type": "string",
           "description": "Private CA bundle for a self-managed host, relative to the repository"
+        },
+        "board": {
+          "type": "object",
+          "description": "The planning board (GitHub Projects v2) issues are placed on, when there is one",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "The user or organization that owns the board"
+            },
+            "number": {
+              "type": "integer",
+              "description": "The board (GitHub Project) number",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

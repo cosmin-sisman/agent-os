@@ -32,6 +32,7 @@ export const COMMANDS = [
   { name: 'hook', summary: 'Run the Claude Code hook handlers for an event (called from .claude/settings.json)', status: 'new', issue: 8, load: () => import('../commands/hook.mjs') },
   { name: 'platform', summary: 'Show the code platform and its login, or detect it from the git remote (GitHub, GitLab)', status: 'new', issue: 90, load: () => import('../commands/platform.mjs') },
   { name: 'lang', summary: 'Show the language of each area, check ro text for diacritics, print the language rule', status: 'new', issue: 7, load: () => import('../commands/lang.mjs') },
+  { name: 'issue', summary: 'Create, relate, assign, branch and place issues on the board; read progress', status: 'new', issue: 12, load: () => import('../commands/issue.mjs') },
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'planned', issue: 18 },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'planned', issue: 33 },
   { name: 'gate', summary: 'Run the checks the current diff needs', status: 'planned', issue: 43 },
