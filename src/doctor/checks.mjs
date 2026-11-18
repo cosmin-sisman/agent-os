@@ -3,6 +3,7 @@
 // with --offline and --ci. Design §10 (Verify) and §6 (Consistency).
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { dirname, join, relative, resolve } from 'node:path'
 import { COMMANDS } from '../cli/registry.mjs'
 import { GITIGNORE_ENTRIES } from '../config/config.mjs'
@@ -98,6 +99,20 @@ function gitignore({ cwd }) {
   const missing = GITIGNORE_ENTRIES.filter((e) => !lines.includes(e))
   if (!missing.length) return [ok('.gitignore keeps personal settings and caches out')]
   return [{ level: 'fail', path: '.gitignore', message: `.gitignore does not ignore ${missing.join(', ')}, so personal settings or caches can be committed`, fix: `add ${missing.join(' and ')} to .gitignore`, apply: () => { writeFileSync(join(cwd, '.gitignore'), `${text}${text && !text.endsWith('\n') ? '\n' : ''}${missing.join('\n')}\n`); return `added ${missing.join(', ')} to .gitignore` } }]
+}
+
+/** Paths that are personal (per laptop) and must never be committed. */
+export const PERSONAL = ['.agent-os/local.json', '.agent-os/cache/', '.claude/settings.local.json', '.claude/worktrees/']
+
+/** git tracks none of the personal paths. Never fixed automatically: removing files from the index changes the team's tree. */
+function personal({ cwd, git }) {
+  const run = git ?? ((args) => { const r = spawnSync('git', args, { cwd, encoding: 'utf8', windowsHide: true }); return { status: r.status, stdout: r.stdout ?? '' } })
+  const r = run(['ls-files', '-z', '--', ...PERSONAL.map((p) => (p.endsWith('/') ? p.slice(0, -1) : p))])
+  if (r.status !== 0) return [ok('not a git repository: nothing tracked')]
+  const tracked = r.stdout.split('\0').filter(Boolean)
+  if (!tracked.length) return [ok('no personal file is tracked by git')]
+  const shown = tracked.slice(0, 5)
+  return [{ level: 'fail', path: shown[0], message: `git tracks personal file(s): ${shown.join(', ')}${tracked.length > 5 ? `, +${tracked.length - 5}` : ''}`, fix: `untrack them in a change request (the files stay on your laptop): git rm --cached -r -- ${[...new Set(tracked.map((f) => PERSONAL.find((p) => f === p || f.startsWith(p)) ?? f))].map((p) => p.replace(/\/$/, '')).join(' ')}` }]
 }
 
 /** No unresolved update conflicts. */
@@ -277,6 +292,7 @@ export const CHECKS = [
   { id: 'conflicts', area: 'updates', run: conflicts },
   { id: 'version', area: 'updates', run: version },
   { id: 'gitignore', area: 'repository', run: gitignore },
+  { id: 'personal', area: 'repository', run: personal },
   { id: 'issues', area: 'platform', platform: true, run: issues },
   { id: 'labels', area: 'platform', platform: true, run: labels },
   { id: 'titles', area: 'platform', platform: true, run: titles },

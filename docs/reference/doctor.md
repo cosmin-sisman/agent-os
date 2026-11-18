@@ -29,6 +29,7 @@ It exits with 1 when any check fails and 0 otherwise. Warnings don't fail.
 | `conflicts` | an update left a `.rej` file |
 | `version` | no version is pinned, or what runs differs from the pin (warn) |
 | `gitignore` | `.gitignore` does not keep `.agent-os/local.json` and `.agent-os/cache/` out; fixable |
+| `personal` | git tracks a personal path (`.agent-os/local.json`, `.agent-os/cache/`, `.claude/settings.local.json`, `.claude/worktrees/`); proposes `git rm --cached`, never runs it |
 | `issues` | platform: an open issue lacks a type, a priority or a milestone, or has the `blocked` label with no open blocker (warn) |
 | `labels` | platform: a convention label is missing (warn; `agent-os setup --only labels` creates them) |
 | `titles` | platform: one of your open change requests has a title that breaks the convention (warn) |
