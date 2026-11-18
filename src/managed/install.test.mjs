@@ -85,7 +85,8 @@ test('every shipped template renders for each platform and language; YAML parses
       for (const item of plan.items) {
         if (/\.ya?ml$/.test(item.key)) assert.doesNotThrow(() => parse(item.content, { file: item.key }), `${platform}/${lang}: ${item.key}`)
         if (lang === 'ro') assert.deepEqual(findDiacritics(item.content), [], `${platform}/ro: ${item.key}`)
-        assert.doesNotMatch(item.content, /\{\{|\}\}/, `${platform}/${lang}: ${item.key} has an unrendered tag`)
+        // CI expressions (${{ … }}) are meant to be there; any other braces are a tag the engine missed.
+        assert.doesNotMatch(item.content.replace(/\$\{\{[^}]*\}\}/g, ''), /\{\{|\}\}/, `${platform}/${lang}: ${item.key} has an unrendered tag`)
       }
     }
   }

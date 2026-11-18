@@ -29,6 +29,8 @@ export function buildContext(config) {
     lang: Object.fromEntries(AREAS.map((a) => [a.id, languageFor(config, a.id)])),
     labels,
     vocab: vocabularyFor(config.platform?.type),
+    // CI expressions such as ${{ secrets.GITHUB_TOKEN }} use the same braces as templates: write {{{expr.open}}} … {{{expr.close}}}.
+    expr: { open: '${{', close: '}}' },
   }
 }
 
