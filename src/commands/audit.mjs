@@ -9,6 +9,7 @@ import { resolve } from 'node:path'
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { LENSES, SUBJECTS, detectSubject, lensBrief, lensesFor, mergeFindings } from '../audit/audit.mjs'
 import { auditData, auditSlug, previousAudit, proposeIssues, verifyAudit } from '../audit/outputs.mjs'
+import { upkeep } from '../maintenance/upkeep.mjs'
 import { newArtifact } from '../artifacts/artifact.mjs'
 import { buildArtifact } from '../artifacts/build.mjs'
 import { languageFor } from '../i18n/i18n.mjs'
@@ -19,6 +20,7 @@ export const usage = [
   'agent-os audit plan "<what>" [--as <subject>] [--lens <add>…] [--no-lens <remove>…]   ·   merge <answer.json>…',
   'agent-os audit report --plan <plan.json> <answer.json>… [--title <t>] [--dry-run]   (the artifact, compared with the previous audit)',
   'agent-os audit propose <artifact-id> [--accept <n>…]   ·   verify <artifact-id>',
+  'agent-os audit upkeep [--report <sarif|gitleaks.json>…]   (maintenance: dependencies, secrets, licenses; proposals only)',
 ].join('\n')
 
 export const options = {
@@ -28,6 +30,7 @@ export const options = {
   plan: { type: 'string', description: 'report: the saved output of audit plan --json' },
   title: { type: 'string', description: 'report: the artifact title' },
   accept: { type: 'string', multiple: true, description: 'propose: a finding number the person accepted (repeat)' },
+  report: { type: 'string', multiple: true, description: 'upkeep: a scanner report to read (SARIF, gitleaks JSON); adds to security.reports' },
 }
 
 const readJson = (ctx, f, what) => { try { return JSON.parse(readFileSync(resolve(ctx.cwd, f), 'utf8')) } catch { throw new CliError(`${f} is not ${what} (JSON)`) } }
@@ -92,6 +95,18 @@ export async function run(ctx) {
     const r = proposeIssues(audit, { accept, artifact: id })
     ctx.output(r, r.confirmed ? [...(r.epic ? [`one epic: ${r.epic.title} [${r.epic.labels.join(', ')}], with the ${r.drafts.length} issues below as sub-issues`] : []), ...r.drafts.map((d) => `#${d.finding} → ${d.title} [${d.labels.join(', ')}]`), '', r.note].join('\n') : r.note)
     return EXIT.OK
+  }
+  if (action === 'upkeep') {
+    const { merged } = loadConfig(ctx.cwd)
+    const ls = git(ctx)(['ls-files'])
+    const tracked = ls.status === 0 ? String(ls.stdout).split(/\r?\n/).filter(Boolean) : []
+    const r = upkeep(ctx.cwd, { reports: [...(merged.security?.reports ?? []), ...(ctx.values.report ?? [])], tracked })
+    ctx.output(r, [
+      `${r.proposals.length} proposal(s), read-only: nothing is filed until the person confirms (then /ticket)`,
+      ...r.proposals.map((p) => `\n[${p.priority.split(':')[1]}] ${p.title}  [${p.labels.join(', ')}]\n  ${p.evidence.slice(0, 5).join('\n  ')}${p.evidence.length > 5 ? `\n  … ${p.evidence.length - 5} more` : ''}\n  fix: ${p.fix}`),
+      ...r.notes.map((n) => `\nnote: ${n}`),
+    ].join('\n'))
+    return r.proposals.some((p) => ['priority:p0', 'priority:p1'].includes(p.priority)) ? EXIT.CHECK_FAILED : EXIT.OK
   }
   if (action === 'verify') {
     const [id] = rest
