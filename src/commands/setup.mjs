@@ -25,7 +25,7 @@ const version = () => JSON.parse(readFileSync(new URL('../../package.json', impo
  */
 export function runSetup(ctx, config, only) {
   const remoteAreas = (only ?? SETUP_AREAS).filter((a) => a !== 'files')
-  const steps = remoteAreas.length ? planPlatformSetup(config, { gh: ctx.io.gh, only: remoteAreas }) : []
+  const steps = remoteAreas.length ? planPlatformSetup(config, { gh: ctx.io.gh, glab: ctx.io.glab, only: remoteAreas }) : []
   const lines = steps.map((s) => (s.action === 'keep' ? s.description : `${ctx.dryRun ? 'would ' : ''}${s.description}`))
   const applied = []
   if (!ctx.dryRun) for (const s of steps.filter((x) => x.action !== 'keep')) { s.apply(); applied.push(s.description) }

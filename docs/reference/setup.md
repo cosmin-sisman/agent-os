@@ -18,3 +18,15 @@ agent-os lang set labels ro              # switch the labels language and rename
 | files | installs the platform route (issue templates, the PR template, skills) as managed files (see [managed files](managed-files.md)) |
 
 Running it again changes nothing once the repository is set up. Planning only reads from the platform; nothing is sent until a step is applied. GitLab setup is #93.
+
+## On GitLab
+
+`agent-os setup` does the same on GitLab (gitlab.com or self-managed, through `glab api`). It completes what exists and never replaces it.
+
+| Area | On GitLab |
+|---|---|
+| branches | creates the integration branch from production and makes it the default branch |
+| ruleset | protects both branches (no direct push, merges by developers and maintainers, no force push); turns on *pipelines must succeed* (so `agent-os/loop` and your CI gate merges) and *all threads must be resolved*; adds an approval rule for `branches.requiredApprovals` on Premium, and only notes it on Free. A branch that is already protected differently is kept and reported |
+| labels | scoped labels (`type::bug`, `tip::bug` in ro), so a group allows one label at a time. Existing `type:bug` or other-language labels are renamed in place and stay on their issues; colors and descriptions someone wrote stay |
+| milestones | the rolling milestone, created or renamed into the milestones language (issues, due date and description stay) |
+| files | `.gitlab/issue_templates/`, `.gitlab/merge_request_templates/` and `.gitlab/agent-os-loop.yml` in the configured languages |
