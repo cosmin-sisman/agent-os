@@ -1,0 +1,24 @@
+{
+  "kind": "discovery",
+  "lang": "ro",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Ce am analizat",
+      "items": []
+    },
+    {
+      "heading": "Ce am gasit",
+      "items": []
+    },
+    {
+      "heading": "Riscuri",
+      "items": []
+    },
+    {
+      "heading": "Pasii urmatori",
+      "items": []
+    }
+  ]
+}

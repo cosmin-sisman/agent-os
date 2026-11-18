@@ -65,7 +65,7 @@ test('given a catalog change, the stack map shows as stale until rebuilt; verify
 test('build refuses a hand-written page, a template without the placeholder, and an unknown artifact', async () => {
   const cwd = mkdtempSync(join(tmpdir(), 'aos-build-'))
   try {
-    await run(['artifact', 'new', 'analysis', 'notes'], { stdout: () => {}, stderr: () => {}, cwd, env: {}, now: new Date('2026-11-18T10:00:00Z'), gh: () => ({ status: 1, stdout: '', stderr: 'offline' }) })
+    await run(['artifact', 'new', 'architecture', 'notes'], { stdout: () => {}, stderr: () => {}, cwd, env: {}, now: new Date('2026-11-18T10:00:00Z'), gh: () => ({ status: 1, stdout: '', stderr: 'offline' }) })
     assert.match((await cli(cwd, ['artifact', 'build', '2026-11-18-notes'])).stderr, /written by hand/)
     writeFileSync(join(cwd, 'artifacts/2026-11-18-notes/template.html'), '<p>no data</p>')
     assert.match((await cli(cwd, ['artifact', 'build', '2026-11-18-notes'])).stderr, /no __DATA__ placeholder/)

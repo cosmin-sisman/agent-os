@@ -1,0 +1,24 @@
+{
+  "kind": "release-report",
+  "lang": "en",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "What shipped",
+      "items": []
+    },
+    {
+      "heading": "Fixes",
+      "items": []
+    },
+    {
+      "heading": "Decisions",
+      "items": []
+    },
+    {
+      "heading": "Lessons",
+      "items": []
+    }
+  ]
+}
