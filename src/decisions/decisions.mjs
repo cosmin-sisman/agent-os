@@ -61,7 +61,7 @@ export function checkDecisions(cwd) {
 }
 
 /** The body of a new record, in the docs language. */
-export function template({ title, lang = 'en', supersedes = null }) {
+export function template({ title, lang = 'en', supersedes = null, sections = {} }) {
   const w = WORDS[lang] ?? WORDS.en
   const ro = lang === 'ro'
   return `# ${title}
@@ -69,13 +69,13 @@ export function template({ title, lang = 'en', supersedes = null }) {
 ${w.status}: ${w.proposed}${supersedes ? ` · ${w.supersedes} [${supersedes.title ?? supersedes.id}](${supersedes.name})` : ''}
 
 ## ${w.context}
-${ro ? 'Ce problema rezolva decizia si ce constrangeri exista. Faptele, cu legaturi catre issue-uri, PR-uri si cercetare.' : 'What problem this decides and under which constraints. The facts, with links to issues, PRs and research.'}
+${sections.context ?? (ro ? 'Ce problema rezolva decizia si ce constrangeri exista. Faptele, cu legaturi catre issue-uri, PR-uri si cercetare.' : 'What problem this decides and under which constraints. The facts, with links to issues, PRs and research.')}
 
 ## ${w.decision}
-${ro ? 'Ce s-a decis, in propozitii scurte. Variantele respinse, si de ce.' : 'What was decided, in short sentences. The options that were rejected, and why.'}
+${sections.decision ?? (ro ? 'Ce s-a decis, in propozitii scurte. Variantele respinse, si de ce.' : 'What was decided, in short sentences. The options that were rejected, and why.')}
 
 ## ${w.consequences}
-${ro ? 'Ce devine mai usor, ce devine mai greu, ce trebuie urmarit.' : 'What becomes easier, what becomes harder, what to watch.'}
+${sections.consequences ?? (ro ? 'Ce devine mai usor, ce devine mai greu, ce trebuie urmarit.' : 'What becomes easier, what becomes harder, what to watch.')}
 `
 }
 
@@ -83,7 +83,7 @@ ${ro ? 'Ce devine mai usor, ce devine mai greu, ce trebuie urmarit.' : 'What bec
  * Creates a record. Same day and same slug is refused (pick another slug); different slugs never collide. With
  * `supersedes`, the old record's status line is pointed at the new one and nothing else in it changes.
  */
-export function newDecision(cwd, { slug, title, lang = 'en', supersedes, accepted = false, now = new Date(), dryRun = false }) {
+export function newDecision(cwd, { slug, title, lang = 'en', supersedes, accepted = false, sections, now = new Date(), dryRun = false }) {
   const s = slugify(slug ?? title ?? '', 6)
   if (!title) throw new CliError('--title is required: the decision in a few words')
   const name = `${now.toISOString().slice(0, 10)}-${s}.md`
@@ -95,7 +95,7 @@ export function newDecision(cwd, { slug, title, lang = 'en', supersedes, accepte
     if (!old) throw new CliError(`no decision record "${supersedes}"`, { hint: 'agent-os decision list' })
     if (stateOf(old.statusLine) === 'superseded') throw new CliError(`${old.path} is already superseded`, { hint: `supersede its successor instead: ${links(old.statusLine)[0]}` })
   }
-  let content = template({ title, lang, supersedes: old })
+  let content = template({ title, lang, supersedes: old, sections })
   const w = WORDS[lang] ?? WORDS.en
   if (accepted) content = content.replace(`${w.status}: ${w.proposed}`, `${w.status}: ${w.accepted}`)
   const steps = [`create ${path}`, ...(old ? [`mark ${old.path} as superseded by ${name}`] : [])]
