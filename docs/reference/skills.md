@@ -25,7 +25,22 @@ agent-os skill register code-review --origin builtin --provides review     # no 
 agent-os skill check
 ```
 
-`doctor` fails when a folder in `.claude/skills/` has no entry, when an entry (other than plugin or builtin) has no folder, and when an entry is invalid. Adding, updating and removing vendored skills is #39.
+`doctor` fails when a folder in `.claude/skills/` has no entry, when an entry (other than plugin or builtin) has no folder, and when an entry is invalid.
+
+## Vendored skills: `agent-os skill add|update|remove|new`
+
+A third-party skill is copied into the project at a pinned commit, never run:
+
+```sh
+agent-os skill add github:owner/repo/path/to/skill@v1.2.0 [--provides review] [--license MIT]
+agent-os skill add ./some/folder          # a local folder, copied the same way
+```
+
+- `add` resolves the ref to a commit, copies the files under the path into `.claude/skills/<name>/` as plain data (no install scripts, no postinstall, nothing executable, symlinks skipped), registers it with `origin: external` and the source pinned to the commit, and records the commit, the ref it came from, the folder and a sha256 per file under `vendored` in `.agent-os/lock.json`. The license comes from a LICENSE file unless `--license` names it.
+- `update <name> [--ref <ref>] [--yes]` fetches the ref again (the one it was added from by default) and shows the diff between the two commits, file by file. The files are replaced only after you confirm, or with `--yes`; without either nothing is written and the command exits 1. A skill vendored from a local folder updates with `--from <folder>`.
+- Vendored files are never edited in place: `update` refuses when a file no longer matches its hash in the lock. Put changes in a local skill instead.
+- `remove <name>` deletes only the folder the lock records for that skill, its registry entry and lock record, and sets every slot bound to it in `agent-os.json` back to `null`. `--dry-run` lists the steps. Core skills are not removed this way (`agent-os eject`).
+- `new <name> [--description <d>]` scaffolds `.claude/skills/<name>/SKILL.md` with a Learn step, and its local registry entry.
 
 ## The index: `agent-os skills`
 
