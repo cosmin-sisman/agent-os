@@ -1,4 +1,6 @@
 ---
+followed: 0
+recalled: 0
 areas: [github, platform]
 paths: ["scripts/github/**", "src/platform/**"]
 keywords: [idempotent, sub-issues, "422"]

@@ -1,4 +1,6 @@
 ---
+followed: 0
+recalled: 0
 areas: [cli]
 paths: ["scripts/**", "bin/**", "src/**"]
 keywords: [dry-run, stub]

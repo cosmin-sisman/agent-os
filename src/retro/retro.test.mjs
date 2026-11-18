@@ -56,6 +56,12 @@ test('every inbox entry ends as a rule, a card, or rejected with a reason; the c
   try {
     assert.throws(() => applyRetro(cwd, { accept: ['db-only'] }), /3 inbox lesson\(s\) have no decision/)
     assert.throws(() => applyRetro(cwd, { accept: ['db-only'], promote: { 'yaml-a': 'r', 'yaml-b': 'r' }, reject: { 'pin-again': '' } }), /needs a reason/)
+    const decisions = { accept: ['db-only'], promote: { 'yaml-a': '.claude/rules/yaml.md', 'yaml-b': '.claude/rules/yaml.md' }, reject: { 'pin-again': 'repeats pin-actions' } }
+    const before = readLessons(cwd).map((c) => [c.id, c.state])
+    const dry = applyRetro(cwd, decisions, { dryRun: true })
+    assert.deepEqual(dry.done.map((d) => d.action).sort(), ['card', 'rejected', 'rule', 'rule'])
+    assert.deepEqual(readLessons(cwd).map((c) => [c.id, c.state]), before, 'a dry run writes nothing')
+    assert.throws(() => applyRetro(cwd, { ...decisions, accept: ['db-only', 'nope'] }, { dryRun: true }), /no inbox lesson "nope"/)
     const r = applyRetro(cwd, { accept: ['db-only'], promote: { 'yaml-a': '.claude/rules/yaml.md', 'yaml-b': '.claude/rules/yaml.md' }, reject: { 'pin-again': 'repeats pin-actions' } })
     assert.deepEqual(r.done.map((d) => d.action).sort(), ['card', 'rejected', 'rule', 'rule'])
     const all = readLessons(cwd)

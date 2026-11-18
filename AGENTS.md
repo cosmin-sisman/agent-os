@@ -7,6 +7,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 - [docs/design/overview.md](docs/design/overview.md): the target design. Every feature issue implements a section of it.
 - [docs/decisions/](docs/decisions/): accepted decisions. Don't contradict one; propose a new record that supersedes it.
 - [CONTRIBUTING.md](CONTRIBUTING.md): branches, issues, PRs, the journal entry and the Lessons section.
+- [docs/rules.md](docs/rules.md): area rules from triaged lessons (platform calls, pipes, paths, tests, YAML).
 
 ## Conventions an agent can't infer
 
