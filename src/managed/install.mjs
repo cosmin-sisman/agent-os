@@ -35,6 +35,9 @@ export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
       items.push({ key: f.path, content: f.content, route })
     }
   }
+  // Managed blocks in the agent files: the team's own text around them is never touched (#49).
+  items.push({ key: 'AGENTS.md#agent-os', content: agentsBlock(config), route: 'core' })
+  items.push({ key: 'CLAUDE.md#agent-os', content: '@AGENTS.md', route: 'core' })
   // The hooks block in .claude/settings.json, always with the pinned command (#65).
   items.push({ key: '.claude/settings.json#hooks', content: hooksContent(settingsHooks(hookCommand(config, { cwd }))), route: 'core' })
   return { platform, items: items.sort((a, b) => a.key.localeCompare(b.key)), aliases: aliasesFor(platform) }
@@ -55,4 +58,15 @@ export function installRoutes(cwd, config, { version, dryRun = false, templatesR
   const results = applyManaged(cwd, plan.items, { version, dryRun })
   if (!dryRun) writeLock(cwd, { ...readLock(cwd), platform: plan.platform })
   return { platform: plan.platform, aliases: plan.aliases, results }
+}
+
+/** The agent-os block in AGENTS.md: where the rules, skills and checks are, in a few lines. */
+export function agentsBlock(config) {
+  const { integration, production } = config.branches ?? {}
+  return [
+    '## agent-os',
+    '',
+    `This repository follows agent-os${config.version ? ` ${config.version}` : ''}. Rules in \`.claude/rules/\`, skills in \`.claude/skills/\` (start with /next, /start, /pr and /ship), team settings in \`agent-os.json\`.`,
+    `Work goes to \`${integration ?? 'development'}\` through change requests; \`${production ?? 'main'}\` changes only through /release. \`agent-os doctor\` checks the setup.`,
+  ].join('\n')
 }

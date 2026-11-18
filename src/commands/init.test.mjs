@@ -126,14 +126,3 @@ test('outside a git repository it writes the personal file and warns', async () 
     assert.equal(readLocal(dir).languages.chat, 'en')
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
-
-test('the full init is still planned and says so', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'aos-init-full-'))
-  try {
-    const r = await cli(dir, ['init'])
-    assert.equal(r.code, 2)
-    assert.match(r.stderr, /full init is planned/)
-    assert.match(r.stderr, /init --me/)
-    assert.match(r.stderr, /issues\/49/)
-  } finally { rmSync(dir, { recursive: true, force: true }) }
-})
