@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { checkCommand, rulesFor } from './guards.mjs'
 import { checkEnvironment } from '../env/checks.mjs'
 import { systemProbe } from '../env/probe.mjs'
+import { versionStatus } from '../version/pin.mjs'
 
 export const EVENTS = ['SessionStart', 'PreToolUse', 'PostToolUse', 'Stop']
 
@@ -38,6 +39,16 @@ export const CORE_HANDLERS = [
       if (typeof command !== 'string' || !/^(Bash|PowerShell)$/.test(input.tool_name ?? '')) return
       const broken = checkCommand(command, { rules: rulesFor(config), env, minFreeMb: config.machine?.minFreeMb ?? 0 })
       if (broken.length) return { decision: 'deny', message: broken.map((b) => `agent-os guard "${b.id}": ${b.message}`).join('\n') }
+    },
+  },
+  {
+    name: 'version',
+    events: ['SessionStart'],
+    kind: 'reminder',
+    timeoutMs: 1000,
+    run(input, { config, cwd }) {
+      const status = versionStatus(config, { cwd })
+      if (!status.ok) return { message: `agent-os version: ${status.problems.map((p) => `${p.message} (fix: ${p.fix})`).join('; ')}` }
     },
   },
   {
@@ -121,9 +132,10 @@ export async function runEvent(event, input, { config, cwd, env = {}, handlers =
 /**
  * The hooks block for .claude/settings.json: one entry per event, each calling the runner with no shell syntax, so
  * the same command works whether Claude Code runs it through bash, zsh or PowerShell.
- * @param {string} [command] how to call agent-os (the pinned version comes with #65)
+ * @param {string} command how to call agent-os, pinned (hookCommand in src/version/pin.mjs)
  */
-export function settingsHooks(command = 'npx --no-install agent-os') {
+export function settingsHooks(command) {
+  if (!command) throw new Error('settingsHooks needs the pinned command (hookCommand in src/version/pin.mjs)')
   const entry = (event, extra = {}) => [{ ...extra, hooks: [{ type: 'command', command: `${command} hook ${event}`, timeout: event === 'Stop' ? 30 : 10 }] }]
   return {
     SessionStart: entry('SessionStart'),

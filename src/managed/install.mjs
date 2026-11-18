@@ -7,6 +7,9 @@ import { fileURLToPath } from 'node:url'
 import { renderTree } from '../templates/tree.mjs'
 import { applyManaged, readLock, writeLock } from './managed.mjs'
 import { aliasesFor } from '../platform/vocabulary.mjs'
+import { hooksContent } from './managed.mjs'
+import { settingsHooks } from '../hooks/runner.mjs'
+import { hookCommand } from '../version/pin.mjs'
 import { CliError } from '../cli/errors.mjs'
 
 export const TEMPLATES = fileURLToPath(new URL('../../templates/', import.meta.url))
@@ -17,7 +20,7 @@ export const TEMPLATES = fileURLToPath(new URL('../../templates/', import.meta.u
  * @param {{ templatesRoot?: string }} [options]
  * @returns {{ platform: string, items: { key: string, content: string, route: string }[], aliases: { alias: string, target: string }[] }}
  */
-export function planInstall(config, { templatesRoot = TEMPLATES } = {}) {
+export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
   const platform = config.platform?.type ?? 'github'
   const routes = [['core', join(templatesRoot, 'core')], [`platform/${platform}`, join(templatesRoot, 'platform', platform)]]
   const items = []
@@ -30,6 +33,8 @@ export function planInstall(config, { templatesRoot = TEMPLATES } = {}) {
       items.push({ key: f.path, content: f.content, route })
     }
   }
+  // The hooks block in .claude/settings.json, always with the pinned command (#65).
+  items.push({ key: '.claude/settings.json#hooks', content: hooksContent(settingsHooks(hookCommand(config, { cwd }))), route: 'core' })
   return { platform, items: items.sort((a, b) => a.key.localeCompare(b.key)), aliases: aliasesFor(platform) }
 }
 
@@ -40,7 +45,7 @@ export function planInstall(config, { templatesRoot = TEMPLATES } = {}) {
  * @param {{ version: string, dryRun?: boolean, templatesRoot?: string }} options
  */
 export function installRoutes(cwd, config, { version, dryRun = false, templatesRoot } = {}) {
-  const plan = planInstall(config, { templatesRoot })
+  const plan = planInstall(config, { templatesRoot, cwd })
   const lock = readLock(cwd)
   if (lock.platform && lock.platform !== plan.platform) {
     throw new CliError(`this project was installed for ${lock.platform}, and agent-os.json now says ${plan.platform}`, { hint: 'switching platform rewrites every platform route on its own branch; follow #98 (agent-os platform switch)' })
