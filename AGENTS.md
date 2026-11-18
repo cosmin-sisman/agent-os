@@ -13,6 +13,8 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 - All repository text is in English. The *installed* templates exist in `en` and `ro`; `ro` is Romanian **without diacritics** (ASCII only).
 - Zero runtime dependencies. Use only Node built-ins (`node:fs`, `node:child_process`, `node:test`, `node:util` `parseArgs`).
 - Every mechanical step is a CLI subcommand with `--dry-run` and `--json`. Skills call the CLI; they never build `gh` or `git` commands from scratch.
+- Tests are `*.test.mjs` next to the code they test, using `node:test`; `npm test` runs them all. The required check is the `ci` job (`.github/workflows/ci.yml`).
+- Text files are LF on every OS (`.gitattributes`): artifacts record sha256 hashes of their sources.
 - Never commit generated indexes or caches. They are rendered on demand into `.agent-os/cache/`.
 - Hooks and scripts must run on Windows, macOS and Linux: Node only, no shell-specific syntax.
 - `--dry-run` stubs return the same shape as the real call (an empty list, not `{}`), or the dry run crashes where the real run works. (lesson: dry-run-shapes)
@@ -26,7 +28,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 | `docs/design/` | the target design |
 | `docs/decisions/` | decision records, date-based ids |
 | `docs/research/` | research notes behind decisions |
-| `.github/` | issue forms, PR template |
+| `.github/` | issue forms, PR template, workflows (`ci.yml` required check, `pages.yml` artifact site) |
 | `catalog/` | the stack catalog in YAML: layers, technologies, languages, providers, runtimes, blueprints |
 | `examples/` | example files a project would have (`stack.yaml`) |
 | `artifacts/` | visual artifacts: one folder each, with `artifact.yaml` and a self-contained `index.html` |

@@ -5,7 +5,8 @@
 <p align="center">
   <a href="https://github.com/cosmin-sisman/agent-os/milestones"><img alt="Status: design phase" src="https://img.shields.io/badge/status-design%20phase-8b5cf6?style=flat-square"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-0ea5e9?style=flat-square"></a>
-  <img alt="Node 20+" src="https://img.shields.io/badge/node-%E2%89%A520-14b8a6?style=flat-square">
+  <img alt="Node 22+" src="https://img.shields.io/badge/node-%E2%89%A522-14b8a6?style=flat-square">
+  <a href="https://github.com/cosmin-sisman/agent-os/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/cosmin-sisman/agent-os/actions/workflows/ci.yml/badge.svg?branch=development"></a>
   <img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-0-f97316?style=flat-square">
   <img alt="Platforms: GitHub and GitLab" src="https://img.shields.io/badge/platforms-GitHub%20%C2%B7%20GitLab%20%C2%B7%20self--managed-6366f1?style=flat-square">
   <img alt="Languages: en, ro" src="https://img.shields.io/badge/i18n-en%20%C2%B7%20ro-f43f5e?style=flat-square">

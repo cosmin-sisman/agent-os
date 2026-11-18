@@ -1,21 +1,25 @@
 // Builds the GitHub Pages site: every artifacts/<id>/ folder (minus build-only files) plus a generated index
 // that lists them by type and date and marks an artifact stale when a source file's sha256 no longer matches.
-// Usage: node scripts/site/build.mjs [outDir=_site]. Zero dependencies; the index is never committed.
+// Usage: node scripts/site/build.mjs [outDir=_site] [--strict]. Zero dependencies; the index is never committed.
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, cpSync, writeFileSync, statSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { join } from 'node:path'
+import { join, basename } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
-const root = process.cwd()
-const out = process.argv[2] ?? '_site'
-const SKIP = new Set(['template.html'])
+const REPO_URL = 'https://github.com/cosmin-sisman/agent-os'
+const BUILD_ONLY = new Set(['template.html'])
 
-// The small YAML subset artifact.yaml uses: top-level `key: value`, inline [a, b] lists, and a
-// `sources:` list of `- path: …` / `sha256: …` pairs.
-function parseArtifactYaml(text) {
+/**
+ * Parses the YAML subset artifact.yaml uses: top-level `key: value`, inline `[a, b]` lists, quoted strings,
+ * and a `sources:` list of `- path: …` / `sha256: …` pairs. Comments and blank lines are ignored.
+ * @param {string} text
+ * @returns {{ sources: { path: string, sha256?: string }[], [key: string]: unknown }}
+ */
+export function parseArtifactYaml(text) {
   const meta = { sources: [] }
   let inSources = false
-  for (const raw of text.split('\n')) {
+  for (const raw of text.split(/\r?\n/)) {
     const line = raw.replace(/\s+#.*$/, '')
     if (!line.trim() || line.trimStart().startsWith('#')) continue
     if (/^\S/.test(line)) {
@@ -28,44 +32,56 @@ function parseArtifactYaml(text) {
       const m = line.trim().match(/^-?\s*(path|sha256):\s*(.+)$/)
       if (!m) continue
       if (m[1] === 'path') meta.sources.push({ path: scalar(m[2]) })
-      else meta.sources[meta.sources.length - 1].sha256 = scalar(m[2])
+      else if (meta.sources.length) meta.sources[meta.sources.length - 1].sha256 = scalar(m[2])
     }
   }
   return meta
 }
-function scalar(v) {
-  v = v.trim()
+
+function scalar(value) {
+  const v = value.trim()
   if (v.startsWith('[') && v.endsWith(']')) return v.slice(1, -1).split(',').map((s) => scalar(s)).filter((s) => s !== '')
   if (v.startsWith('"')) return JSON.parse(v)
   return v
 }
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
-const dir = join(root, 'artifacts')
-const items = []
-mkdirSync(out, { recursive: true })
-for (const id of existsSync(dir) ? readdirSync(dir).sort().reverse() : []) {
-  const folder = join(dir, id)
-  if (!statSync(folder).isDirectory() || !existsSync(join(folder, 'artifact.yaml'))) continue
-  const meta = parseArtifactYaml(readFileSync(join(folder, 'artifact.yaml'), 'utf8'))
-  if (meta.id !== id) throw new Error(`artifacts/${id}: artifact.yaml id is "${meta.id}"`)
-  const stale = meta.sources.filter((s) => !existsSync(join(root, s.path)) ||
-    createHash('sha256').update(readFileSync(join(root, s.path))).digest('hex') !== s.sha256).map((s) => s.path)
-  cpSync(folder, join(out, id), { recursive: true, filter: (p) => !SKIP.has(p.split(/[\\/]/).pop()) })
-  items.push({ ...meta, stale })
+/** Lists the artifact paths whose sha256 no longer matches the recorded one (or that are missing). */
+export function staleSources(root, sources) {
+  return sources.filter((s) => {
+    const file = join(root, s.path)
+    return !existsSync(file) || createHash('sha256').update(readFileSync(file)).digest('hex') !== s.sha256
+  }).map((s) => s.path)
 }
 
-const cards = items.map((a) => `
+/** Reads every artifacts/<id>/artifact.yaml under root, newest first, with its staleness. */
+export function collectArtifacts(root) {
+  const dir = join(root, 'artifacts')
+  if (!existsSync(dir)) return []
+  const items = []
+  for (const id of readdirSync(dir).sort().reverse()) {
+    const folder = join(dir, id)
+    if (!statSync(folder).isDirectory() || !existsSync(join(folder, 'artifact.yaml'))) continue
+    const meta = parseArtifactYaml(readFileSync(join(folder, 'artifact.yaml'), 'utf8'))
+    if (meta.id !== id) throw new Error(`artifacts/${id}: artifact.yaml id is "${meta.id}"`)
+    items.push({ ...meta, folder, stale: staleSources(root, meta.sources) })
+  }
+  return items
+}
+
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+
+/** Renders the index page for the given artifacts. */
+export function renderIndex(items) {
+  const cards = items.map((a) => `
   <article class="card">
     <div class="meta"><span class="type">${esc(a.type)}</span><span>${esc(a.id.slice(0, 10))}</span><span>${esc(a.kind)}</span>
       ${a.stale.length ? `<span class="stale" title="${esc(a.stale.join(', '))}">stale: ${a.stale.length} source(s) changed</span>` : '<span class="ok">sources verified</span>'}</div>
     <h2><a href="${esc(a.id)}/">${esc(a.title)}</a></h2>
     <p>${esc(a.summary)}</p>
-    <p class="refs">${(a.refs || []).map((r) => `<a href="https://github.com/cosmin-sisman/agent-os/issues/${esc(String(r).replace('#', ''))}">${esc(r)}</a>`).join(' ')}
-      <a href="https://github.com/cosmin-sisman/agent-os/commits/development/artifacts/${esc(a.id)}">history</a></p>
+    <p class="refs">${(a.refs || []).map((r) => `<a href="${REPO_URL}/issues/${esc(String(r).replace('#', ''))}">${esc(r)}</a>`).join(' ')}
+      <a href="${REPO_URL}/commits/development/artifacts/${esc(a.id)}">history</a></p>
   </article>`).join('')
-
-writeFileSync(join(out, 'index.html'), `<!doctype html>
+  return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>agent-os artifacts</title>
 <style>
@@ -83,10 +99,35 @@ footer{color:var(--muted);font-size:.8rem;margin-top:28px}
 </style></head><body><div class="wrap">
 <header><img src="assets/logo.svg" alt=""><div><h1>agent-os artifacts</h1><p>Versioned in git, verified against their sources, built from <code>artifacts/</code> on every push.</p></div></header>
 ${cards || '<p>No artifacts yet.</p>'}
-<footer>${items.length} artifact(s) · <a href="https://github.com/cosmin-sisman/agent-os">cosmin-sisman/agent-os</a></footer>
+<footer>${items.length} artifact(s) · <a href="${REPO_URL}">cosmin-sisman/agent-os</a></footer>
 </div></body></html>
-`)
-mkdirSync(join(out, 'assets'), { recursive: true })
-cpSync(join(root, 'docs/assets/logo.svg'), join(out, 'assets/logo.svg'))
-console.log(`site: ${items.length} artifact(s), ${items.filter((a) => a.stale.length).length} stale → ${out}/`)
-if (process.env.CI && items.some((a) => a.stale.length) && process.argv.includes('--strict')) process.exit(1)
+`
+}
+
+/** Builds the site into `out`: artifact folders, the index and the logo. Returns the artifacts. */
+export function buildSite(root, out) {
+  const items = collectArtifacts(root)
+  mkdirSync(out, { recursive: true })
+  for (const a of items) cpSync(a.folder, join(out, a.id), { recursive: true, filter: (p) => !BUILD_ONLY.has(basename(p)) })
+  writeFileSync(join(out, 'index.html'), renderIndex(items))
+  const logo = join(root, 'docs/assets/logo.svg')
+  if (existsSync(logo)) {
+    mkdirSync(join(out, 'assets'), { recursive: true })
+    cpSync(logo, join(out, 'assets/logo.svg'))
+  }
+  return items
+}
+
+function main() {
+  const args = process.argv.slice(2)
+  const out = args.find((a) => !a.startsWith('--')) ?? '_site'
+  const items = buildSite(process.cwd(), out)
+  const stale = items.filter((a) => a.stale.length)
+  console.log(`site: ${items.length} artifact(s), ${stale.length} stale → ${out}/`)
+  if (args.includes('--strict') && stale.length) {
+    for (const a of stale) console.error(`stale: ${a.id}: ${a.stale.join(', ')}`)
+    process.exit(1)
+  }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main()

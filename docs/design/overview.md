@@ -292,7 +292,7 @@ Optional bundles of rules, subagents, gate suites and release verifiers. Example
 
 ## 14. Distribution and runtime
 
-- Node ≥ 20, ESM, **zero runtime dependencies**, Windows, macOS and Linux (hooks are Node, never shell-specific).
+- Node ≥ 22 (the LTS lines still supported upstream; Node 20 reached end of life in April 2026), ESM, **zero runtime dependencies**, Windows, macOS and Linux (hooks are Node, never shell-specific).
 - `npx @cosmin-sisman/agent-os <command>`; a Claude Code plugin with the same skills for user-level install.
 - Published with npm provenance from CI.
 
@@ -308,7 +308,7 @@ A project depends on more than its code: MCP servers (a database, a design tool,
     { "name": "postgres", "scope": "project", "transport": "http", "why": "schema reads in db-verifier" },
     { "name": "figma", "scope": "user", "optional": true, "why": "ui-design slot" }
   ],
-  "cli": { "node": ">=20", "gh": ">=2.60", "docker": "*" },
+  "cli": { "node": ">=22", "gh": ">=2.60", "docker": "*" },
   "platformScopes": ["repo", "workflow", "project"],   // GitLab: ["api", "read_repository"]
   "env": ["DATABASE_URL"],
   "plugins": []
