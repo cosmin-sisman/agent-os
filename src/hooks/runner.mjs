@@ -5,6 +5,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { checkCommand, rulesFor } from './guards.mjs'
+import { checkEnvironment } from '../env/checks.mjs'
+import { systemProbe } from '../env/probe.mjs'
 
 export const EVENTS = ['SessionStart', 'PreToolUse', 'PostToolUse', 'Stop']
 
@@ -36,6 +38,17 @@ export const CORE_HANDLERS = [
       if (typeof command !== 'string' || !/^(Bash|PowerShell)$/.test(input.tool_name ?? '')) return
       const broken = checkCommand(command, { rules: rulesFor(config), env, minFreeMb: config.machine?.minFreeMb ?? 0 })
       if (broken.length) return { decision: 'deny', message: broken.map((b) => `agent-os guard "${b.id}": ${b.message}`).join('\n') }
+    },
+  },
+  {
+    name: 'env',
+    events: ['SessionStart'],
+    kind: 'reminder',
+    timeoutMs: 1000,
+    run(input, { config, cwd, env }) {
+      const { findings } = checkEnvironment(config, { cwd, probe: systemProbe(env), mode: 'fast' })
+      const problems = findings.filter((f) => f.level !== 'ok')
+      if (problems.length) return { message: `agent-os env: ${problems.map((f) => f.message).join('; ')}. Run "agent-os env" for the fixes.` }
     },
   },
 ]

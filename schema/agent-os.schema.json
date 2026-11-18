@@ -240,6 +240,15 @@
                 ],
                 "description": "How the server is reached"
               },
+              "url": {
+                "type": "string",
+                "description": "http/sse: the server URL, used in the fix command",
+                "pattern": "^https?://"
+              },
+              "command": {
+                "type": "string",
+                "description": "stdio: the command that starts the server, used in the fix command"
+              },
               "optional": {
                 "type": "boolean",
                 "description": "A missing optional server is a warning, not a failure",
