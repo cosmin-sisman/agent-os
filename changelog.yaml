@@ -10,6 +10,25 @@
 #       refs: ["#43"]
 #       migration: 0.2.0
 releases:
+  - version: 0.1.3
+    date: 2026-11-18
+    changes:
+      - group: new
+        text: "feat(distribution): one-command install for a fresh folder"
+        refs:
+          - "#267"
+      - group: new
+        text: "feat(cli): arrow-key menus for interactive questions"
+        refs:
+          - "#269"
+      - group: chore
+        text: "chore(release): sync v0.1.2 into development"
+        refs:
+          - "#261"
+      - group: chore
+        text: "docs(docs): real install steps in the README and a usage guide"
+        refs:
+          - "#263"
   - version: 0.1.2
     date: 2026-11-18
     changes:
