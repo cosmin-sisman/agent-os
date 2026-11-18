@@ -94,7 +94,7 @@ test('SessionStart context is added; unknown events and other tools produce noth
 test('the settings block calls the runner per event with no shell syntax', () => {
   const hooks = settingsHooks('agent-os')
   assert.deepEqual(Object.keys(hooks), ['SessionStart', 'PreToolUse', 'PostToolUse', 'Stop'])
-  assert.equal(hooks.PreToolUse[0].matcher, 'Bash|PowerShell')
+  assert.equal(hooks.PreToolUse[0].matcher, 'Bash|PowerShell|Edit|Write|MultiEdit|NotebookEdit', 'guards on commands, the branch reminder on edits')
   for (const [event, [entry]] of Object.entries(hooks)) {
     const { command } = entry.hooks[0]
     assert.equal(command, `agent-os hook ${event}`)
@@ -139,3 +139,18 @@ for (const [shell, args] of shells) {
     } finally { rmSync(dir, { recursive: true, force: true }) }
   })
 }
+
+test('an edit on the integration or production branch gets a reminder to claim the issue, never a refusal', async () => {
+  const cwd = tmp()
+  try {
+    spawnSync('git', ['init', '-q', '-b', 'development'], { cwd })
+    const handlers = CORE_HANDLERS.filter((h) => h.name === 'branch-reminder')
+    const edit = { session_id: 's1', hook_event_name: 'PreToolUse', tool_name: 'Edit', tool_input: { file_path: join(cwd, 'a.md') } }
+    const out = await runEvent('PreToolUse', edit, { config: config(), cwd, handlers })
+    assert.equal(out.hookSpecificOutput.permissionDecision, undefined, 'never a deny')
+    assert.match(out.hookSpecificOutput.additionalContext, /you are on development, the integration branch\. Claim the issue first \(agent-os start <n>\)/)
+    assert.equal(await runEvent('PreToolUse', { ...edit, tool_name: 'Read' }, { config: config(), cwd, handlers }), null, 'only edits')
+    spawnSync('git', ['checkout', '-q', '-b', 'feat/7-x'], { cwd })
+    assert.equal(await runEvent('PreToolUse', edit, { config: config(), cwd, handlers }), null, 'silent on a work branch')
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})

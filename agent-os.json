@@ -1,0 +1,49 @@
+{
+  "ci": {
+    "loop": false,
+    "gate": false,
+    "retro": false
+  },
+  "version": "0.0.0",
+  "platform": {
+    "type": "github",
+    "project": "cosmin-sisman/agent-os"
+  },
+  "branches": {
+    "integration": "development",
+    "production": "main",
+    "requiredApprovals": 0,
+    "requiredChecks": [
+      "ci",
+      "agent-os/loop"
+    ]
+  },
+  "languages": {
+    "issues": "en",
+    "prs": "en",
+    "commits": "en",
+    "branches": "en",
+    "labels": "en",
+    "milestones": "en",
+    "releases": "en",
+    "codeComments": "en",
+    "docs": "en",
+    "journal": "en"
+  },
+  "gate": {
+    "test": "npm run test"
+  },
+  "slots": {
+    "review": "code-review",
+    "security-review": "security-review",
+    "standards": null,
+    "testing": null,
+    "ui-design": null,
+    "ci": null,
+    "docs": null
+  },
+  "adoption": {
+    "warnOnlyUntil": "2026-12-02",
+    "cutoff": "2026-11-18"
+  }
+}

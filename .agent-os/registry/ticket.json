@@ -1,0 +1,10 @@
+{
+  "name": "ticket",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Create a complete issue (title convention, body from the form, one type and one priority label, one or more area labels, milestone, assignees, parent, blockers and test scenarios) after a duplicate search, in the issues language."
+}

@@ -1,0 +1,10 @@
+{
+  "name": "ci",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Write or review CI the way best practice asks (least-privilege permissions, pinned actions and images, timeouts, concurrency, no untrusted input in scripts, pull_request_target and OIDC rules), for GitHub."
+}

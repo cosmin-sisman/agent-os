@@ -1,0 +1,10 @@
+{
+  "name": "pr",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Open a pull request for the current branch only when it is ready (the gate passed on this exact commit, a journal entry, a non-empty Lessons section, a title in convention), then watch its checks and answer review threads."
+}

@@ -1,0 +1,10 @@
+{
+  "name": "discover",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Infer the conventions an active repository already follows (commit style, branch prefixes, merge strategy, areas) and the decisions made in its pull or merge requests, each with its evidence, then apply only what the person accepts."
+}

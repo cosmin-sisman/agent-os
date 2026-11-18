@@ -1,0 +1,10 @@
+{
+  "name": "doctor",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Check the agent system, the repository and the GitHub hygiene, repair what is mechanical, and propose the rest."
+}

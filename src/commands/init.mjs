@@ -171,7 +171,7 @@ async function full(ctx) {
   if (plan.problems.length) throw new CliError(`the answers do not make a valid configuration:\n  - ${plan.problems.join('\n  - ')}`)
   let platformSteps = []
   try { platformSteps = planPlatformSetup(plan.merged, { gh: ctx.io.gh, glab: ctx.io.glab }) } catch (err) { lines.push(`platform plan unavailable: ${err.message.split('\n')[0]}${err.hint ? ` (${err.hint})` : ''}`) }
-  const changed = plan.files.filter((f) => f.action !== 'unchanged')
+  const changed = plan.files.filter((f) => f.action !== 'unchanged' && f.action !== 'ejected')
   lines.push(
     `profile: ${profile}${profile === state.profile ? '' : ` (detected ${state.profile})`}${methodology ? `, ${methodology}${methodology === 'forward-only' ? ` from ${cfg.team.adoption.cutoff} (doctor ignores older history; a baseline journal entry records the snapshot)` : ''}` : ''}; team areas in ${lang}${Object.keys(areaLangs).length ? ` (${Object.entries(areaLangs).map(([a, l]) => `${a} ${l}`).join(', ')})` : ''}; chat in ${chat}; ${integration} → ${production}; ${team ? 'team (1 approval)' : 'solo'}`,
     `${plan.existing ? 'update' : 'write'} ${TEAM_FILE}, ${LOCAL_FILE}${plan.ignore.length ? `, .gitignore (+ ${plan.ignore.join(', ')})` : ''}`,

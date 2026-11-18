@@ -52,6 +52,23 @@ export const CORE_HANDLERS = [
     },
   },
   {
+    // A reminder, never a refusal (#61): editing on a long-lived branch usually means the issue was not claimed yet.
+    name: 'branch-reminder',
+    events: ['PreToolUse'],
+    kind: 'context',
+    timeoutMs: 1500,
+    run(input, { config, cwd }) {
+      if (!/^(Edit|Write|MultiEdit|NotebookEdit)$/.test(input.tool_name ?? '')) return null
+      // symbolic-ref also answers in a repository with no commit yet; a detached HEAD has no branch to warn about.
+      const r = systemGit(cwd)(['symbolic-ref', '--short', '-q', 'HEAD'])
+      const branch = r.status === 0 ? r.stdout.trim() : null
+      const integration = config.branches?.integration ?? 'development'
+      const production = config.branches?.production ?? 'main'
+      if (branch !== integration && branch !== production) return null
+      return { context: `agent-os: you are on ${branch}, the ${branch === integration ? 'integration' : 'production'} branch. Claim the issue first (agent-os start <n>) and edit on its branch; work written here ends in a push to ${branch}.` }
+    },
+  },
+  {
     name: 'session',
     events: ['SessionStart'],
     kind: 'context',
@@ -197,7 +214,7 @@ export async function runEvent(event, input, { config, cwd, env = {}, handlers =
     const fit = fitBudget(contexts, budgetBytes(config.contextBudgets?.SessionStart))
     if (fit.text) out.hookSpecificOutput = { hookEventName: 'SessionStart', additionalContext: fit.text }
   }
-  else if (contexts.length && event === 'PostToolUse') out.hookSpecificOutput = { hookEventName: 'PostToolUse', additionalContext: contexts.map((c) => c.text).join('\n') }
+  else if (contexts.length && (event === 'PostToolUse' || event === 'PreToolUse')) out.hookSpecificOutput = { hookEventName: event, additionalContext: contexts.map((c) => c.text).join('\n') }
   if (warnings.length) out.systemMessage = warnings.join('\n')
   return Object.keys(out).length ? out : null
 }
@@ -212,7 +229,7 @@ export function settingsHooks(command) {
   const entry = (event, extra = {}) => [{ ...extra, hooks: [{ type: 'command', command: `${command} hook ${event}`, timeout: event === 'Stop' ? 30 : 10 }] }]
   return {
     SessionStart: entry('SessionStart'),
-    PreToolUse: entry('PreToolUse', { matcher: 'Bash|PowerShell' }),
+    PreToolUse: entry('PreToolUse', { matcher: 'Bash|PowerShell|Edit|Write|MultiEdit|NotebookEdit' }),
     PostToolUse: entry('PostToolUse', { matcher: 'Edit|Write|MultiEdit' }),
     Stop: entry('Stop'),
   }

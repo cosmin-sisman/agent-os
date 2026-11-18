@@ -37,6 +37,17 @@ test('with an exact devDependency, hooks use the project install; a range falls 
   } finally { rmSync(exact, { recursive: true, force: true }); rmSync(range, { recursive: true, force: true }) }
 })
 
+test("agent-os's own repository runs its hooks with its own executable, never npx", () => {
+  const self = project({})
+  try {
+    writeFileSync(join(self, 'package.json'), JSON.stringify({ name: PACKAGE, version: '0.0.0' }))
+    assert.equal(hookCommand(config({ version: '0.0.0' }), { cwd: self }), `npx -y ${PACKAGE}@0.0.0`, 'without bin/agent-os.mjs it is not the repository itself')
+    mkdirSync(join(self, 'bin'))
+    writeFileSync(join(self, 'bin/agent-os.mjs'), '')
+    assert.equal(hookCommand(config({ version: '0.0.0' }), { cwd: self }), 'node bin/agent-os.mjs')
+  } finally { rmSync(self, { recursive: true, force: true }) }
+})
+
 test('no hook the installer writes runs an unpinned version', () => {
   const dir = project()
   try {

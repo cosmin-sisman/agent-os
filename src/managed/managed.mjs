@@ -26,10 +26,10 @@ const eq = (a, b) => a.replace(/\r\n/g, '\n') === b.replace(/\r\n/g, '\n')
 
 export function readLock(cwd) {
   const path = join(cwd, LOCK_FILE)
-  if (!existsSync(path)) return { lockVersion: LOCK_VERSION, platform: null, migrations: [], items: {}, vendored: {}, packs: {} }
+  if (!existsSync(path)) return { lockVersion: LOCK_VERSION, platform: null, migrations: [], items: {}, vendored: {}, packs: {}, ejected: [] }
   try {
     const lock = JSON.parse(readFileSync(path, 'utf8'))
-    return { lockVersion: lock.lockVersion ?? LOCK_VERSION, platform: lock.platform ?? null, migrations: lock.migrations ?? [], items: lock.items ?? {}, vendored: lock.vendored ?? {}, packs: lock.packs ?? {} }
+    return { lockVersion: lock.lockVersion ?? LOCK_VERSION, platform: lock.platform ?? null, migrations: lock.migrations ?? [], items: lock.items ?? {}, vendored: lock.vendored ?? {}, packs: lock.packs ?? {}, ejected: lock.ejected ?? [] }
   } catch {
     throw new CliError(`${LOCK_FILE} is not valid JSON`, { hint: 'run "agent-os update --relock" to rebuild it from .agent-os/base/' })
   }
@@ -40,7 +40,9 @@ export function writeLock(cwd, lock) {
   mkdirSync(join(cwd, '.agent-os'), { recursive: true })
   const vendored = Object.fromEntries(Object.entries(lock.vendored ?? {}).sort(([a], [b]) => a.localeCompare(b)))
   const packs = Object.fromEntries(Object.entries(lock.packs ?? {}).sort(([a], [b]) => a.localeCompare(b)))
-  writeFileSync(join(cwd, LOCK_FILE), `${JSON.stringify({ lockVersion: LOCK_VERSION, ...(lock.platform ? { platform: lock.platform } : {}), ...(lock.migrations?.length ? { migrations: lock.migrations } : {}), items, ...(Object.keys(vendored).length ? { vendored } : {}), ...(Object.keys(packs).length ? { packs } : {}) }, null, 2)}\n`)
+  // Ejected paths: the project keeps its own version for good, and updates leave them alone.
+  const ejected = [...new Set(lock.ejected ?? [])].sort()
+  writeFileSync(join(cwd, LOCK_FILE), `${JSON.stringify({ lockVersion: LOCK_VERSION, ...(lock.platform ? { platform: lock.platform } : {}), ...(lock.migrations?.length ? { migrations: lock.migrations } : {}), items, ...(Object.keys(vendored).length ? { vendored } : {}), ...(Object.keys(packs).length ? { packs } : {}), ...(ejected.length ? { ejected } : {}) }, null, 2)}\n`)
 }
 
 const baseFile = (cwd, key) => join(cwd, BASE_DIR, key.replace('#', '.__'))
@@ -82,7 +84,7 @@ export function writeBlock(text, id, content, style = 'html') {
 
 /** Events in a fixed order, so the managed hooks hash the same whatever order a settings file lists them in. */
 const EVENT_ORDER = ['SessionStart', 'UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Notification', 'Stop', 'SubagentStop', 'PreCompact', 'SessionEnd']
-const isManagedHook = (h) => typeof h?.command === 'string' && /\bagent-os(@\S+)?\s+hook\b/.test(h.command)
+const isManagedHook = (h) => typeof h?.command === 'string' && /\bagent-os(@\S+|\.mjs)?\s+hook\b/.test(h.command)
 
 /** The managed hook entries of a settings object, as a canonical JSON string (for hashing and merging): events in a fixed order. */
 export function readHooks(settings) {
@@ -158,6 +160,7 @@ export function applyManaged(cwd, items, { version, dryRun = false }) {
   const lock = readLock(cwd)
   const results = []
   for (const { key, content } of items) {
+    if (lock.ejected.includes(key) || lock.ejected.includes(pathOf(key))) { results.push({ key, action: 'ejected' }); continue }
     const local = readItem(cwd, key)
     const entry = lock.items[key]
     const base = entry ? readBase(cwd, key) : null
@@ -221,12 +224,19 @@ function conflict(cwd, key, base, local, content, version, dryRun, reason, merge
 export function eject(cwd, target, { dryRun = false } = {}) {
   const lock = readLock(cwd)
   const keys = Object.keys(lock.items).filter((k) => k === target || pathOf(k) === target)
-  if (!keys.length) throw new CliError(`${target} is not managed by agent-os`, { hint: `see ${LOCK_FILE} for the managed paths` })
+  // A file agent-os would install but the project kept (an install conflict) can be ejected too: it was never managed.
+  const rejOf = (k) => `${pathOf(k)}${kindOf(k) === 'file' ? '' : `.${k.split('#')[1]}`}.rej`
+  if (lock.ejected.includes(target)) throw new CliError(`${target} is not managed by agent-os: it is already ejected`, { hint: `remove it from "ejected" in ${LOCK_FILE} to let agent-os manage it again` })
+  const kept = !keys.length && existsSync(join(cwd, pathOf(target)))
+  if (!keys.length && !kept) throw new CliError(`${target} is not managed by agent-os`, { hint: `see ${LOCK_FILE} for the managed paths` })
   if (!dryRun) {
     for (const k of keys) { delete lock.items[k]; rmSync(baseFile(cwd, k), { force: true }) }
+    lock.ejected = [...lock.ejected, target]
     writeLock(cwd, lock)
+    // Keeping the project's version resolves the conflict agent-os's version left behind.
+    for (const k of keys.length ? keys : [target]) rmSync(join(cwd, rejOf(k)), { force: true })
   }
-  return keys
+  return keys.length ? keys : [target]
 }
 
 /** Rebuilds the lock from .agent-os/base/ (for example after a merge conflict in lock.json), keeping known versions. */
@@ -235,7 +245,8 @@ export function relock(cwd, { version }) {
   let oldMigrations = []
   let oldVendored = {}
   let oldPacks = {}
-  const old = (() => { try { const l = readLock(cwd); oldPlatform = l.platform; oldMigrations = l.migrations; oldVendored = l.vendored; oldPacks = l.packs; return l.items } catch { return {} } })()
+  let oldEjected = []
+  const old = (() => { try { const l = readLock(cwd); oldPlatform = l.platform; oldMigrations = l.migrations; oldVendored = l.vendored; oldPacks = l.packs; oldEjected = l.ejected; return l.items } catch { return {} } })()
   const dir = join(cwd, BASE_DIR)
   const items = {}
   const walk = (d) => {
@@ -247,7 +258,7 @@ export function relock(cwd, { version }) {
     }
   }
   walk(dir)
-  writeLock(cwd, { platform: oldPlatform, migrations: oldMigrations, items, vendored: oldVendored, packs: oldPacks })
+  writeLock(cwd, { platform: oldPlatform, migrations: oldMigrations, items, vendored: oldVendored, packs: oldPacks, ejected: oldEjected })
   return Object.keys(items).sort()
 }
 

@@ -1,0 +1,10 @@
+{
+  "name": "next",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Recommend what to work on next from the repository's live state (your pull requests that need you, reviews requested from you, your issues, free issues in the current milestone), each with a one-line reason, then offer /start."
+}

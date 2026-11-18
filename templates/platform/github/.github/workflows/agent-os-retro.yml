@@ -1,3 +1,4 @@
+{{#if ci.retro}}
 # The retro schedule (agent-os): once a week, when the lessons inbox is not empty, open or update one "Retro" issue
 # listing each lesson with a proposed decision; close it when the inbox is empty. Triage itself is /retro.
 # Managed by agent-os.
@@ -34,3 +35,4 @@ jobs:
       - run: {{{runner.npx}}} retro issue
         env:
           GH_TOKEN: {{{expr.open}}} secrets.GITHUB_TOKEN {{{expr.close}}}
+{{/if}}

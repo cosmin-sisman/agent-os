@@ -1,0 +1,10 @@
+{
+  "name": "release",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Release what is on development to main - a release pull request merged with a merge commit, a tag, the GitHub release with grouped notes, the rolling milestone rolled, release checks, and the sync back."
+}

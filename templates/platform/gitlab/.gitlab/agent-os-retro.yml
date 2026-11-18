@@ -1,3 +1,4 @@
+{{#if ci.retro}}
 # The retro schedule (agent-os): run it from a weekly pipeline schedule (CI/CD → Schedules). When the lessons inbox is
 # not empty it opens or updates one "Retro" issue, and closes it when the inbox is empty. Include it from
 # .gitlab-ci.yml:
@@ -15,3 +16,4 @@ agent-os/retro:
     - if: $CI_PIPELINE_SOURCE == "schedule"
   script:
     - {{{runner.npx}}} retro issue
+{{/if}}

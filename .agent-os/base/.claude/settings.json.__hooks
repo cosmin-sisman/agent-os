@@ -1,0 +1,48 @@
+{
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node bin/agent-os.mjs hook SessionStart",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "Bash|PowerShell|Edit|Write|MultiEdit|NotebookEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node bin/agent-os.mjs hook PreToolUse",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Edit|Write|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node bin/agent-os.mjs hook PostToolUse",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node bin/agent-os.mjs hook Stop",
+          "timeout": 30
+        }
+      ]
+    }
+  ]
+}

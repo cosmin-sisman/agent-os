@@ -724,6 +724,21 @@
             "description": "A runner tag"
           }
         },
+        "loop": {
+          "type": "boolean",
+          "description": "Install the agent-os/loop job (turn it off only when the project's own CI already runs agent-os check loop)",
+          "default": true
+        },
+        "gate": {
+          "type": "boolean",
+          "description": "Install the agent-os/gate job (turn it off only when the project's own CI already runs agent-os gate)",
+          "default": true
+        },
+        "retro": {
+          "type": "boolean",
+          "description": "Install the weekly scheduled job that keeps the Retro issue current",
+          "default": true
+        },
         "labels": {
           "type": "boolean",
           "description": "Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels)",

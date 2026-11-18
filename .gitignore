@@ -4,3 +4,5 @@ node_modules/
 *.rej
 .DS_Store
 _site/
+.claude/settings.local.json
+.claude/worktrees/

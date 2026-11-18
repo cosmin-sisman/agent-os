@@ -126,6 +126,9 @@ export const SCHEMA = obj({
   ci: obj({
     image: str('The container image generated CI jobs run in, e.g. from the internal registry (default node:22)'),
     tags: list(str('A runner tag'), 'Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels)', { default: [] }),
+    loop: bool('Install the agent-os/loop job (turn it off only when the project\'s own CI already runs agent-os check loop)', { default: true }),
+    gate: bool('Install the agent-os/gate job (turn it off only when the project\'s own CI already runs agent-os gate)', { default: true }),
+    retro: bool('Install the weekly scheduled job that keeps the Retro issue current', { default: true }),
     labels: bool('Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels)', { default: false }),
     securityWatch: oneOf(['off', 'daily', 'weekly'], 'Install the scheduled job that keeps the Security digest issue current', { default: 'off' }),
     labelsEnvironment: str('GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret)'),
