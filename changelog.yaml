@@ -10,6 +10,61 @@
 #       refs: ["#43"]
 #       migration: 0.2.0
 releases:
+  - version: 0.1.2
+    date: 2026-11-18
+    changes:
+      - group: new
+        text: "feat(loop): milestones.rolling turns off the rolling milestone"
+        refs:
+          - "#249"
+      - group: new
+        text: "feat(platform): wire the agent-os jobs into .gitlab-ci.yml"
+        refs:
+          - "#252"
+      - group: new
+        text: "feat(security): report vulnerabilities privately, never as issues"
+        refs:
+          - "#255"
+      - group: new
+        text: "feat(collab): optional per-laptop orchestrator with an edit guard"
+        refs:
+          - "#256"
+      - group: new
+        text: "feat(testing): skill evals on fixture repositories"
+        refs:
+          - "#257"
+      - group: new
+        text: "feat(distribution): accept the other-agents decision"
+        refs:
+          - "#259"
+      - group: fix
+        text: "fix(loop): sync production into integration with a merge commit"
+        refs:
+          - "#241"
+      - group: fix
+        text: "fix(loop): never delete a long-lived branch or a sync's head"
+        refs:
+          - "#244"
+      - group: chore
+        text: "chore(release): sync v0.1.1 into development"
+        refs:
+          - "#242"
+      - group: chore
+        text: "chore(distribution): pin this repository to agent-os 0.1.1"
+        refs:
+          - "#246"
+      - group: chore
+        text: "refactor(platform): split the GitHub adapter by responsibility"
+        refs:
+          - "#247"
+      - group: chore
+        text: "chore(ci): one macOS job on pull requests, full matrix on push"
+        refs:
+          - "#251"
+      - group: chore
+        text: "chore(ci): no macOS job on pull requests, macOS on push"
+        refs:
+          - "#254"
   - version: 0.1.1
     date: 2026-11-18
     changes:
