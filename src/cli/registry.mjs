@@ -52,7 +52,7 @@ export const COMMANDS = [
   { name: 'stack', summary: 'Show, change, detect or import the stack map', status: 'planned', issue: 74 },
   { name: 'system', summary: 'Map components, interfaces, exposure and contracts', status: 'planned', issue: 113 },
   { name: 'artifact', summary: 'Create, build, verify and link artifacts', status: 'planned', issue: 82 },
-  { name: 'skill', summary: 'Add, remove, update or list core, external and local skills', status: 'planned', issue: 39 },
+  { name: 'skill', summary: 'Register skills and check the registry (add, update and remove vendored skills: #39)', status: 'new', issue: 38, load: () => import('../commands/skill.mjs') },
   { name: 'retrofit', summary: 'Plan and apply history into the system for an existing repository', status: 'planned', issue: 50 },
   { name: 'sbom', summary: 'Generate a software bill of materials for the security watch', status: 'planned', issue: 108 },
 ]
