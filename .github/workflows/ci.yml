@@ -35,6 +35,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm test
+      # The catalog: unique ids, references that resolve, both languages, ASCII-only ro; problems name file and id.
+      - run: node bin/agent-os.mjs stack catalog check
       - run: npm run site
 
   actionlint:

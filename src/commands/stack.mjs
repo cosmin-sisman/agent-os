@@ -8,9 +8,10 @@ import { CliError, EXIT } from '../cli/errors.mjs'
 import { ask } from '../cli/prompt.mjs'
 import { parse } from '../yaml/yaml.mjs'
 import { closest } from '../util/closest.mjs'
+import { catalogFiles, KINDS, mergeCatalog, problemText, validateCatalog } from '../stack/catalog.mjs'
 import { loadCatalog, readStack, stackFromBlueprint, stackSummary, validateStack } from '../stack/stack.mjs'
 
-export const usage = 'agent-os stack show | check | new --from <blueprint> [--project <name>] [--force] [--dry-run]   (set, status, detect, drift, import, render: later issues)'
+export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run]   (set, status, detect, drift, import, render: later issues)'
 
 export const options = {
   from: { type: 'string', description: 'new: the blueprint id (catalog/blueprints.yaml)' },
@@ -40,8 +41,20 @@ function showText(rows, s) {
 
 /** @param {import('../cli/context.mjs').Context} ctx */
 export async function run(ctx) {
-  const [action] = ctx.positionals
-  const catalog = loadCatalog()
+  const [action, sub] = ctx.positionals
+  if (action === 'catalog') {
+    const files = catalogFiles({ cwd: ctx.cwd })
+    const merged = mergeCatalog(files)
+    const counts = Object.fromEntries(KINDS.map((k) => [k, merged[k].size]))
+    const overlays = Object.values(files.overlays).map((f) => f.file)
+    const problems = sub === 'check' ? validateCatalog(files) : []
+    const head = `catalog: ${KINDS.map((k) => `${counts[k]} ${k}`).join(', ')}${overlays.length ? ` (overlays: ${overlays.join(', ')})` : ''}`
+    ctx.output({ counts, overlays, problems }, problems.length ? `${head}
+${problems.length} problem(s):
+  ${problems.map(problemText).join('\n  ')}` : `${head}${sub === 'check' ? '\nvalid: unique ids, references resolve, en and ro present, ro ASCII only' : ''}`)
+    return problems.length ? EXIT.CHECK_FAILED : EXIT.OK
+  }
+  const catalog = loadCatalog({ cwd: ctx.cwd })
   if (action === 'show' || action === 'check') {
     const stack = readStack(ctx.cwd)
     if (!stack) throw new CliError('there is no stack.yaml', { hint: 'agent-os stack new --from <blueprint> (blueprints: catalog/blueprints.yaml)' })

@@ -1,6 +1,6 @@
 # The stack map: `stack.yaml` and `agent-os stack`
 
-`stack.yaml` sits at the repository root and records what the project is built with, layer by layer. Every id in it comes from the catalog (`catalog/*.yaml`). [`examples/stack.yaml`](../../examples/stack.yaml) shows the format.
+`stack.yaml` sits at the repository root and records what the project is built with, layer by layer. Every id in it comes from the catalog (`catalog/*.yaml`, plus the project's overlays in `.agent-os/catalog/`; see [the catalog](catalog.md)). [`examples/stack.yaml`](../../examples/stack.yaml) shows the format.
 
 ## The format
 
