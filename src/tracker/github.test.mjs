@@ -127,4 +127,6 @@ test('checks: the latest run of each check wins, even when the platform rollup s
   assert.deepEqual(r.all.map((c) => `${c.name}=${c.state}`), ['ci=success', 'pr-title=success'])
   assert.equal(checksOf({ state: 'FAILURE', contexts: { nodes: [run('ci', 'SUCCESS', '1'), run('ci', 'FAILURE', '2')] } }).overall, 'failure', 'a later failure still fails')
   assert.equal(checksOf(null).overall, 'none')
+  assert.equal(checksOf({ state: 'PENDING', contexts: { nodes: [{ __typename: 'CheckRun', name: 'test', status: 'IN_PROGRESS', conclusion: 'SUCCESS', startedAt: '1' }] } }).overall, 'success', 'a conclusion means finished, even if the status lags')
+  assert.equal(checksOf({ state: 'PENDING', contexts: { nodes: [{ __typename: 'CheckRun', name: 'test', status: 'IN_PROGRESS', conclusion: null, startedAt: '1' }] } }).overall, 'pending')
 })

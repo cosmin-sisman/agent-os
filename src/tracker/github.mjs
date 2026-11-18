@@ -13,14 +13,15 @@ const CONTEXTS = 'contexts(first:100){ nodes{ __typename ... on CheckRun { name 
 
 /**
  * The checks of a commit, one per name: the latest run wins, as for required checks. A re-run after a fix leaves the
- * old failed run on the same commit, and the platform's own rollup state still counts it.
+ * old failed run on the same commit, and the platform's own rollup state still counts it. A run that has a
+ * conclusion is finished, even when the API still reports it in progress (seen on GitHub after the job completed).
  */
 export function checksOf(rollup) {
   const latest = new Map()
   for (const c of rollup?.contexts?.nodes ?? []) {
     const check = c.__typename === 'StatusContext'
       ? { name: c.context, at: c.createdAt ?? '', state: c.state === 'SUCCESS' ? 'success' : c.state === 'PENDING' || c.state === 'EXPECTED' ? 'pending' : 'failure', url: c.targetUrl ?? null }
-      : { name: c.name, at: c.startedAt ?? '', state: c.status !== 'COMPLETED' ? 'pending' : ['SUCCESS', 'NEUTRAL', 'SKIPPED'].includes(c.conclusion) ? 'success' : 'failure', url: c.detailsUrl ?? null }
+      : { name: c.name, at: c.startedAt ?? '', state: !c.conclusion && c.status !== 'COMPLETED' ? 'pending' : ['SUCCESS', 'NEUTRAL', 'SKIPPED'].includes(c.conclusion) ? 'success' : 'failure', url: c.detailsUrl ?? null }
     const seen = latest.get(check.name)
     if (!seen || check.at >= seen.at) latest.set(check.name, check)
   }
