@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { execFileSync } from 'node:child_process'
 import { run } from '../cli/main.mjs'
 
 async function cli(cwd, ...argv) {
@@ -22,14 +23,18 @@ function withRepo(fn) {
 
 const read = (dir, file) => JSON.parse(readFileSync(join(dir, file), 'utf8'))
 
-test('set writes team keys to agent-os.json with $schema, and personal keys to local.json plus .gitignore', withRepo(async (dir) => {
+test('set writes team keys to agent-os.json with $schema, and personal keys to local.json without touching .gitignore', withRepo(async (dir) => {
+  execFileSync('git', ['init', '-q'], { cwd: dir })
   assert.equal((await cli(dir, 'config', 'set', 'languages.issues', 'ro')).code, 0)
-  assert.equal((await cli(dir, 'config', 'set', 'languages.chat', 'en')).code, 0)
+  const r = await cli(dir, 'config', 'set', 'languages.chat', 'en')
+  assert.equal(r.code, 0)
   const team = read(dir, 'agent-os.json')
   assert.equal(team.languages.issues, 'ro')
   assert.match(team.$schema, /agent-os\.schema\.json$/)
   assert.deepEqual(read(dir, '.agent-os/local.json'), { languages: { chat: 'en' } })
-  assert.match(readFileSync(join(dir, '.gitignore'), 'utf8'), /\.agent-os\/local\.json\n\.agent-os\/cache\//)
+  assert.equal(existsSync(join(dir, '.gitignore')), false)
+  assert.match(readFileSync(join(dir, '.git/info/exclude'), 'utf8'), /\.agent-os\/local\.json/)
+  assert.match(r.stdout, /\.git\/info\/exclude/)
 }))
 
 test('set parses JSON values and rejects invalid ones without writing', withRepo(async (dir) => {

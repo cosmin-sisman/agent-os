@@ -261,7 +261,7 @@ Decision: [lessons learned](../decisions/2026-11-18-lessons-learned-store.md).
 
 `agent-os init` reads signals (commit count, source files, `docs/` and specifications, open PRs and branches, tags and releases, date of the last commit, CI, an existing `CLAUDE.md` or `AGENTS.md`). It proposes a profile, confirms it with you, and asks four to six questions (languages per area, tracker, packs, integration branch, solo or team).
 
-The first question is always personal: **which language the agent should use to talk to you** (`en` or `ro`). It is stored in your `.agent-os/local.json`, separate from the team's languages for issues, PRs, commits and code. A teammate who joins later runs `agent-os init --me`, which asks only the personal questions (chat language, machine limits, sessions) and never touches the team's files.
+The first question is always personal: **which language the agent should use to talk to you** (`en` or `ro`). It is stored in your `.agent-os/local.json`, separate from the team's languages for issues, PRs, commits and code. A teammate who joins later runs `agent-os init --me`, which asks only the personal questions (chat language, sessions, machine limits) and never touches a committed file. If the personal files are not ignored yet, they go to `.git/info/exclude`, never to `.gitignore`.
 
 | Profile | Signals | Installs | Extra skill |
 |---|---|---|---|
