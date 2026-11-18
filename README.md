@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/cosmin-sisman/agent-os/milestones"><img alt="Status: design phase" src="https://img.shields.io/badge/status-design%20phase-8b5cf6?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/@cosmin-sisman/agent-os"><img alt="npm" src="https://img.shields.io/npm/v/@cosmin-sisman/agent-os?style=flat-square&color=8b5cf6"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-0ea5e9?style=flat-square"></a>
   <img alt="Node 22+" src="https://img.shields.io/badge/node-%E2%89%A522-14b8a6?style=flat-square">
   <a href="https://github.com/cosmin-sisman/agent-os/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/cosmin-sisman/agent-os/actions/workflows/ci.yml/badge.svg?branch=development"></a>
@@ -15,6 +15,7 @@
 
 <p align="center">
   <a href="#-quick-start">Quick start</a> ·
+  <a href="docs/guides/usage.md"><b>Usage guide</b></a> ·
   <a href="#-what-you-get">Features</a> ·
   <a href="#-how-it-works">How it works</a> ·
   <a href="docs/guides/README.md">Guides</a> ·
@@ -30,11 +31,11 @@
 **agent-os** installs a working agreement into any repository. It sets up the skills, rules, hooks and small deterministic scripts that let a team (five people or fifty, each with their own coding-agent sessions on their own laptops) move work from idea to production the same way every time. Your code platform is the shared memory: **GitHub or GitLab**, in the cloud or self-managed on your own servers. Every piece of work also teaches the system something, so it keeps up with the project instead of falling behind it.
 
 ```bash
-npx @cosmin-sisman/agent-os init
+npx -y @cosmin-sisman/agent-os@0.1.2 init --detect
 ```
 
-> [!NOTE]
-> **agent-os is in its design phase.** The design, decisions and plan are public and open for discussion. The package is built in the open, milestone by milestone. Watch the repository or pick an issue labelled [`good first issue`](https://github.com/cosmin-sisman/agent-os/labels/good%20first%20issue).
+> [!TIP]
+> **New here?** Follow the [Quick start](#-quick-start) to install it, then the [usage guide](docs/guides/usage.md): the daily loop, every skill with an example prompt and a real sample of its output, use cases and troubleshooting.
 
 ## ✨ What you get
 
@@ -119,7 +120,7 @@ One gate definition runs locally and in CI. `/test` plans scenarios at ticket ti
 <td valign="top">
 
 ### 🛡️ Security that keeps watch
-`/security` follows the advisories that affect *your* dependencies and stack (GHSA, OSV, NVD, CISA KEV, vendors). It checks every change request by layer, writes threat models and abuse cases, and reports vulnerabilities only through private channels.
+`agent-os security` follows the advisories that affect *your* dependencies and stack (GHSA, OSV, NVD, CISA KEV, vendors). It checks every change request by layer, writes threat models and abuse cases, and reports vulnerabilities only through private channels.
 
 </td>
 </tr>
@@ -169,23 +170,82 @@ Issues, PRs, commits, labels, milestones, docs and chat are each set to `en` or 
 
 ## 🚀 Quick start
 
-> These commands describe the target CLI. Track progress in the [v0.1 milestone](https://github.com/cosmin-sisman/agent-os/milestone/1).
+**Requirements:** Node.js 22 or later, git, and the platform CLI logged in: [`gh`](https://cli.github.com) (`gh auth login`) for GitHub, or [`glab`](https://gitlab.com/gitlab-org/cli) (`glab auth login --hostname <host>`) for GitLab. Skills and hooks run in [Claude Code](https://claude.com/claude-code). AGENTS.md and the CLI work in other agents too.
+
+Run it without installing, pinned to a version:
 
 ```bash
-npx @cosmin-sisman/agent-os init      # detects the repo's state, asks 4–6 questions, shows the plan, then writes it
-npx @cosmin-sisman/agent-os doctor    # checks the agent system and GitHub hygiene (the same check runs in CI)
-npx @cosmin-sisman/agent-os next      # what to work on next, and why
-npx @cosmin-sisman/agent-os init --me # joining a project: your chat language, sessions and machine limits only
+npx -y @cosmin-sisman/agent-os@0.1.2 <command>
 ```
 
-`init` recognizes four kinds of repository and adapts:
+Or install it once and type `agent-os`:
+
+```bash
+npm i -g @cosmin-sisman/agent-os
+agent-os version
+```
+
+The examples below use `agent-os`. With npx, put `npx -y @cosmin-sisman/agent-os@0.1.2` in its place.
+
+### A new project
+
+```bash
+mkdir shop && cd shop
+git init -b development
+gh repo create --private --source . --remote origin          # GitLab: glab repo create
+agent-os init --profile greenfield --solo --lang en --setup  # --team for one approval per change request; --lang ro for Romanian
+agent-os init --me                                           # your own settings: chat language (en or ro), sessions, machine limits
+```
+
+`--setup` also prepares the platform: branch protection, labels and the first milestone. It shows the plan and asks first. Leave it out to do it later with `agent-os setup`.
+
+Then open Claude Code in the folder:
+1. `/kickoff`: a product interview that writes `docs/product.md`, proposes a stack, and creates the first milestone and issues;
+2. `agent-os doctor`: checks the setup (the same check runs in CI);
+3. `/next`: what to work on first;
+4. `/start <n>`: claim it and branch.
+
+The [greenfield guide](docs/guides/greenfield.md) walks through every step.
+
+### An existing repository
+
+```bash
+agent-os init --detect        # reads the repository, suggests a profile, writes nothing
+agent-os init --profile active --methodology forward-only --team
+agent-os init --me
+```
+
+`init --detect` suggests one of four profiles:
 
 | Your repository | Profile | What agent-os adds first |
 |---|---|---|
 | Empty | `greenfield` | `/kickoff`: a product interview, then docs, milestones and the first issues |
 | Specs and docs, little code | `spec-first` | `/ingest-docs`: specifications become epics and sub-issues linked to their sources |
-| In active development | `active` | `/discover`: conventions inferred from history; **retrofit** or **forward-only** adoption |
+| In active development | `active` | `/discover`: conventions inferred from history, then `--methodology forward-only` (from today on) or `retrofit` (history brought in too) |
 | Finished, in maintenance | `maintenance` | `/audit`, `/runbook`, `/handoff` |
+
+Every profile has its own guide in [docs/guides](docs/guides/README.md). Everyone who joins later runs only `agent-os init --me`.
+
+### GitLab, including self-managed
+
+```bash
+agent-os init --profile greenfield --platform gitlab --host https://gitlab.example.com --project team/app --team
+```
+
+agent-os probes what your instance and tier support, installs `.gitlab/` files, and installs `/pr` as `/mr`.
+
+### Languages
+
+The repository's own text is in English. The **installed** rules, skills, issue forms, labels and milestones can be `en` or `ro` (Romanian without diacritics), per area (`--lang ro --area-lang commits=en`). Each person chooses the chat language with `init --me --chat ro`.
+
+### Updating later
+
+```bash
+agent-os update --plan        # what would change: changelog, managed files, migrations
+agent-os update               # applies it on its own branch, as a change request
+```
+
+**Next:** the [usage guide](docs/guides/usage.md) covers the daily loop (`/next` → `/start` → work → `/pr` → `/ship`, then `/release`), every skill, and what to do when something is blocked.
 
 ## 🧠 How it works
 
@@ -251,18 +311,22 @@ layers:
 
 ## 🗺️ Roadmap
 
+agent-os 0.1.2 is on npm. It ships the features of the milestones below; the open ones still have a few issues left.
+
 | Milestone | Theme |
 |---|---|
-| [v0.1 Foundations](https://github.com/cosmin-sisman/agent-os/milestone/1) | CLI, config, templates, lock, languages, hooks runner, environment check, pinned versions and migrations |
+| [v0.1 Foundations](https://github.com/cosmin-sisman/agent-os/milestone/1) ✅ | CLI, config, templates, lock, languages, hooks runner, environment check, pinned versions and migrations |
 | [v0.2 Core workflow](https://github.com/cosmin-sisman/agent-os/milestone/2) | GitHub **and GitLab** (cloud and self-managed) adapters, capability probing, platform setup, `/ticket` `/start` `/pr`·`/mr` `/ship` `/release` `/next`, safe `update` |
-| [v0.3 Knowledge and loop](https://github.com/cosmin-sisman/agent-os/milestone/3) | journal, lessons with recall, chronicle, `map`, `/retro`, `doctor`, the required loop check, `/upstream` |
-| [v0.4 Collaboration](https://github.com/cosmin-sisman/agent-os/milestone/4) | claim protocol, overlap detection, comment-driven work, optional orchestrator, `/handoff` |
-| [v0.5 Skill registry](https://github.com/cosmin-sisman/agent-os/milestone/5) | core / external / local registry, capability slots |
+| [v0.3 Knowledge and loop](https://github.com/cosmin-sisman/agent-os/milestone/3) ✅ | journal, lessons with recall, chronicle, `map`, `/retro`, `doctor`, the required loop check, `/upstream` |
+| [v0.4 Collaboration](https://github.com/cosmin-sisman/agent-os/milestone/4) ✅ | claim protocol, overlap detection, comment-driven work, optional orchestrator, `/handoff` |
+| [v0.5 Skill registry](https://github.com/cosmin-sisman/agent-os/milestone/5) ✅ | core / external / local registry, capability slots |
 | [v0.6 Testing and CI](https://github.com/cosmin-sisman/agent-os/milestone/6) | `/test`, one gate locally and in CI, `/ci` for GitHub Actions and GitLab CI, `/standards` always on |
-| [v0.7 Init and adoption](https://github.com/cosmin-sisman/agent-os/milestone/7) | detection, profiles, retrofit and forward-only, `/discover`, `/kickoff`, packs |
-| [v0.8 Stack map and artifacts](https://github.com/cosmin-sisman/agent-os/milestone/9) | `stack.yaml`, `/stack`, catalog overlays, `system.yaml`, `/system` (components, contracts, exposure), `/artifact`, Pages |
-| [v0.9 Audit and security](https://github.com/cosmin-sisman/agent-os/milestone/10) | `/audit` with lenses and evidence, `/security`: advisory watch, layer checks, threat models, private reporting |
+| [v0.7 Init and adoption](https://github.com/cosmin-sisman/agent-os/milestone/7) ✅ | detection, profiles, retrofit and forward-only, `/discover`, `/kickoff`, packs |
+| [v0.8 Stack map and artifacts](https://github.com/cosmin-sisman/agent-os/milestone/9) ✅ | `stack.yaml`, `/stack`, catalog overlays, `system.yaml`, `/system` (components, contracts, exposure), `/artifact`, Pages |
+| [v0.9 Audit and security](https://github.com/cosmin-sisman/agent-os/milestone/10) ✅ | `/audit` with lenses and evidence, `agent-os security`: advisory watch, layer checks, threat models, private reporting |
 | [v1.0 Release](https://github.com/cosmin-sisman/agent-os/milestone/8) | Claude Code plugin, npm with provenance, skill evals, docs, dogfooding |
+
+✅ = every issue closed.
 
 ## 🤝 Community
 
