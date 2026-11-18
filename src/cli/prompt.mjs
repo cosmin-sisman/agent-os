@@ -25,6 +25,7 @@ export function interpret(q, raw) {
     const n = Number(a)
     return (q.min === undefined || n >= q.min) && (q.max === undefined || n <= q.max) ? n : undefined
   }
+  if (q.kind === 'text') { const t = String(raw).trim(); return !q.pattern || q.pattern.test(t) ? t : undefined }
   return undefined
 }
 
