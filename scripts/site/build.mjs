@@ -6,43 +6,19 @@ import { readFileSync, readdirSync, existsSync, mkdirSync, cpSync, writeFileSync
 import { createHash } from 'node:crypto'
 import { join, basename } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { parse } from '../../src/yaml/yaml.mjs'
 
 const REPO_URL = 'https://github.com/cosmin-sisman/agent-os'
 const BUILD_ONLY = new Set(['template.html'])
 
 /**
- * Parses the YAML subset artifact.yaml uses: top-level `key: value`, inline `[a, b]` lists, quoted strings,
- * and a `sources:` list of `- path: …` / `sha256: …` pairs. Comments and blank lines are ignored.
+ * Reads artifact.yaml with the package's YAML parser and normalizes `sources` to a list.
  * @param {string} text
- * @returns {{ sources: { path: string, sha256?: string }[], [key: string]: unknown }}
+ * @param {string} [file] used in error messages
  */
-export function parseArtifactYaml(text) {
-  const meta = { sources: [] }
-  let inSources = false
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.replace(/\s+#.*$/, '')
-    if (!line.trim() || line.trimStart().startsWith('#')) continue
-    if (/^\S/.test(line)) {
-      inSources = false
-      const m = line.match(/^([A-Za-z][\w-]*):\s*(.*)$/)
-      if (!m) continue
-      if (m[1] === 'sources') { inSources = true; continue }
-      meta[m[1]] = scalar(m[2])
-    } else if (inSources) {
-      const m = line.trim().match(/^-?\s*(path|sha256):\s*(.+)$/)
-      if (!m) continue
-      if (m[1] === 'path') meta.sources.push({ path: scalar(m[2]) })
-      else if (meta.sources.length) meta.sources[meta.sources.length - 1].sha256 = scalar(m[2])
-    }
-  }
-  return meta
-}
-
-function scalar(value) {
-  const v = value.trim()
-  if (v.startsWith('[') && v.endsWith(']')) return v.slice(1, -1).split(',').map((s) => scalar(s)).filter((s) => s !== '')
-  if (v.startsWith('"')) return JSON.parse(v)
-  return v
+export function parseArtifactYaml(text, file = 'artifact.yaml') {
+  const meta = parse(text, { file }) ?? {}
+  return { ...meta, sources: Array.isArray(meta.sources) ? meta.sources : [] }
 }
 
 /** Lists the artifact paths whose sha256 no longer matches the recorded one (or that are missing). */
@@ -61,7 +37,7 @@ export function collectArtifacts(root) {
   for (const id of readdirSync(dir).sort().reverse()) {
     const folder = join(dir, id)
     if (!statSync(folder).isDirectory() || !existsSync(join(folder, 'artifact.yaml'))) continue
-    const meta = parseArtifactYaml(readFileSync(join(folder, 'artifact.yaml'), 'utf8'))
+    const meta = parseArtifactYaml(readFileSync(join(folder, 'artifact.yaml'), 'utf8'), `artifacts/${id}/artifact.yaml`)
     if (meta.id !== id) throw new Error(`artifacts/${id}: artifact.yaml id is "${meta.id}"`)
     items.push({ ...meta, folder, stale: staleSources(root, meta.sources) })
   }
