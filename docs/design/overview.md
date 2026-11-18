@@ -197,6 +197,8 @@ It always searches for duplicates first and proposes extending an existing issue
 
 Blocked issues (open `blocked by`) and issues assigned to others are left out, with a note.
 
+As built (#18): "in progress" means a `<type>/<n>-<slug>` branch exists on the remote, and "areas you touched" are the area labels of issues you closed recently, until paths map to areas.
+
 ## 10. Knowledge, history and the self-improvement loop
 
 ### No committed file index
