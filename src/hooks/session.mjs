@@ -6,6 +6,8 @@
 import { changedFiles } from '../gate/gate.mjs'
 import { lessonsForChange, readLessons } from '../lessons/lessons.mjs'
 import { indexLine, skillIndex } from '../registry/skill-index.mjs'
+import { hookCommand } from '../version/pin.mjs'
+import { onPath } from '../util/which.mjs'
 
 /** Lines are { p, text }: a lower p is more important and survives the budget longer. */
 const line = (p, text) => ({ p, text })
@@ -33,7 +35,7 @@ export function fitBudget(lines, limit) {
 const issueOf = (branch) => Number(String(branch ?? '').match(/(?:^|\/)(\d+)-/)?.[1]) || null
 
 /** What the working tree says, offline. */
-export function localContext({ config, cwd, git }) {
+export function localContext({ config, cwd, git, env = process.env }) {
   const lines = []
   const r = git(['rev-parse', '--abbrev-ref', 'HEAD'])
   const branch = r.status === 0 ? r.stdout.trim() : null
@@ -41,6 +43,8 @@ export function localContext({ config, cwd, git }) {
     const n = issueOf(branch)
     lines.push(line(0, `agent-os: you are on ${branch}${n ? ` (issue #${n})` : [config.branches.integration, config.branches.production].includes(branch) ? '; start work with /start <issue> or ask /next' : ''}.`))
   }
+  // Skills say `agent-os <command>`; where it is not installed, name the exact pinned command so no agent guesses (#275).
+  if (!onPath('agent-os', env)) lines.push(line(1, `agent-os CLI: not on this PATH; run each \`agent-os <command>\` as \`${hookCommand(config, { cwd })} <command>\` (never an unscoped "agent-os" package).`))
   let files = []
   try { files = branch && ![config.branches.integration, config.branches.production].includes(branch) ? changedFiles(git, config.branches.integration) : [] } catch { files = [] }
   const lessons = files.length ? lessonsForChange(cwd, { paths: files }, { limit: 2, budget: 200 }) : []

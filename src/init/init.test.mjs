@@ -140,4 +140,6 @@ test('the AGENTS.md block tells other agents how to run a skill, in en and in AS
   assert.match(ro, /Alt agent decat Claude Code: o cerere pentru `\/<name>` inseamna sa citesti `\.claude\/skills\/<name>\/SKILL\.md`/)
   assert.match(ro, /^[\x00-\x7F]*$/, 'ro is ASCII')
   assert.equal(en.split('\n').length, ro.split('\n').length, 'the same lines in both languages')
+  assert.match(en, /Where `agent-os` is not installed, run each command as `npx -y @cosmin-sisman\/agent-os@0\.1\.2 <command>` \(never an unscoped `agent-os` package\)/)
+  assert.match(ro, /Daca `agent-os` nu e instalat, ruleaza fiecare comanda ca `npx -y @cosmin-sisman\/agent-os@0\.1\.2 <comanda>`/)
 })

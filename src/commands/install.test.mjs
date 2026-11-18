@@ -43,7 +43,7 @@ async function cli(cwd, argv, extra = {}) {
   return { code, stdout, stderr }
 }
 
-const BASE = [[/talk to you/, 'en'], [/Integration branch/, ''], [/Which profile/, ''], [/Language of the team areas/, 'en'], [/several people/, 'n'], [/Write this\?/, 'y'], [/How many agent sessions/, '1'], [/free memory/, '']]
+const BASE = [[/talk to you/, 'en'], [/Integration branch/, ''], [/Which profile/, ''], [/Language of the team areas/, 'en'], [/several people/, 'n'], [/Write this\?/, 'y'], [/How many agent sessions/, '1'], [/free memory/, ''], [/is not installed on this laptop/, 'n'], [/Nothing is committed yet/, 'n']]
 
 test('on a terminal, the bare command in a folder without agent-os.json starts install; elsewhere it prints help and asks nothing', async () => {
   const cwd = tmp()
@@ -135,5 +135,42 @@ test('scripted: --yes without a remote or --platform fails with the hint and wri
     assert.match(ok.stdout, /^git init -b development\n/)
     assert.equal(JSON.parse(readFileSync(join(cwd, '.agent-os/local.json'), 'utf8')).languages.chat, 'ro')
     assert.match(ok.stdout, /Next:/)
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('a fresh folder gets the CLI and the first commit only after a yes: npm i -g with the pinned version, then commit and push', async () => {
+  const cwd = tmp()
+  const remote = tmp()
+  try {
+    const env = { ...process.env, GIT_AUTHOR_NAME: 'Ana', GIT_AUTHOR_EMAIL: 'ana@example.com', GIT_COMMITTER_NAME: 'Ana', GIT_COMMITTER_EMAIL: 'ana@example.com' }
+    const g = (args) => { const r = spawnSync('git', args, { cwd, env, encoding: 'utf8' }); return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' } }
+    g(['init', '-q', '-b', 'development'])
+    spawnSync('git', ['init', '-q', '--bare'], { cwd: remote })
+    g(['remote', 'add', 'origin', remote])
+    const npm = []
+    const rules = [[/is not installed on this laptop. Install it now \(npm i -g @cosmin-sisman\/agent-os@0\.0\.0\)/, 'y'], [/Commit the installed files as the first commit on development/, 'y'], ...BASE.filter(([re]) => !/not installed|committed/.test(re.source))]
+    const r = await cli(cwd, ['install', '--platform', 'github', '--project', 'acme/shop'], { ask: terminal(rules).ask, gh: fakeGh().gh, git: g, npm: (args) => { npm.push(args); return { status: 0, stdout: '', stderr: '' } } })
+    assert.equal(r.code, 0, r.stdout + r.stderr)
+    assert.deepEqual(npm, [['install', '--global', '@cosmin-sisman/agent-os@0.0.0']])
+    assert.match(r.stdout, /installed the agent-os command \(npm i -g @cosmin-sisman\/agent-os@0\.0\.0\)\ncommitted the installed files on development \(chore: install agent-os\)\npushed development to origin\n/)
+    const files = g(['show', '--name-only', '--format=%s', 'HEAD']).stdout.trim().split('\n')
+    assert.equal(files[0], 'chore: install agent-os')
+    assert.ok(files.includes('agent-os.json') && files.includes('AGENTS.md') && files.includes('.claude/skills/next/SKILL.md'))
+    assert.ok(!files.includes('.agent-os/local.json'), 'personal settings stay out')
+    assert.equal(spawnSync('git', ['--git-dir', remote, 'log', '--format=%s', 'development'], { encoding: 'utf8' }).stdout.trim(), 'chore: install agent-os')
+  } finally { rmSync(cwd, { recursive: true, force: true }); rmSync(remote, { recursive: true, force: true }) }
+})
+
+test('without a terminal and without --yes, install only says how: no npm, no commit', async () => {
+  const cwd = tmp()
+  try {
+    git(cwd, 'init', '-q', '-b', 'development')
+    let npm = 0
+    const r = await cli(cwd, ['install', '--platform', 'github', '--project', 'acme/shop', '--lang', 'en', '--chat', 'en', '--solo'], { gh: fakeGh().gh, npm: () => { npm++; return { status: 0 } } })
+    assert.equal(r.code, 0, r.stdout + r.stderr)
+    assert.equal(npm, 0)
+    assert.match(r.stdout, /the agent-os command is not on this PATH: npm i -g @cosmin-sisman\/agent-os@0\.0\.0 installs it; until then, run npx -y @cosmin-sisman\/agent-os@0\.0\.0 <command>/)
+    assert.match(r.stdout, /not committed yet: git add <the installed files> && git commit -m "chore: install agent-os" && git push -u origin development/)
+    assert.notEqual(git(cwd, 'rev-parse', '--verify', '--quiet', 'HEAD').status, 0)
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
