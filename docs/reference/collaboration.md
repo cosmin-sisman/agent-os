@@ -46,3 +46,18 @@ agent-os installs `.claude/rules/collaboration.md` (in the `docs` language) for 
 - **`personal`:** git must track none of them.
 
 When `personal` finds a tracked file, it fails and proposes `git rm --cached -r -- <paths>` in a change request. The file stays on the laptop. `--fix` never runs it, because removing files from the index changes the team's tree.
+
+## Handing off: `agent-os handoff`
+
+```bash
+agent-os handoff --next 14="answer the review on #150" --summary "stopping for today"
+agent-os handoff --dry-run
+```
+
+At the end of a session or a day, each issue **assigned to you with work in flight** (a pushed branch named for it, or an open change request) gets one status comment, in the issues language. The comment holds:
+- the branch and its last commit;
+- the change request and its checks;
+- open blockers and unticked test scenarios;
+- the next step you give with `--next`.
+
+One `handoff` journal entry lists them all. Issues assigned to someone else never get a comment, and neither do yours that have nothing in flight. The next person continues from the comments alone.
