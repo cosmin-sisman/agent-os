@@ -5,13 +5,15 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { render, formatFor, TemplateError } from './engine.mjs'
 import { AREAS, LANGUAGES, languageFor, labelSet } from '../i18n/i18n.mjs'
+import { vocabularyFor } from '../platform/vocabulary.mjs'
 
 const VARIANT = new RegExp(`^(.*)\\.(${LANGUAGES.join('|')})(\\.[^./]+)$`)
 const AREA_DECL = /^\{\{!\s*area:\s*([\w-]+)\s*\}\}/
 
 /**
  * The values templates can use: the merged configuration, `pack.<id>` flags, `lang.<area>` and `labels`
- * (core label names in the `labels` language, addressed as labels.type.bug or labels.needs-decision).
+ * (core label names in the `labels` language, addressed as labels.type.bug or labels.needs-decision) and `vocab`
+ * (the platform's words: vocab.changeRequest, vocab.crRef, …).
  * @param {object} config merged configuration (src/config)
  */
 export function buildContext(config) {
@@ -26,6 +28,7 @@ export function buildContext(config) {
     pack: Object.fromEntries((config.packs ?? []).map((p) => [p, true])),
     lang: Object.fromEntries(AREAS.map((a) => [a.id, languageFor(config, a.id)])),
     labels,
+    vocab: vocabularyFor(config.platform?.type),
   }
 }
 
@@ -38,7 +41,8 @@ function walk(dir, root = dir) {
 
 /**
  * Renders every template under `dir`. `name.en.ext` and `name.ro.ext` are variants of `name.ext`: they declare their
- * area on the first line ({{! area: issues }}), and the variant in that area's language is rendered.
+ * area on the first line ({{! area: issues }}), and the variant in that area's language is rendered. Path segments
+ * like __crSkill__ are replaced by the platform vocabulary, so one template can land at .claude/skills/pr or …/mr.
  * @param {string} dir
  * @param {object} config merged configuration
  * @returns {{ path: string, content: string, area: string | null, lang: string | null }[]} sorted by path
@@ -55,12 +59,16 @@ export function renderTree(dir, config) {
     groups.set(out, g)
   }
   const results = []
+  const outPath = (path, file) => path.replace(/__(\w+)__/g, (_, name) => {
+    if (typeof context.vocab[name] !== 'string') throw new TemplateError(`unknown path placeholder __${name}__ (use a vocab key)`, { file, line: 1, col: 1 })
+    return context.vocab[name]
+  })
   for (const g of [...groups.values()].sort((a, b) => a.out.localeCompare(b.out))) {
     const variants = Object.entries(g.variants)
     if (g.plain && variants.length) throw new TemplateError(`${g.out} has both a plain file and language variants; keep one kind`, { file: g.plain, line: 1, col: 1 })
     if (!variants.length) {
       const source = readFileSync(join(dir, g.plain), 'utf8')
-      results.push({ path: g.out, content: render(source, context, { file: g.plain, format: formatFor(g.out) }), area: source.match(AREA_DECL)?.[1] ?? null, lang: null })
+      results.push({ path: outPath(g.out, g.plain), content: render(source, context, { file: g.plain, format: formatFor(g.out) }), area: source.match(AREA_DECL)?.[1] ?? null, lang: null })
       continue
     }
     const areas = new Set()
@@ -75,7 +83,7 @@ export function renderTree(dir, config) {
     const lang = languageFor(config, area)
     const file = g.variants[lang]
     if (!file) throw new TemplateError(`${g.out} has no "${lang}" variant, which the ${area} area needs`, { file: variants[0][1], line: 1, col: 1 })
-    results.push({ path: g.out, content: render(readFileSync(join(dir, file), 'utf8'), context, { file, format: formatFor(g.out) }), area, lang })
+    results.push({ path: outPath(g.out, file), content: render(readFileSync(join(dir, file), 'utf8'), context, { file, format: formatFor(g.out) }), area, lang })
   }
   return results
 }

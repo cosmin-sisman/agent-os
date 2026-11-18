@@ -1,0 +1,20 @@
+{{! area: issues }}
+name: Feature
+description: A capability the project should have.
+labels: [{{labels.type.feature}}]
+body:
+  - type: textarea
+    id: context
+    attributes: { label: Context, description: "What exists today and why it is not enough." }
+    validations: { required: true }
+  - type: textarea
+    id: goal
+    attributes: { label: Goal, description: "What is true when this is done." }
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes: { label: Acceptance criteria, value: "- [ ] " }
+    validations: { required: true }
+  - type: textarea
+    id: scenarios
+    attributes: { label: Test scenarios, description: "Given / When / Then." }
