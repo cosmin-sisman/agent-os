@@ -201,6 +201,31 @@ test('the sync release finish opens comes from production and is marked, so ship
   assert.match(body, /never squashed/)
 })
 
+test('given milestones.rolling false, release finish touches no milestone and the release is numbered from its tags', () => {
+  const t = fakeTracker({ pr: { number: 70, url: 'u/70' }, milestones: [{ number: 2, title: 'v0.2 Core workflow', state: 'open' }] })
+  const off = { ...CONFIG, milestones: { rolling: false } }
+  const git = fakeGit({ tags: ['v0.1.0', 'v0.1.1'] })
+  const base = git
+  const withTags = (args) => (args[0] === 'tag' && args[1] === '--list' ? { status: 0, stdout: 'v0.1.0\nv0.1.1\n', stderr: '' } : base(args))
+  withTags.calls = base.calls
+  const plan = planRelease({ git: withTags, tracker: t, cwd: '.', config: off, vocab: VOCAB }, { version: '0.2.0' })
+  assert.equal(plan.milestone, null)
+  assert.equal(plan.title, 'release-3: 0.2.0', 'the third release')
+  const r = finishRelease({ git: withTags, tracker: t, cwd: '.', config: off, vocab: VOCAB }, { version: '0.2.0', accept: ['env'], now: new Date('2026-12-01T00:00:00Z') })
+  assert.equal(r.released, true)
+  assert.equal(t.calls.some((c) => c[0] === 'milestone' || c[0] === 'new milestone'), false, 'no milestone closed or created')
+  assert.deepEqual(r.milestone, { closed: null, opened: null })
+  const dry = finishRelease({ git: withTags, tracker: t, cwd: '.', config: off, vocab: VOCAB }, { version: '0.2.0', accept: ['env'], dryRun: true })
+  assert.ok(dry.steps.includes('leave the milestones as they are (milestones.rolling is off)'))
+})
+
+test('given the default, release finish rolls the milestone as before', () => {
+  const t = fakeTracker({ pr: { number: 70, url: 'u/70' } })
+  finishRelease(deps(fakeGit(), t), { version: '0.2.0', accept: ['env'], now: new Date('2026-12-01T00:00:00Z') })
+  assert.ok(t.calls.some((c) => c[0] === 'milestone'), 'the rolling milestone is closed')
+  assert.ok(t.calls.some((c) => c[0] === 'new milestone' && /Release 4/.test(c[1])), 'and the next one opened')
+})
+
 test('given a KEV entry for a direct dependency, /release refuses to ship it until it is updated or accepted in writing', async () => {
   const { saveCache } = await import('../security/digest.mjs')
   const cwd = mkdtempSync(join(tmpdir(), 'aos-release-kev-'))

@@ -87,6 +87,6 @@ async function flow(ctx, action) {
     return r.problems.length ? EXIT.CHECK_FAILED : EXIT.OK
   }
   const failed = r.checks.suites.filter((s) => !s.passed)
-  ctx.output(r, [`released ${r.plan.tag} (${r.sha.slice(0, 7)})${r.release.url ? `: ${r.release.url}` : ''}`, r.milestone.closed ? `  milestone: closed "${r.milestone.closed}", opened "${r.milestone.opened}"` : `  milestone: "${r.milestone.opened}" is open`, `  checks: environment ${r.checks.env.fail ? 'failed' : 'ok'}${r.checks.suites.length ? `, ${r.checks.suites.map((s) => `${s.name} ${s.passed ? 'passed' : 'FAILED'}`).join(', ')}` : ''}`, `  sync into ${merged.branches.integration}: ${vocab.crRef}${r.sync.number}${r.sync.existed ? ' (already open)' : ''}`].join('\n'))
+  ctx.output(r, [`released ${r.plan.tag} (${r.sha.slice(0, 7)})${r.release.url ? `: ${r.release.url}` : ''}`, !r.milestone.opened ? '  milestones: left as they are (milestones.rolling is off)' : r.milestone.closed ? `  milestone: closed "${r.milestone.closed}", opened "${r.milestone.opened}"` : `  milestone: "${r.milestone.opened}" is open`, `  checks: environment ${r.checks.env.fail ? 'failed' : 'ok'}${r.checks.suites.length ? `, ${r.checks.suites.map((s) => `${s.name} ${s.passed ? 'passed' : 'FAILED'}`).join(', ')}` : ''}`, `  sync into ${merged.branches.integration}: ${vocab.crRef}${r.sync.number}${r.sync.existed ? ' (already open)' : ''}`].join('\n'))
   return failed.length || r.checks.env.fail ? EXIT.CHECK_FAILED : EXIT.OK
 }
