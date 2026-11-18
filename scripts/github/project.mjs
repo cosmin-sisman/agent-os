@@ -1,10 +1,13 @@
 // Creates or updates this repository's GitHub Project (v2): a public board linked to the repo, with
 // Status, Priority and Size fields, every issue added, and fields synced from labels and issue state.
-// Idempotent. Needs the `project` token scope. Usage: node scripts/github/project.mjs <owner/repo> [title]
+// Idempotent. Needs the `project` token scope.
+// Usage: node scripts/github/project.mjs <owner/repo> [title] [--issue N]   (--issue syncs one issue only)
 
 import { execFileSync } from 'node:child_process'
 
-const [repo, title = 'agent-os'] = process.argv.slice(2)
+const argv = process.argv.slice(2)
+const only = argv.includes('--issue') ? Number(argv[argv.indexOf('--issue') + 1]) : null
+const [repo, title = 'agent-os'] = argv.filter((a, i) => a !== '--issue' && argv[i - 1] !== '--issue')
 if (!repo?.includes('/')) { console.error('usage: project.mjs <owner/repo> [title]'); process.exit(2) }
 const [owner, name] = repo.split('/')
 
@@ -46,7 +49,9 @@ f = fields()
 const opt = (field, optionName) => f[field]?.options.find((o) => o.name === optionName)?.id
 
 // 3. Every issue: add (idempotent) and sync Status, Priority, Size.
-const issues = JSON.parse(gh(['issue', 'list', '--repo', repo, '--state', 'all', '--limit', '1000', '--json', 'id,number,state,labels,assignees']))
+const issues = only
+  ? [JSON.parse(gh(['issue', 'view', String(only), '--repo', repo, '--json', 'id,number,state,labels,assignees']))]
+  : JSON.parse(gh(['issue', 'list', '--repo', repo, '--state', 'all', '--limit', '1000', '--json', 'id,number,state,labels,assignees']))
 const setSelect = (item, field, optionId) => optionId && gql(
   `mutation($p:ID!,$i:ID!,$f:ID!,$o:String!){ updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$o}}){ clientMutationId } }`,
   { p: pid, i: item, f: f[field].id, o: optionId })

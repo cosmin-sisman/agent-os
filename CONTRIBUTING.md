@@ -28,4 +28,8 @@ A decision that changes the design gets a record in `docs/decisions/<YYYY-MM-DD>
 
 ## Code
 
-Node ≥ 20, ESM, no runtime dependencies, Windows, macOS and Linux. Every file starts with a 1–3 line header saying what it is. Tests use `node:test`.
+Node ≥ 22 (every LTS line still supported upstream), ESM, no runtime dependencies, Windows, macOS and Linux. Every file starts with a 1–3 line header saying what it is. Tests use `node:test`, live next to the code as `*.test.mjs`, and run with `npm test`.
+
+## Checks
+
+Every PR runs `ci` (the single required check): `npm test` and `npm run site` on Linux, macOS and Windows with Node 22, 24 and 26, plus `actionlint` on the workflows. Run `npm test` before you push.
