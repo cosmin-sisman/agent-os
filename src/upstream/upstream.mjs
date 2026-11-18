@@ -82,8 +82,11 @@ export function draftUpstream(input, { cwd, config, version, os = process.platfo
     '### Environment', '', `${os}, Node ${node}${keys.length ? `; configuration keys involved: ${keys.map((k) => `\`${k}\``).join(', ')}` : ''}`, '',
     '_Drafted by `/upstream`: project names, code, paths, links, people and secrets were removed before this text was shown for approval._',
   ].join('\n')
-  // A title is one clause: the first sentence (or what comes before a colon), cut at a word boundary.
-  let short = title.text.split(/(?<=[.!?])\s|:\s/)[0].replace(/[.!?]$/, '')
+  // A title is one clause: the first sentence (or what comes before a later colon), cut at a word boundary. A short
+  // `<Area>: ` prefix (up to three words) belongs to the convention and is kept with the clause after it (#266).
+  const area = title.text.match(/^([^\s:.!?][^:.!?]{0,29}):\s+(?=\S)/)
+  const prefix = area && area[1].trim().split(/\s+/).length <= 3 ? area[0].replace(/\s+$/, ' ') : ''
+  let short = prefix + title.text.slice(prefix ? area[0].length : 0).split(/(?<=[.!?])\s|:\s/)[0].replace(/[.!?]$/, '')
   if (short.length > 90) short = short.slice(0, 90).replace(/\s+\S*$/, '').replace(/\s*\[[^\]]*$/, '')
   return { title: short, body, labels: [input.kind === 'bug' ? 'type:bug' : 'type:feature', 'upstream'], removed }
 }
