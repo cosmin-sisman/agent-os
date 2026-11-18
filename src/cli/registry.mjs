@@ -57,7 +57,7 @@ export const COMMANDS = [
   { name: 'chronicle', summary: 'One timeline from the platform and the journal, rendered into the cache', status: 'new', issue: 25, load: () => import('../commands/chronicle.mjs') },
   { name: 'upstream', summary: 'Draft an improvement for the public agent-os repository, filtered for privacy', status: 'new', issue: 71, load: () => import('../commands/upstream.mjs') },
   { name: 'stack', summary: 'Show and check the stack map against the catalog; write one from a blueprint', status: 'new', issue: 74, load: () => import('../commands/stack.mjs') },
-  { name: 'system', summary: 'Map components, interfaces, exposure and contracts', status: 'planned', issue: 113 },
+  { name: 'system', summary: 'Map components, interfaces, exposure and contracts (system.yaml): detect, check, show', status: 'new', issue: 113, load: () => import('../commands/system.mjs') },
   { name: 'artifact', summary: 'Create, list, check, build, verify and trace artifacts (link: later)', status: 'new', issue: 82, load: () => import('../commands/artifact.mjs') },
   { name: 'skills', summary: 'The skill index: core, external and local skills, with what each does', status: 'new', issue: 41, load: () => import('../commands/skills.mjs') },
   { name: 'skill', summary: 'Vendor, update, remove, scaffold and register skills; check the registry', status: 'new', issue: 39, load: () => import('../commands/skill.mjs') },
