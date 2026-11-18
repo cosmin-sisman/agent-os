@@ -83,7 +83,7 @@ test('loadConfig lists every problem in both files at once', () => {
 
 test('personal keys are exactly chat, machine and orchestrator', () => {
   const personal = keyPaths().filter((k) => !k.includes('<') && isPersonal(k))
-  assert.deepEqual(personal.sort(), ['languages.chat', 'machine', 'machine.devPortStart', 'machine.maxWorkers', 'machine.minFreeMb', 'orchestrator'])
+  assert.deepEqual(personal.sort(), ['languages.chat', 'machine', 'machine.devPortStart', 'machine.maxWorkers', 'machine.minFreeMb', 'machine.noProxy', 'machine.proxy', 'orchestrator'])
 })
 
 test('the team and personal schemas share no key', () => {

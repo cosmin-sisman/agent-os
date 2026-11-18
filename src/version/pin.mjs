@@ -29,8 +29,11 @@ export const pinnedVersion = (config) => config.version ?? runningVersion()
  */
 export function hookCommand(config, { cwd } = {}) {
   const { spec } = cwd ? projectInstall(cwd) : { spec: null }
-  if (spec && EXACT.test(spec)) return 'npx --no-install agent-os'
-  return `npx -y ${PACKAGE}@${pinnedVersion(config)}`
+  // An exact version, or a tarball vendored into the repository (air-gapped installs): the project's own copy, which
+  // never touches the network.
+  if (spec && (EXACT.test(spec) || /^file:.+\.t(ar\.)?gz$/.test(spec))) return 'npx --no-install agent-os'
+  const registry = config.npmRegistry ? ` --registry ${config.npmRegistry}` : ''
+  return `npx -y${registry} ${PACKAGE}@${pinnedVersion(config)}`
 }
 
 /**

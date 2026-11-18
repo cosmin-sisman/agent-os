@@ -2,6 +2,7 @@
 // (laptop side)? Every finding says what is wrong and the exact command that fixes it. Secret values are never
 // read into findings: only names, presence, scopes and where a value comes from.
 
+import { networkProblems } from '../platform/network.mjs'
 import { join } from 'node:path'
 import { extractVersion, satisfies } from './semver.mjs'
 
@@ -66,6 +67,7 @@ export function checkRepo(config, { cwd, probe }) {
     else if (req.transport && transportOf(server) !== req.transport) findings.push({ side: 'repo', level, message: `.mcp.json: "${req.name}" uses ${transportOf(server)}, the project expects ${req.transport}`, fix: `${addCommand(req)}   (after: claude mcp remove --scope project ${req.name})` })
     else findings.push({ side: 'repo', level: 'ok', message: `.mcp.json declares "${req.name}" (${transportOf(server)})` })
   }
+  for (const p of networkProblems(config, cwd)) findings.push({ side: 'repo', ...p })
   if (mcp) {
     for (const path of literalSecrets(mcp)) {
       const name = path.split(/[.[\]]/).filter(Boolean).at(-1)
