@@ -57,7 +57,7 @@ export class GitLabTracker {
   get(number) {
     this.cache.issues.delete(number)
     const i = this.raw(number)
-    return { ...issueOf(i), milestone: i.milestone?.title ?? null, isPullRequest: false }
+    return { ...issueOf(i), body: i.description ?? '', milestone: i.milestone?.title ?? null, isPullRequest: false }
   }
 
   /** Child items of an issue (tasks, through the work item hierarchy); empty when the instance has none. */

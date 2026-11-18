@@ -28,7 +28,7 @@ const MILESTONES = { [`GET projects/${ID}/milestones?include_ancestors=true&per_
 
 test('reads map to the shared shape: open/closed, labels, assignees, the host flag', () => {
   const { glab, t } = tracker({ [`GET projects/${ID}/issues/5`]: issue(5, { labels: ['type::bug'], assignees: [{ id: 1, username: 'ana' }], milestone: { title: 'v0.2' } }) })
-  assert.deepEqual(t.get(5), { number: 5, title: 'issue 5', state: 'open', url: `https://gitlab.example.com/${P}/-/issues/5`, labels: ['type::bug'], milestone: 'v0.2', assignees: ['ana'], createdAt: null, isPullRequest: false })
+  assert.deepEqual(t.get(5), { number: 5, title: 'issue 5', body: '', state: 'open', url: `https://gitlab.example.com/${P}/-/issues/5`, labels: ['type::bug'], milestone: 'v0.2', assignees: ['ana'], createdAt: null, isPullRequest: false })
   assert.deepEqual(glab.calls[0].args.slice(-2), ['--hostname', 'gitlab.example.com'])
 })
 

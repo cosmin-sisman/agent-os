@@ -35,3 +35,7 @@ Add `--worktree` only when the person runs several sessions in parallel; by defa
 
 - Read the issue, its comments and its test scenarios. Unclear acceptance criteria are a question in the issue, not a guess.
 - Done means tested: the scenarios become tests in this branch.
+
+## 5. Learn
+
+`agent-os start` lists the lessons that apply to the issue (its areas, the paths and words it mentions). Say which ones you will follow, and follow them. If starting went wrong (a wrong base, a claim conflict), capture it: `agent-os lessons add "…" --area <area> --source "#<n>"`.

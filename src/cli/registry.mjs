@@ -44,7 +44,7 @@ export const COMMANDS = [
   { name: 'check', summary: 'Check a pull or merge request title against its description, or a commit message', status: 'new', issue: 19, load: () => import('../commands/check.mjs') },
   { name: 'map', summary: 'Render a map of one area of the code, on demand', status: 'planned', issue: 26 },
   { name: 'journal', summary: 'Add to or read the project journal', status: 'new', issue: 22, load: () => import('../commands/journal.mjs') },
-  { name: 'lessons', summary: 'Capture, recall, search and triage lessons learned', status: 'planned', issue: 24 },
+  { name: 'lessons', summary: 'Capture, recall, search and triage lessons learned', status: 'new', issue: 24, load: () => import('../commands/lessons.mjs') },
   { name: 'decision', summary: 'Create a decision record', status: 'planned', issue: 23 },
   { name: 'chronicle', summary: 'One timeline from git, the platform and the journal', status: 'planned', issue: 25 },
   { name: 'stack', summary: 'Show, change, detect or import the stack map', status: 'planned', issue: 74 },

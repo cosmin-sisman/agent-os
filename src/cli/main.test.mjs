@@ -9,6 +9,9 @@ import { run, route } from './main.mjs'
 import { COMMANDS } from './registry.mjs'
 import { EXIT } from './errors.mjs'
 
+/** Any command still planned, so these tests keep working as commands ship. */
+const PLANNED = COMMANDS.find((c) => !c.load)
+
 const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'))
 
 /** Runs the CLI in memory and captures what it prints. */
@@ -47,21 +50,21 @@ test('an unknown command with no close match points to --help', async () => {
 })
 
 test('a planned command exits 2 and names its issue', async () => {
-  const { code, stderr } = await cli('lessons')
+  const { code, stderr } = await cli(PLANNED.name)
   assert.equal(code, EXIT.CANNOT_RUN)
-  assert.match(stderr, /"lessons" is planned/)
-  assert.match(stderr, /issues\/24/)
+  assert.match(stderr, new RegExp(`"${PLANNED.name}" is planned`))
+  assert.match(stderr, new RegExp(`issues/${PLANNED.issue}`))
 })
 
 test('with --json, a failing command prints one JSON object with an error field and exits 2', async () => {
-  const { code, stdout, stderr } = await cli('lessons', '--json')
+  const { code, stdout, stderr } = await cli(PLANNED.name, '--json')
   assert.equal(code, EXIT.CANNOT_RUN)
   assert.equal(stderr, '')
   const out = JSON.parse(stdout)
   assert.equal(out.ok, false)
   assert.equal(out.exitCode, 2)
   assert.equal(typeof out.error.message, 'string')
-  assert.match(out.error.hint, /#24/)
+  assert.match(out.error.hint, new RegExp(`#${PLANNED.issue}`))
 })
 
 test('with --json, a successful command prints one JSON object with its result', async () => {
@@ -86,10 +89,10 @@ test('an unknown option exits 2 with a short message and a hint', async () => {
 })
 
 test('<command> --help explains that command, including planned ones', async () => {
-  const { code, stdout } = await cli('lessons', '--help')
+  const { code, stdout } = await cli(PLANNED.name, '--help')
   assert.equal(code, EXIT.OK)
-  assert.match(stdout, /agent-os lessons: /)
-  assert.match(stdout, /Status: planned \(follow #24/)
+  assert.match(stdout, new RegExp(`agent-os ${PLANNED.name}: `))
+  assert.match(stdout, new RegExp(`Status: planned \\(follow #${PLANNED.issue}`))
 })
 
 test('--cwd must be an existing directory', async () => {
