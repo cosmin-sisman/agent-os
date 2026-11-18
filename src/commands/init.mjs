@@ -1,6 +1,6 @@
 // `agent-os init --me`: the personal part of setting up agent-os, for anyone joining a project. It asks first which
 // language the agent should talk to you in, then about your sessions and machine, and writes only .agent-os/local.json.
-// It never changes a committed file. The full `init` (detection, profiles, team setup) is planned in #49.
+// It never changes a committed file. Without --me it is the full init (detection, profiles, team setup); `install` runs both.
 
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { ask } from '../cli/prompt.mjs'
@@ -37,6 +37,15 @@ export const options = {
 export async function run(ctx) {
   if (ctx.values.detect) return detect(ctx)
   if (!ctx.values.me) return full(ctx)
+  return personal(ctx)
+}
+
+/**
+ * The personal settings (`init --me`): chat language, sessions, orchestrator, machine limits, in .agent-os/local.json.
+ * `install` runs it right after the full init; a value given as a flag is never asked.
+ * @param {import('../cli/context.mjs').Context} ctx
+ */
+export async function personal(ctx) {
   const { local, merged, initialized } = loadConfig(ctx.cwd)
   const useDefaults = Boolean(ctx.values.yes)
   const flag = (name, parse) => (ctx.values[name] === undefined ? undefined : parse(ctx.values[name], name))
@@ -118,7 +127,8 @@ async function detect(ctx) {
 
 const PROFILES_LIST = ['greenfield', 'spec-first', 'active', 'maintenance']
 
-async function full(ctx) {
+/** The full init: detection, profile, platform, team settings, managed files, then doctor. */
+export async function full(ctx) {
   const v = ctx.values
   const useDefaults = Boolean(v.yes)
   const { detectState } = await import('../init/detect.mjs')

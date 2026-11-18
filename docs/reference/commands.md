@@ -22,6 +22,7 @@ Every command prints text, or one JSON object with `--json`. Exit codes: 0 ok, 1
 | [`help`](#help) | new | Show help for agent-os or for one command |
 | [`version`](#version) | new | Print the agent-os version |
 | [`init`](#init) | new | Set up agent-os; --me sets only your personal settings (full init: #49) |
+| [`install`](#install) | new | Start in any folder: git init, the platform and project (created if you want), init and your settings, in one go |
 | [`config`](#config) | new | Read, change or validate agent-os.json and your personal settings |
 | [`doctor`](#doctor) | new | Check the agent system, the repository and platform hygiene; readiness score; --fix |
 | [`env`](#env) | new | Check MCP servers, CLIs, token scopes and variables, on this laptop and in the repo |
@@ -117,6 +118,37 @@ agent-os init [--profile <p>] [--platform github|gitlab --project <owner/name> [
 | `--author <value>` | The login for the baseline journal entry (default: your platform login) |
 | `--setup` | Also apply the platform setup (branches, protection, labels, milestone); asks first unless --yes |
 | `--detect` | Only read the repository and suggest a profile (greenfield, spec-first, active, maintenance); writes nothing |
+| `--chat <value>` | Language the agent talks to you in: en or ro |
+| `--sessions <value>` | Most agent sessions you run in parallel on this laptop (1 = one at a time) |
+| `--orchestrator` | One of your sessions coordinates the others |
+| `--dev-port <value>` | First dev-server port for parallel worktrees |
+| `--min-free-mb <value>` | Refuse heavy commands below this much free memory |
+| `--yes` (`-y`) | Do not ask; use flags and defaults |
+
+## install
+
+Start in any folder: git init, the platform and project (created if you want), init and your settings, in one go. Status: new (#264).
+
+```
+agent-os install [any init flag: --profile, --platform github|gitlab --project <owner/name> [--host <url>], --lang, --solo|--team, --chat, --setup, --yes …]
+       (the bare `agent-os` runs it on a terminal in a folder without agent-os.json)
+```
+
+| Option | What |
+|---|---|
+| `--profile <value>` | greenfield, spec-first, active or maintenance (default: the detected one) |
+| `--platform <value>` | github or gitlab (default: from the origin remote) |
+| `--project <value>` | owner/name or group/name (default: from the origin remote) |
+| `--host <value>` | Self-managed host, https://… |
+| `--integration <value>` | The integration branch, made the default branch (default development) |
+| `--production <value>` | The production branch (default main) |
+| `--lang <value>` | Language of every team area: en or ro (Romanian without diacritics) |
+| `--area-lang <value>`, repeatable | One area in another language, e.g. --area-lang issues=ro (repeat) |
+| `--solo` | One person: no required approvals |
+| `--team` | A team: one approval required on change requests |
+| `--methodology <value>` | For an existing repository: forward-only (conventions from today on) or retrofit (#50) |
+| `--author <value>` | The login for the baseline journal entry (default: your platform login) |
+| `--setup` | Also apply the platform setup (branches, protection, labels, milestone); asks first unless --yes |
 | `--chat <value>` | Language the agent talks to you in: en or ro |
 | `--sessions <value>` | Most agent sessions you run in parallel on this laptop (1 = one at a time) |
 | `--orchestrator` | One of your sessions coordinates the others |

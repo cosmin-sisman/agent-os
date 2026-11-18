@@ -5,8 +5,8 @@
 import { spawnSync } from 'node:child_process'
 import { CliError } from '../cli/errors.mjs'
 
-export function systemGlab(args, { input } = {}) {
-  const r = spawnSync(process.platform === 'win32' ? 'glab.exe' : 'glab', args, { input, encoding: 'utf8', timeout: 60000, windowsHide: true })
+export function systemGlab(args, { input, env } = {}) {
+  const r = spawnSync(process.platform === 'win32' ? 'glab.exe' : 'glab', args, { input, encoding: 'utf8', timeout: 60000, windowsHide: true, ...(env ? { env: { ...process.env, ...env } } : {}) })
   if (r.error?.code === 'ENOENT') throw new CliError('the GitLab CLI (glab) is not installed', { hint: 'install it from https://gitlab.com/gitlab-org/cli, then run "glab auth login --hostname <host>"' })
   return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' }
 }

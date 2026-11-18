@@ -3,8 +3,8 @@
 
 import { parseArgs } from 'node:util'
 import { runNotices } from '../lifecycle/legacy.mjs'
-import { statSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, statSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import { EXIT, CliError } from './errors.mjs'
 import { findCommand, suggestCommand } from './registry.mjs'
 import { GLOBAL_OPTIONS, ISSUES_URL } from './options.mjs'
@@ -23,6 +23,8 @@ export async function run(argv, io) {
   let command = 'help'
   try {
     const plan = route(argv)
+    // The bare `agent-os` on a terminal, in a folder agent-os has not set up yet, starts the install (#264).
+    if (!argv.length && io.ask && !existsSync(join(resolve(io.cwd), 'agent-os.json'))) plan.command = 'install'
     command = plan.command
     const entry = findCommand(command)
     if (!entry) {
