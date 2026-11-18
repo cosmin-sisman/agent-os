@@ -335,6 +335,18 @@
       },
       "additionalProperties": false
     },
+    "gateAffected": {
+      "type": "object",
+      "description": "Affected components in a monorepo: only the components a change touches, and those that depend on them, are tested",
+      "default": {},
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "The command that tests one component, with {id}, {path} and {name}, e.g. \"pnpm --filter ./{path} test\"; the gate runs it for each affected component"
+        }
+      },
+      "additionalProperties": false
+    },
     "gateLayers": {
       "type": "object",
       "description": "Stack layers and the gate suites a change to them needs (\"data-layer\": [\"migrations\"]), matched through the layer paths in stack.yaml",

@@ -3,6 +3,7 @@
 // one list and nothing else. Design §5 (Seeing overlap).
 
 import { areasFor } from '../stack/areas.mjs'
+import { componentGraph, ownerOf } from '../system/affected.mjs'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { issueRefs } from '../conventions/conventions.mjs'
@@ -70,9 +71,16 @@ export function findOverlap({ tracker, git, cwd, config }, { files, branch, ttlM
   try { writeCache(cwd, cache) } catch { /* the cache is an optimisation */ }
   found.sort((a, b) => b.files.length - a.files.length || String(a.number ?? a.branch).localeCompare(String(b.number ?? b.branch), 'en', { numeric: true }))
   // The stack areas the shared files belong to, so "same area" reads before the file list.
-  for (const o of found) { const areas = areasFor(o.files, cwd); if (areas.length) o.areas = areas }
+  let graph = null
+  try { graph = componentGraph(cwd) } catch { graph = null }
+  for (const o of found) {
+    const areas = areasFor(o.files, cwd)
+    if (areas.length) o.areas = areas
+    // Components are finer than layers in a monorepo: name the ones both changes touch.
+    if (graph && Object.keys(graph.components).length > 1) { const comps = [...new Set(o.files.map((f) => ownerOf(f, graph.components)).filter(Boolean))].sort(); if (comps.length) o.components = comps }
+  }
   return { files: mine, overlaps: found, warnings }
 }
 
 /** One line per overlap, for command output and skills. */
-export const overlapLines = (overlaps, vocab) => overlaps.map((o) => `  ${o.kind === 'branch' ? `branch ${o.branch}` : `${vocab.crRef}${o.number} ${o.title}`}${o.author ? ` by @${o.author}` : ''}${o.issues.length ? ` (${o.issues.map((n) => `#${n}`).join(', ')})` : ''}${o.areas?.length ? ` [${o.areas.join(', ')}]` : ''}: ${o.files.slice(0, 5).join(', ')}${o.files.length > 5 ? `, +${o.files.length - 5}` : ''}`)
+export const overlapLines = (overlaps, vocab) => overlaps.map((o) => `  ${o.kind === 'branch' ? `branch ${o.branch}` : `${vocab.crRef}${o.number} ${o.title}`}${o.author ? ` by @${o.author}` : ''}${o.issues.length ? ` (${o.issues.map((n) => `#${n}`).join(', ')})` : ''}${o.areas?.length ? ` [${o.areas.join(', ')}]` : ''}${o.components?.length ? ` {${o.components.join(', ')}}` : ''}: ${o.files.slice(0, 5).join(', ')}${o.files.length > 5 ? `, +${o.files.length - 5}` : ''}`)

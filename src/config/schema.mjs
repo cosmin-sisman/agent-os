@@ -62,6 +62,9 @@ export const SCHEMA = obj({
     exclude: list(str('A path prefix or glob that needs no tests (generated code, vendored files)'), 'Paths agent-os test gaps leaves out', { default: [] }),
     map: map(list(str('Where its test lives: a path with {dir}, {name} and {ext}, e.g. "{dir}/{name}.test.{ext}"')), 'Source globs and where their tests live ("src/**/*.ts": ["{dir}/{name}.test.ts"]); files no glob matches use the built-in naming rules', { default: {} }),
   }, 'Test planning and gaps', { default: {} }),
+  gateAffected: obj({
+    command: str('The command that tests one component, with {id}, {path} and {name}, e.g. "pnpm --filter ./{path} test"; the gate runs it for each affected component'),
+  }, 'Affected components in a monorepo: only the components a change touches, and those that depend on them, are tested', { default: {} }),
   gateLayers: map(list(str('A suite name from "gate"')), 'Stack layers and the gate suites a change to them needs ("data-layer": ["migrations"]), matched through the layer paths in stack.yaml', { default: {} }),
   gatePaths: map(list(str('A suite name from "gate"')), 'Path globs and the gate suites a change to them needs ("docs/**": ["docs"]); without it every suite runs', { default: {} }),
   requires: obj({
