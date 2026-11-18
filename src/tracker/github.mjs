@@ -56,7 +56,7 @@ export class GitHubTracker {
   get(number) {
     const i = this.gh.rest('GET', `repos/${this.repo}/issues/${number}`)
     this.cache.ids.set(number, { id: i.id, nodeId: i.node_id })
-    return { number: i.number, title: i.title, state: i.state, url: i.html_url, labels: i.labels.map((l) => l.name), milestone: i.milestone?.title ?? null, assignees: i.assignees.map((a) => a.login), isPullRequest: Boolean(i.pull_request) }
+    return { number: i.number, title: i.title, body: i.body ?? '', state: i.state, url: i.html_url, labels: i.labels.map((l) => l.name), milestone: i.milestone?.title ?? null, assignees: i.assignees.map((a) => a.login), isPullRequest: Boolean(i.pull_request) }
   }
 
   /** The sub-issues of an issue. */

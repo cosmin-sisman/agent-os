@@ -7,6 +7,7 @@ import { checkTitle, referencedIssues } from '../conventions/conventions.mjs'
 import { findDiacritics } from '../i18n/i18n.mjs'
 import { readResult } from '../gate/gate.mjs'
 import { labelId } from './next.mjs'
+import { lessonsForChange } from '../lessons/lessons.mjs'
 
 /** Section headings of the change-request template, per language. */
 export const SECTIONS = {
@@ -62,7 +63,9 @@ export function preflight({ config, git, cwd }, { title, body, base = config.bra
   if (!gate) problems.push('the gate has not run: agent-os gate')
   else if (gate.head !== head || !gate.clean) problems.push(`the gate ran on ${gate.clean ? `commit ${String(gate.head).slice(0, 7)}` : 'uncommitted changes'}, not on ${String(head).slice(0, 7)}: commit everything, then run agent-os gate again`)
   else if (!gate.ok) problems.push(`the gate failed: ${gate.suites.filter((s) => !s.passed).map((s) => s.name).join(', ')} (fix it; a change request never opens with a failing check)`)
-  return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion }
+  const changed = out(git(['diff', '--name-only', `origin/${base}...HEAD`]))
+  const lessons = lessonsForChange(cwd, { paths: changed ? changed.split(/\r?\n/).filter(Boolean) : [], text: `${title}\n${body}` })
+  return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion, lessons }
 }
 
 /**

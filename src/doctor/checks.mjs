@@ -9,6 +9,7 @@ import { GITIGNORE_ENTRIES } from '../config/config.mjs'
 import { checkTitle } from '../conventions/conventions.mjs'
 import { findDiacritics, languageFor, labelSet, toAscii } from '../i18n/i18n.mjs'
 import { readJournal, validate as validateEntry } from '../journal/journal.mjs'
+import { readLessons, validateCard } from '../lessons/lessons.mjs'
 import { readLock } from '../managed/managed.mjs'
 import { matches } from '../util/glob.mjs'
 import { versionStatus } from '../version/pin.mjs'
@@ -206,6 +207,16 @@ function journal({ cwd, config }) {
   return out.length ? out : [ok(`${entries.length} journal entr${entries.length === 1 ? 'y' : 'ies'}, all valid`)]
 }
 
+/** Lesson cards follow the schema; the inbox does not pile up unnoticed. */
+function lessons({ cwd, config }) {
+  const cards = readLessons(cwd)
+  const lang = languageFor(config, 'docs')
+  const out = cards.flatMap((c) => validateCard(c, { lang }).map((p) => ({ level: 'fail', path: c.path, message: `${c.path}: ${p}`, fix: 'fix the front matter (agent-os lessons check lists them all)' })))
+  const inbox = cards.filter((c) => c.state === 'inbox').length
+  if (inbox >= 10) out.push({ level: 'warn', message: `${inbox} lessons wait in the inbox`, fix: 'triage them: /lessons review (or /retro)' })
+  return out.length ? out : [ok(`${cards.length} lesson card(s), all valid${inbox ? `, ${inbox} in the inbox` : ''}`)]
+}
+
 /** AGENTS.md has an area map that covers every top-level source directory. */
 function areaMap({ cwd }) {
   const text = read(cwd, 'AGENTS.md')
@@ -262,6 +273,7 @@ export const CHECKS = [
   { id: 'budgets', area: 'context', run: budgets },
   { id: 'language', area: 'language', run: language },
   { id: 'journal', area: 'history', run: journal },
+  { id: 'lessons', area: 'history', run: lessons },
   { id: 'conflicts', area: 'updates', run: conflicts },
   { id: 'version', area: 'updates', run: version },
   { id: 'gitignore', area: 'repository', run: gitignore },

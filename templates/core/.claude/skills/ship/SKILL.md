@@ -42,3 +42,7 @@ agent-os ship [<n>]
 
 - Tick the closed issues' test scenarios that the merged tests cover.
 - If a closed issue's work left something undone, open it with /ticket now, not "later".
+
+## 5. Learn
+
+When shipping was refused or needed a manual step, capture why: `agent-os lessons add "…" --area <area> --source "{{vocab.crRef}}<n>"`. A refusal that keeps coming back is a rule to propose, not a lesson to repeat.

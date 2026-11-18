@@ -1,7 +1,7 @@
 ---
 areas: [github, platform]
 paths: ["scripts/github/**", "src/platform/**"]
-keywords: [idempotent, sub-issues, 422]
+keywords: [idempotent, sub-issues, "422"]
 source: "#88, scripts/github/setup.mjs rerun"
 confidence: high
 promotedTo: "AGENTS.md: Conventions an agent can't infer"

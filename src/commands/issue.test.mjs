@@ -59,6 +59,6 @@ test('get returns the issue as JSON', async () => {
   try {
     const gh = fakeGh({ 'GET repos/acme/app/issues/8': { number: 8, id: 9, node_id: 'I_8', title: 'Eight', state: 'open', html_url: 'u8', labels: [{ name: 'type:bug' }], milestone: { title: 'v0.2' }, assignees: [{ login: 'ana' }] } })
     const out = JSON.parse((await cli(dir, ['issue', 'get', '8', '--json'], gh)).stdout)
-    assert.deepEqual(out.result, { number: 8, title: 'Eight', state: 'open', url: 'u8', labels: ['type:bug'], milestone: 'v0.2', assignees: ['ana'], isPullRequest: false })
+    assert.deepEqual(out.result, { number: 8, title: 'Eight', body: '', state: 'open', url: 'u8', labels: ['type:bug'], milestone: 'v0.2', assignees: ['ana'], isPullRequest: false })
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })

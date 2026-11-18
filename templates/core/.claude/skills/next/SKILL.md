@@ -29,3 +29,7 @@ One line each, in the chat language of the person you are talking to: the item, 
 ## 3. Offer the next step
 
 For an issue: offer `/start <n>`. For a {{vocab.changeRequest}}: offer to open it and address the review or the checks. Do nothing until the person picks one.
+
+## 4. Learn
+
+If the person picks something other than the top recommendation, ask why in one line. A recurring reason (a label that is missing, a priority that is wrong) is a lesson: `agent-os lessons add "…" --area <area> --source "/next"`.

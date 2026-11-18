@@ -10,6 +10,7 @@ import { vocabularyFor } from '../platform/vocabulary.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 import { openChangeRequest, preflight } from '../workflow/pr.mjs'
 import { systemGit } from '../workflow/start.mjs'
+import { lessonLines } from '../lessons/lessons.mjs'
 
 export const usage = [
   'agent-os pr preflight --title "<title>" --body-file <file>',
@@ -55,7 +56,8 @@ export async function run(ctx) {
     const input = { title: ctx.values.title, body: read(ctx.cwd, ctx.values['body-file']), base: ctx.values.base ?? merged.branches.integration, lang }
     if (action === 'preflight') {
       const r = preflight({ config: merged, git, cwd: ctx.cwd }, input)
-      ctx.output(r, r.ok ? `ready to open: gate passed on ${r.head.slice(0, 7)}, journal entry present, title and body follow the conventions` : `not ready:\n${r.problems.map((p) => `  - ${p}`).join('\n')}${r.suggestion ? `\nsuggested title: ${r.suggestion}` : ''}`)
+      const recalled = r.lessons.length ? `\nLessons that apply to this change (check the diff follows them):\n${lessonLines(r.lessons).join('\n')}` : ''
+      ctx.output(r, `${r.ok ? `ready to open: gate passed on ${r.head.slice(0, 7)}, journal entry present, title and body follow the conventions` : `not ready:\n${r.problems.map((p) => `  - ${p}`).join('\n')}${r.suggestion ? `\nsuggested title: ${r.suggestion}` : ''}`}${recalled}`)
       return r.ok ? EXIT.OK : EXIT.CHECK_FAILED
     }
     const r = openChangeRequest({ config: merged, git, cwd: ctx.cwd, tracker: tracker(), vocab }, { ...input, draft: ctx.values.draft, issuesLang: languageFor(merged, 'issues'), dryRun: ctx.dryRun })

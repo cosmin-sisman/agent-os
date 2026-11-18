@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
 import { LABELS } from '../i18n/i18n.mjs'
 import { has } from '../platform/capabilities.mjs'
+import { lessonsForIssue } from '../lessons/lessons.mjs'
 
 const TYPE_PREFIX = { feature: 'feat', bug: 'fix', docs: 'docs', chore: 'chore', research: 'chore' }
 
@@ -72,7 +73,8 @@ export function startIssue({ tracker, caps, config, git, cwd }, { number, hotfix
   if (worktree) run(`check it out in a worktree at ${worktreePath}`, () => mustGit(git, ['worktree', 'add', worktreePath, branch]))
   else run(`check out ${branch}`, () => mustGit(git, ['switch', branch]))
   if (has(caps, 'board')) run(`set #${number} to In Progress`, () => tracker.setStatus(number, 'In Progress'))
-  return { started: !dryRun, dryRun, issue: { number, title: issue.title }, branch, base, worktree: worktree ? worktreePath : null, steps, warnings: tracker.warnings ?? [] }
+  const lessons = lessonsForIssue(cwd, issue)
+  return { started: !dryRun, dryRun, issue: { number, title: issue.title }, branch, base, worktree: worktree ? worktreePath : null, steps, lessons, warnings: tracker.warnings ?? [] }
 }
 
 function mustGit(git, args) {

@@ -1,7 +1,7 @@
 // Tests for `agent-os start` from the command line, with a fake gh and a fake git.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { run } from '../cli/main.mjs'
@@ -52,4 +52,18 @@ test('start --dry-run reads but sends nothing', async () => {
 test('start without an issue number is a usage error', async () => {
   const r = await cli(['start'], fakeGh({}))
   assert.equal(r.code, 2)
+})
+
+test('start names the lessons that apply to the issue (paths it mentions, its areas)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'aos-start-'))
+  try {
+    writeFileSync(join(dir, 'agent-os.json'), JSON.stringify({ platform: { type: 'github', project: 'acme/app' } }))
+    mkdirSync(join(dir, '.agent-os/lessons/active'), { recursive: true })
+    writeFileSync(join(dir, '.agent-os/lessons/active/down-migrations.md'), '---\nareas: [db]\npaths: ["src/db/**"]\nsource: "#12"\nconfidence: high\n---\n\nWrite a down migration for every up migration. Why. Example.\n')
+    const gh = fakeGh(routes({ 'GET repos/acme/app/issues/14': issue({ body: 'The query in `src/db/orders.ts` is slow.' }) }))
+    let stdout = ''
+    const code = await run(['start', '14', '--dry-run'], { stdout: (s) => { stdout += s }, stderr: () => {}, cwd: dir, env: {}, gh, git: () => ({ status: 0, stdout: '', stderr: '' }) })
+    assert.equal(code, 0)
+    assert.match(stdout, /Lessons that apply here:\n {2}lesson down-migrations \(path src\/db\/\*\*\): Write a down migration for every up migration\./)
+  } finally { rmSync(dir, { recursive: true, force: true }) }
 })
