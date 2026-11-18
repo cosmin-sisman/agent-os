@@ -30,8 +30,9 @@ import { versionStatus } from '../version/pin.mjs'
 import { labelId } from '../workflow/next.mjs'
 
 /**
- * @typedef {{ level: 'ok' | 'warn' | 'fail', message: string, fix?: string, path?: string, apply?: () => string }} Finding
- * `apply` is a mechanical repair that `doctor --fix` may run; it returns what it did.
+ * @typedef {{ level: 'ok' | 'info' | 'warn' | 'fail', message: string, fix?: string, path?: string, apply?: () => string }} Finding
+ * `apply` is a mechanical repair that `doctor --fix` may run; it returns what it did. `info` is a note for people:
+ * it counts as ok and never lowers the score.
  */
 
 const SKILLS = '.claude/skills'
@@ -247,6 +248,16 @@ function hooks({ cwd, config }) {
   return unpinned.length ? [{ level: 'fail', path: '.claude/settings.json', message: `${unpinned.length} hook(s) do not run the pinned version ${config.version ?? ''}`.trim(), fix: 'agent-os update --relock, then agent-os update (it rewrites the hooks block with the pinned command)' }] : [ok(`${cmds.length} hook(s), on the pinned version`)]
 }
 
+/**
+ * What only works in Claude Code (decision 2026-11-18-other-agents-agents-md-first): always an info note, never a
+ * warning, so nobody assumes a guard protects them in another agent.
+ */
+export const CLAUDE_CODE_ONLY = 'only Claude Code runs the hooks (guards, session context, reminders) and the subagent fan-out (/audit lenses, /discover areas). Other agents read AGENTS.md and run the CLI; the required checks enforce the same rules at push time, and fan-out runs one area after another'
+
+function agents() {
+  return [{ level: 'info', message: CLAUDE_CODE_ONLY }]
+}
+
 const DEFAULT_BUDGETS = { 'AGENTS.md': '8KB', 'CLAUDE.md': '8KB', '.claude/rules/**/*.md': '6KB' }
 const bytes = (s) => { const m = String(s).match(/^(\d+(?:\.\d+)?)\s?(B|KB|MB)$/); return m ? Number(m[1]) * { B: 1, KB: 1024, MB: 1024 ** 2 }[m[2]] : Infinity }
 
@@ -417,6 +428,7 @@ export const CHECKS = [
   { id: 'slots', area: 'agent system', run: slots },
   { id: 'commands', area: 'agent system', run: commands },
   { id: 'hooks', area: 'agent system', run: hooks },
+  { id: 'agents', area: 'agent system', run: agents },
   { id: 'links', area: 'agent system', run: links },
   { id: 'area-map', area: 'agent system', run: areaMap },
   { id: 'stack', area: 'agent system', run: stack },

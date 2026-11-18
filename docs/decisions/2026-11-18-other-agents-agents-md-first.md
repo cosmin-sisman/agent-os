@@ -1,6 +1,6 @@
 # Other coding agents: AGENTS.md first, the CLI everywhere, hooks and skills degrade
 
-Status: proposed
+Status: accepted
 
 ## Context
 Teams mix agents: one person uses Claude Code, another Codex or Cursor. agent-os installs four kinds of things, and each reaches other agents differently (#62, research: [other agents](../research/other-agents.md)):
@@ -27,7 +27,7 @@ These surfaces moved several times during 2026.
   - *Hooks* run only in Claude Code. Elsewhere, the same rules are enforced later, by the required checks in CI (`agent-os/loop`, the gate) and branch protection. A push that a guard would have stopped is refused by the platform or fails the change request instead.
   - *Skills* are Markdown procedures. An agent that does not load `.claude/skills/` can still follow one when AGENTS.md points to it by name.
   - *Subagent fan-out* (`/audit` lenses, `/discover` areas) runs sequentially in an agent without subagents. The CLI output (briefs, plans) is the same.
-- **Once accepted:** the installed AGENTS.md block gets one line for other agents. A request for `/<name>` means reading `.claude/skills/<name>/SKILL.md` and following it, and every step in it is an `agent-os` command. `doctor` and the guides then name the Claude Code-only parts. Nothing is changed in the templates while this record is proposed.
+- **Once accepted:** the installed AGENTS.md block gets one line for other agents. A request for `/<name>` means reading `.claude/skills/<name>/SKILL.md` and following it, and every step in it is an `agent-os` command. `doctor` and the guides then name the Claude Code-only parts. Done in #258.
 - **Rejected for now:**
   - Generating per-agent files (`.cursor/rules/`, `.codex/hooks.json`, `.agents/skills/` copies): every format is a moving target, and each copy is one more managed file to merge. They would also duplicate AGENTS.md, whose budget exists to keep it read in full.
   - A hook adapter per agent: the CI checks already enforce the rules, and an adapter would have to track each agent's event model.

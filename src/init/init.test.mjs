@@ -6,6 +6,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { run } from '../cli/main.mjs'
+import { agentsBlock } from '../managed/install.mjs'
 
 const noPrompt = async (q) => { throw new Error(`unexpected prompt: ${q}`) }
 async function init(dir, argv, extra = {}) {
@@ -130,4 +131,13 @@ test('given old issues without milestones, doctor does not report them after a f
     assert.match(link.message, /pre-existing; forward-only since/)
     assert.equal(runDoctor({ cwd: dir, config, running: '0.0.0' }, { offline: true }).summary.fail, 0, 'doctor passes on a legacy repo right after init')
   } finally { rmSync(dir, { recursive: true, force: true }) }
+})
+
+test('the AGENTS.md block tells other agents how to run a skill, in en and in ASCII ro', () => {
+  const en = agentsBlock({ version: '0.1.2', branches: {} })
+  assert.match(en, /In an agent other than Claude Code, a request for `\/<name>` means reading `\.claude\/skills\/<name>\/SKILL\.md` and following it; every step in it is an `agent-os` command\./)
+  const ro = agentsBlock({ version: '0.1.2', branches: {}, languages: { docs: 'ro' } })
+  assert.match(ro, /Alt agent decat Claude Code: o cerere pentru `\/<name>` inseamna sa citesti `\.claude\/skills\/<name>\/SKILL\.md`/)
+  assert.match(ro, /^[\x00-\x7F]*$/, 'ro is ASCII')
+  assert.equal(en.split('\n').length, ro.split('\n').length, 'the same lines in both languages')
 })
