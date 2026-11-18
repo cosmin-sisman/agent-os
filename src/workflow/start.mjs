@@ -6,7 +6,8 @@ import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
 import { LABELS } from '../i18n/i18n.mjs'
 import { has } from '../platform/capabilities.mjs'
-import { lessonsForIssue } from '../lessons/lessons.mjs'
+import { lessonsForIssue, pathsIn } from '../lessons/lessons.mjs'
+import { findOverlap } from '../collab/overlap.mjs'
 
 const TYPE_PREFIX = { feature: 'feat', bug: 'fix', docs: 'docs', chore: 'chore', research: 'chore' }
 
@@ -74,7 +75,13 @@ export function startIssue({ tracker, caps, config, git, cwd }, { number, hotfix
   else run(`check out ${branch}`, () => mustGit(git, ['switch', branch]))
   if (has(caps, 'board')) run(`set #${number} to In Progress`, () => tracker.setStatus(number, 'In Progress'))
   const lessons = lessonsForIssue(cwd, issue)
-  return { started: !dryRun, dryRun, issue: { number, title: issue.title }, branch, base, worktree: worktree ? worktreePath : null, steps, lessons, warnings: tracker.warnings ?? [] }
+  // Who else is already changing what the issue talks about (its paths), before the first file is touched.
+  const paths = pathsIn(`${issue.title}\n${issue.body ?? ''}`)
+  let overlaps = []
+  if (paths.length && tracker.openPullRequests) {
+    try { overlaps = findOverlap({ tracker, git, cwd, config }, { files: paths, branch }).overlaps } catch { overlaps = [] }
+  }
+  return { started: !dryRun, dryRun, issue: { number, title: issue.title }, branch, base, worktree: worktree ? worktreePath : null, steps, lessons, overlaps, warnings: tracker.warnings ?? [] }
 }
 
 function mustGit(git, args) {
