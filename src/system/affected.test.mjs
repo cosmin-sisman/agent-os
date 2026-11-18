@@ -65,3 +65,22 @@ test('--all runs every component; a single package or no command leaves the gate
   } finally { rmSync(cwd, { recursive: true, force: true }) }
   assert.equal(ownerOf('apps/web/a/b.ts', { web: { path: 'apps/web' }, root: { path: '.' } }), 'web', 'the longest path wins over the root')
 })
+
+test('a component id or path that is not a plain value is refused before anything runs (no shell injection)', async () => {
+  const { run } = await import('../cli/main.mjs')
+  for (const [path, label] of [['a; touch pwned', 'a semicolon'], ['$(touch pwned)', 'a substitution'], ['`touch pwned`', 'backticks'], ['apps/my app', 'a space'], ['../outside', 'a parent path'], ['-rf', 'a leading dash']]) {
+    const cwd = monorepo({ 'system.yaml': `components:\n  api: { kind: service, path: ${JSON.stringify(path)}, consumes: [db] }\n  db: { kind: package, path: packages/db }\n` })
+    try {
+      const ran = []
+      const exec = (c) => { ran.push(c); return { status: 0, output: '', durationMs: 1 } }
+      assert.throws(() => runGate({ config: CONFIG, git: gitFor(['packages/db/x.ts']), cwd, exec }), (err) => /component "api": its path .* is not safe to put in gateAffected\.command/.test(err.message) && err.code === 2, label)
+      assert.deepEqual(ran, [], `${label}: nothing ran`)
+      writeFileSync(join(cwd, 'agent-os.json'), JSON.stringify({ gate: {}, gateAffected: CONFIG.gateAffected }))
+      let stderr = ''
+      const code = await run(['gate'], { stdout: () => {}, stderr: (s) => { stderr += s }, cwd, env: {}, git: gitFor(['packages/db/x.ts']), exec })
+      assert.equal(code, 2, `${label}: exit 2`)
+      assert.match(stderr, /not safe/)
+      assert.deepEqual(ran, [], `${label}: nothing ran from the CLI either`)
+    } finally { rmSync(cwd, { recursive: true, force: true }) }
+  }
+})

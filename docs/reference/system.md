@@ -86,7 +86,7 @@ With `gateAffected.command`, the gate tests only what a change can break:
 1. The components that contain a changed file (the longest component path wins).
 2. Every component that depends on one of them, transitively.
 
-Each one gets a suite named `affected:<id>`, with `{id}`, `{path}` and `{name}` filled in. Its reason in the results is "changed" or "depends on <component>". `--all` runs every component. The static `gate` and `gatePaths` suites run as before, next to these.
+Each one gets a suite named `affected:<id>`, with `{id}`, `{path}` and `{name}` filled in. The command runs through a shell and these values come from the repository, so each must be a plain id or path (letters, digits and `. _ @ / -`, no `..` segment, no leading `-`). Anything else stops the gate with exit 2, naming the component, before any suite runs. Its reason in the results is "changed" or "depends on <component>". `--all` runs every component. The static `gate` and `gatePaths` suites run as before, next to these.
 
 The graph is system.yaml's components and `consumes` edges when the file exists, else the workspaces `system detect` reads. It depends only on the files and the diff, and the set is sorted, so the laptop and CI compute the same affected set. In CI, `gate --from-ci` takes the base from the change request event.
 

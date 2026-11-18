@@ -12,6 +12,9 @@ import { affectedBy, componentGraph, ownerOf } from '../system/affected.mjs'
 
 export const RESULT_FILE = '.agent-os/cache/gate.json'
 
+/** What a component id or path may contain when it is put into a shell command (gateAffected). */
+export const SAFE_VALUE = /^[A-Za-z0-9._@/-]+$/
+
 const lines = (r) => (r.status === 0 ? r.stdout.split(/\r?\n/).map((l) => l.trim()).filter(Boolean) : null)
 
 /** Files changed on this branch against the base (committed, staged, unstaged and untracked), sorted and unique. */
@@ -109,7 +112,13 @@ export function runGate({ config, git, cwd, exec }, { base = config.branches.int
       affected = { source: graph.source, ...(all ? { changed: [], affected: Object.keys(graph.components).sort(), via: {}, outside: [] } : affectedBy(files, graph)) }
       for (const id of affected.affected) {
         const name = `affected:${id}`
-        effective.gate[name] = config.gateAffected.command.replace(/\{id\}/g, id).replace(/\{path\}/g, graph.components[id].path).replace(/\{name\}/g, id)
+        // The command runs through a shell and the values come from the repository (a branch can change them), so
+        // each one must be a plain identifier or path: anything else is refused, never quoted or escaped.
+        const path = graph.components[id].path
+        for (const [what, value] of [['id', id], ['path', path]]) {
+          if (!SAFE_VALUE.test(value) || value.startsWith('-') || value.split('/').includes('..')) throw new CliError(`component "${id}": its ${what} ${JSON.stringify(value)} is not safe to put in gateAffected.command`, { hint: 'component ids and paths may use letters, digits and . _ @ / - only (no "..", no leading "-"); fix system.yaml or the workspace' })
+        }
+        effective.gate[name] = config.gateAffected.command.replace(/\{id\}/g, id).replace(/\{path\}/g, path).replace(/\{name\}/g, id)
         if (!sel.suites.includes(name)) sel.suites.push(name)
         sel.reasons[name] = [affected.changed.includes(id) ? 'changed' : `depends on ${affected.via[id]}`]
       }
