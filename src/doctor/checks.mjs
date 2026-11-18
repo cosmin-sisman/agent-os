@@ -13,6 +13,7 @@ import { readJournal, validate as validateEntry } from '../journal/journal.mjs'
 import { readLessons, validateCard } from '../lessons/lessons.mjs'
 import { checkDecisions } from '../decisions/decisions.mjs'
 import { headerOf } from '../map/map.mjs'
+import { standardsFindings } from '../standards/checks.mjs'
 import { readLock } from '../managed/managed.mjs'
 import { OUTSIDE, readRegistry } from '../registry/registry.mjs'
 import { matches } from '../util/glob.mjs'
@@ -157,6 +158,21 @@ function headers({ cwd, config, git }) {
   const added = r.stdout.split(/\r?\n/).filter((f) => CODE_FILE.test(f) && !/(^|\/)(__fixtures__|fixtures|vendor)\//.test(f))
   const missing = added.filter((f) => { const text = read(cwd, f); return text !== null && !headerOf(text) })
   return missing.length ? missing.map((f) => ({ level: 'warn', path: f, message: `${f} is new and has no header`, fix: 'open it with a 1–3 line comment: what the file is and where it fits' })) : [ok(`${added.length} new code file(s), each with a header`)]
+}
+
+/** The standards' mechanical checks (TODO references, English comments, size) on the files this branch changes. */
+function standards({ cwd, config, git }) {
+  const run = git ?? ((args) => { const r = spawnSync('git', args, { cwd, encoding: 'utf8', windowsHide: true }); return { status: r.status, stdout: r.stdout ?? '' } })
+  const r = run(['diff', '--name-only', '--diff-filter=AM', `origin/${config.branches.integration}...HEAD`])
+  if (r.status !== 0) return [ok('no branch to compare with: the standards are checked on changed files only')]
+  const files = r.stdout.split(/\r?\n/).filter((f) => CODE_FILE.test(f) && !/(^|\/)(__fixtures__|fixtures|vendor)\//.test(f))
+  const out = []
+  for (const f of files) {
+    const text = read(cwd, f)
+    if (text === null) continue
+    for (const x of standardsFindings(f, text, { commentsLang: languageFor(config, 'codeComments'), maxLines: config.standards?.maxFileLines ?? 500 }).filter((x) => x.kind !== 'header')) out.push({ level: 'warn', path: f, message: x.message, fix: x.kind === 'todo' ? 'reference the issue, TODO(#N)' : x.kind === 'size' ? 'split the file by responsibility' : 'write the comment in English' })
+  }
+  return out.length ? out : [ok(`${files.length} changed code file(s) follow the mechanical standards`)]
 }
 
 /** No unresolved update conflicts. */
@@ -339,6 +355,7 @@ export const CHECKS = [
   { id: 'links', area: 'agent system', run: links },
   { id: 'area-map', area: 'agent system', run: areaMap },
   { id: 'headers', area: 'agent system', run: headers },
+  { id: 'standards', area: 'agent system', run: standards },
   { id: 'budgets', area: 'context', run: budgets },
   { id: 'language', area: 'language', run: language },
   { id: 'journal', area: 'history', run: journal },

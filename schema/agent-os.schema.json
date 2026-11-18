@@ -292,6 +292,20 @@
         "description": "The command that runs this suite"
       }
     },
+    "standards": {
+      "type": "object",
+      "description": "Mechanical standards checks (on edit and in doctor)",
+      "default": {},
+      "properties": {
+        "maxFileLines": {
+          "type": "integer",
+          "description": "Remind when a code file grows past this many lines",
+          "minimum": 50,
+          "default": 500
+        }
+      },
+      "additionalProperties": false
+    },
     "testing": {
       "type": "object",
       "description": "Test planning and gaps",
