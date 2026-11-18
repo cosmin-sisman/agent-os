@@ -24,7 +24,7 @@ function freshInstall(config = {}) {
   return cwd
 }
 const doctor = (cwd, deps = {}, options = { offline: true }) => runDoctor({ cwd, config: loadConfig(cwd).merged, running: '0.0.0', ...deps }, options)
-const findings = (r, id) => r.checks.find((c) => c.id === id).findings.filter((f) => f.level !== 'ok')
+const findings = (r, id) => r.checks.find((c) => c.id === id).findings.filter((f) => f.level === 'warn' || f.level === 'fail')
 
 test('a fresh install has 0 FAIL, on GitHub and on GitLab, in en and ro', () => {
   for (const config of [{}, { platform: { type: 'gitlab', project: 'team/app' } }, { languages: { issues: 'ro', prs: 'ro', journal: 'ro' } }]) {
@@ -63,7 +63,7 @@ test('every finding names its fix', () => {
     })
     writeFileSync(join(cwd, '.gitignore'), 'node_modules\n')
     const r = doctor(cwd)
-    const all = r.checks.flatMap((c) => c.findings.filter((f) => f.level !== 'ok'))
+    const all = r.checks.flatMap((c) => c.findings.filter((f) => f.level === 'warn' || f.level === 'fail'))
     assert.ok(all.length >= 8, report(r))
     for (const f of all) assert.ok(f.fix && f.fix.length > 5, `no fix for: ${f.message}`)
     const msgs = all.map((f) => f.message).join('\n')
@@ -171,5 +171,21 @@ test('given .agent-os/local.json committed by mistake, doctor fails, names it an
     assert.match(g('ls-files').stdout, /\.agent-os\/local\.json/, '--fix never removes tracked files')
     g('rm', '-q', '--cached', '-r', '--', '.agent-os/local.json', '.claude/worktrees'); g('commit', '-qm', 'untrack')
     assert.deepEqual(findings(doctor(cwd, { git }), 'personal'), [])
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('doctor names the Claude Code-only parts as an info note: never a warning, the score and exit code unchanged', () => {
+  const cwd = freshInstall()
+  try {
+    const r = doctor(cwd)
+    const agents = r.checks.find((c) => c.id === 'agents')
+    assert.equal(agents.level, 'ok', 'info counts as ok')
+    assert.deepEqual(agents.findings.map((f) => f.level), ['info'])
+    assert.match(agents.findings[0].message, /only Claude Code runs the hooks .* and the subagent fan-out/)
+    assert.equal(r.summary.fail, 0)
+    const without = runDoctor({ cwd, config: loadConfig(cwd).merged, running: '0.0.0' }, { offline: true, only: r.checks.filter((c) => !c.skipped && c.id !== 'agents').map((c) => c.id) })
+    assert.equal(r.score, Math.round((100 * (without.summary.ok + 1 + without.summary.warn / 2)) / (without.summary.ok + without.summary.warn + without.summary.fail + 1)))
+    assert.match(report(r), /^info {2}\[agents\] only Claude Code runs the hooks/m)
+    assert.ok(report(r).indexOf('info  [agents]') > report(r).lastIndexOf('warn  ['), 'info notes come after the warnings')
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })

@@ -89,15 +89,27 @@ export function installRoutes(cwd, config, { version, dryRun = false, templatesR
   return { platform: plan.platform, aliases: plan.aliases, results }
 }
 
-/** The agent-os block in AGENTS.md: where the rules, skills and checks are, in a few lines. */
+/**
+ * The agent-os block in AGENTS.md, in the docs language: where the rules, skills and checks are, and how an agent
+ * other than Claude Code runs a skill (decision 2026-11-18-other-agents-agents-md-first). `ro` is ASCII.
+ */
 export function agentsBlock(config) {
   const { integration, production } = config.branches ?? {}
-  return [
-    '## agent-os',
-    '',
-    `This repository follows agent-os${config.version ? ` ${config.version}` : ''}. Rules in \`.claude/rules/\`, skills in \`.claude/skills/\` (start with /next, /start, /pr and /ship), team settings in \`agent-os.json\`.`,
-    `Work goes to \`${integration ?? 'development'}\` through change requests; \`${production ?? 'main'}\` changes only through /release. \`agent-os doctor\` checks the setup.`,
-  ].join('\n')
+  const v = config.version ? ` ${config.version}` : ''
+  const int = integration ?? 'development'
+  const prod = production ?? 'main'
+  const lines = languageFor(config, 'docs') === 'ro'
+    ? [
+      `Acest repository urmeaza agent-os${v}. Reguli in \`.claude/rules/\`, skill-uri in \`.claude/skills/\` (incepe cu /next, /start, /pr si /ship), setarile echipei in \`agent-os.json\`.`,
+      `Munca ajunge in \`${int}\` prin change requests; \`${prod}\` se schimba doar prin /release. \`agent-os doctor\` verifica setup-ul.`,
+      'Alt agent decat Claude Code: o cerere pentru `/<name>` inseamna sa citesti `.claude/skills/<name>/SKILL.md` si sa il urmezi; fiecare pas din el este o comanda `agent-os`.',
+    ]
+    : [
+      `This repository follows agent-os${v}. Rules in \`.claude/rules/\`, skills in \`.claude/skills/\` (start with /next, /start, /pr and /ship), team settings in \`agent-os.json\`.`,
+      `Work goes to \`${int}\` through change requests; \`${prod}\` changes only through /release. \`agent-os doctor\` checks the setup.`,
+      'In an agent other than Claude Code, a request for `/<name>` means reading `.claude/skills/<name>/SKILL.md` and following it; every step in it is an `agent-os` command.',
+    ]
+  return ['## agent-os', '', ...lines].join('\n')
 }
 
 /**
