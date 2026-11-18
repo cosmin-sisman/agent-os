@@ -15,6 +15,8 @@ npx agent-os init --detect
 
 Every guide ends in the same daily loop: `/next`, `/start`, the work, `/pr`, `/ship`, and `/release` from time to time (see [the loop](../reference/loop.md)).
 
+**[Using agent-os](usage.md)** covers the daily loop step by step, every skill (when to use it, an example prompt, a real sample of its output), how to choose a profile, use cases (solo, team, GitLab self-managed, Romanian, hotfix, audit, orchestrator, Codex or Cursor) and troubleshooting.
+
 ## Other coding agents
 
 Codex, Cursor and other agents follow the same flow through AGENTS.md and the CLI. Two parts work only in Claude Code: the hooks (guards, session context, reminders), which other agents meet later as required checks at push time, and subagent fan-out (`/audit`, `/discover`), which they run one area at a time. `agent-os doctor` names both; see the [FAQ](faq.md).
