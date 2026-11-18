@@ -30,6 +30,6 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 | `catalog/` | the stack catalog in YAML: layers, technologies, languages, providers, runtimes, blueprints |
 | `examples/` | example files a project would have (`stack.yaml`) |
 | `artifacts/` | visual artifacts: one folder each, with `artifact.yaml` and a self-contained `index.html` |
-| `scripts/github/` | one-off scripts that set up this repository's GitHub (labels, milestones, issues) |
+| `scripts/github/` | scripts that set up this repository's GitHub: `plan.mjs` + `setup.mjs` (labels, milestones, issues, relationships), `project.mjs` (the project board, rerun after creating issues) |
 | `scripts/bootstrap/` | one-off Python that produced the first catalog and artifact |
 | `scripts/site/` | builds the GitHub Pages site (artifacts plus a generated index) |

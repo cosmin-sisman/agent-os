@@ -264,6 +264,7 @@ layers:
 
 agent-os gets better from the projects that use it.
 
+- 🗺️ **Roadmap board:** [agent-os project](https://github.com/users/cosmin-sisman/projects/7) (status, priority and size of every issue)
 - 💬 **Ideas and questions:** [Discussions](https://github.com/cosmin-sisman/agent-os/discussions)
 - 🐛 **Bugs and features:** [open an issue](https://github.com/cosmin-sisman/agent-os/issues/new/choose). From inside a project, `/upstream` drafts one for you with private details removed.
 - 🛠️ **Contribute:** read [CONTRIBUTING.md](CONTRIBUTING.md) and pick a [`good first issue`](https://github.com/cosmin-sisman/agent-os/labels/good%20first%20issue)
