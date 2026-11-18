@@ -13,6 +13,8 @@ import { readJournal, validate as validateEntry } from '../journal/journal.mjs'
 import { readLessons, validateCard } from '../lessons/lessons.mjs'
 import { checkDecisions, readDecisions } from '../decisions/decisions.mjs'
 import { DIR as ARTIFACTS_DIR, externalLoads, listArtifacts } from '../artifacts/artifact.mjs'
+import { stackDrift } from '../stack/detect.mjs'
+import { areaLayers } from '../stack/areas.mjs'
 import { headerOf } from '../map/map.mjs'
 import { standardsFindings } from '../standards/checks.mjs'
 import { readLock } from '../managed/managed.mjs'
@@ -340,6 +342,14 @@ function artifacts({ cwd, config }) {
   return out.length ? out : [ok(`${all.length} artifact(s): valid, self-contained, sources verified`)]
 }
 
+/** stack.yaml agrees with the code (stack drift): warnings, since the code may be mid-migration. */
+function stack({ cwd }) {
+  let r
+  try { r = stackDrift(cwd) } catch (err) { return [{ level: 'warn', path: 'stack.yaml', message: `stack.yaml could not be compared with the code: ${err.message}`, fix: 'agent-os stack check' }] }
+  if (!r.stack) return [ok('no stack.yaml')]
+  return r.drift.length ? r.drift.map((d) => ({ level: 'warn', path: d.evidence[0]?.file ?? 'stack.yaml', message: d.message, fix: d.fix })) : [ok('stack.yaml matches the code')]
+}
+
 /** AGENTS.md has an area map that covers every top-level source directory. */
 function areaMap({ cwd }) {
   const text = read(cwd, 'AGENTS.md')
@@ -347,7 +357,13 @@ function areaMap({ cwd }) {
   const listed = [...text.matchAll(/^\|\s*`([^`]+)`/gm)].map((m) => m[1].replace(/^\.\//, ''))
   const top = dirs(cwd, '.').filter((d) => !d.startsWith('.') && !['node_modules', 'dist', 'build', 'coverage', '_site'].includes(d))
   const missing = top.filter((d) => !listed.some((p) => p === d || p.startsWith(`${d}/`)))
-  return missing.length ? [{ level: 'warn', path: 'AGENTS.md', message: `the AGENTS.md area map does not mention ${missing.map((d) => `${d}/`).join(', ')}`, fix: 'add one table row per missing directory: | `dir/` | what it holds |' }] : [ok(`the area map covers ${top.length} top-level director${top.length === 1 ? 'y' : 'ies'}`)]
+  const out = missing.length ? [{ level: 'warn', path: 'AGENTS.md', message: `the AGENTS.md area map does not mention ${missing.map((d) => `${d}/`).join(', ')}`, fix: 'add one table row per missing directory: | `dir/` | what it holds |' }] : []
+  // Layers in use from stack.yaml: each one's paths should appear in the map (as the path or a parent of it).
+  for (const layer of areaLayers(cwd)) {
+    const prefixes = layer.paths.map((p) => p.split(/[*{[]/)[0].replace(/\/+$/, '')).filter(Boolean)
+    if (prefixes.length && !prefixes.some((pre) => listed.some((l) => { const x = l.replace(/\/+$/, ''); return pre === x || pre.startsWith(`${x}/`) || x.startsWith(`${pre}/`) }))) out.push({ level: 'warn', path: 'AGENTS.md', message: `the AGENTS.md area map does not mention the ${layer.id} layer (${prefixes.join(', ')})`, fix: `add a row for ${prefixes[0]}/ naming the ${layer.id} layer` })
+  }
+  return out.length ? out : [ok(`the area map covers ${top.length} top-level director${top.length === 1 ? 'y' : 'ies'}`)]
 }
 
 // ── Platform checks ────────────────────────────────────────────────────────
@@ -393,6 +409,7 @@ export const CHECKS = [
   { id: 'hooks', area: 'agent system', run: hooks },
   { id: 'links', area: 'agent system', run: links },
   { id: 'area-map', area: 'agent system', run: areaMap },
+  { id: 'stack', area: 'agent system', run: stack },
   { id: 'headers', area: 'agent system', run: headers },
   { id: 'standards', area: 'agent system', run: standards },
   { id: 'budgets', area: 'context', run: budgets },

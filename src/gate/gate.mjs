@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
 import { matches } from '../util/glob.mjs'
 import { testGaps } from '../testing/test.mjs'
+import { areaLayers, areasFor, layersOf } from '../stack/areas.mjs'
 
 export const RESULT_FILE = '.agent-os/cache/gate.json'
 
@@ -85,6 +86,18 @@ export function readResult(cwd) {
 export function runGate({ config, git, cwd, exec }, { base = config.branches.integration, all = false, only = [], dryRun = false } = {}) {
   const files = all || only.length ? [] : changedFiles(git, base)
   const sel = selectSuites(config, files, { all, only })
+  // Suites attached to layers (gateLayers: { "data-layer": ["migrations"] }) run when the diff touches the layer.
+  if (!all && !only.length && Object.keys(config.gateLayers ?? {}).length) {
+    for (const area of areasFor(files, cwd)) {
+      const layer = area.replace(/^area:/, '')
+      for (const suite of (config.gateLayers[layer] ?? []).filter((x) => config.gate?.[x])) {
+        if (!sel.suites.includes(suite)) sel.suites.push(suite)
+        ;(sel.reasons[suite] ??= []).push(`layer ${layer}`)
+      }
+    }
+    const layers = areaLayers(cwd)
+    sel.unmatched = sel.unmatched.filter((f) => !layersOf(f, layers).some((l) => (config.gateLayers[l] ?? []).length))
+  }
   const head = lines(git(['rev-parse', 'HEAD']))?.[0] ?? null
   const clean = isClean(git)
   const warnings = []
