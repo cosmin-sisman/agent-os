@@ -86,3 +86,17 @@ agent-os update --no-pr                                # do it on the branch, pu
 8. **Open.** Pushes the branch and opens the change request. Its body carries the plan, the migration log, the conflicts as a checklist, the gate results, and a **Before merge** item for each `.rej`. It opens as a draft when there are conflicts or the gate failed (exit 1).
 
 Afterwards you are back on the branch you started from. **To roll back, close the change request** (or revert it after merging): the update exists only on its branch until then.
+
+## Legacy features and deprecation notes
+
+A **legacy** feature is an old behaviour kept for teams that still need it. It ships as `templates/legacy/<id>/` and is installed only when the project opts in:
+
+```json
+{ "legacy": ["old-flow"] }
+```
+
+- Without the opt-in, nothing from `templates/legacy/` is installed.
+- With it, `agent-os update` and `setup` install the feature's files next to core. They are managed like any other file.
+- `agent-os doctor` reports each enabled feature as **debt**, with its removal version and what replaces it (from `src/lifecycle/lifecycle.yaml`, id `legacy:<id>`). It fails on an id this version does not have.
+- `doctor` also lists every **deprecated** item the project still uses (config keys in `agent-os.json` or `.agent-os/local.json`, commands and flags in its hooks), each with its replacement.
+- When a deprecated or legacy command or flag runs, agent-os prints a note on stderr, so `--json` output stays clean: `agent-os: note: hook --print-settings is deprecated and will be removed in 0.7.0; use setup`.

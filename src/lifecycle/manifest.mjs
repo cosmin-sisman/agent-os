@@ -37,6 +37,8 @@ export async function collectItems({ root = ROOT } = {}) {
   for (const k of keyPaths()) ids.add(`config:${k}`)
   for (const h of CORE_HANDLERS) ids.add(`hook:${h.name}`)
   for (const f of templateFiles(join(root, 'templates'), '')) ids.add(`template:${f}`)
+  const legacyDir = join(root, 'templates', 'legacy')
+  for (const id of existsSync(legacyDir) ? readdirSync(legacyDir).filter((d) => statSync(join(legacyDir, d)).isDirectory()) : []) ids.add(`legacy:${id}`)
   for (const name of existsSync(join(root, 'catalog')) ? readdirSync(join(root, 'catalog')).filter((f) => f.endsWith('.yaml')) : []) {
     for (const entry of parse(readFileSync(join(root, 'catalog', name), 'utf8'), { file: `catalog/${name}` }) ?? []) ids.add(`catalog:${name.replace('.yaml', '')}:${entry.id}`)
   }
