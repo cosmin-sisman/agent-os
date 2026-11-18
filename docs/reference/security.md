@@ -49,3 +49,26 @@ With `"ci": { "securityWatch": "daily" }` (or `"weekly"`), install adds a workfl
 - **GitLab** (`.gitlab/agent-os-security.yml`): it runs from a pipeline schedule on a protected branch. It writes the issue with `AGENT_OS_SECURITY_TOKEN`, a protected and masked variable. Without that token it reports and writes nothing.
 
 Both pass `agent-os ci review`. By default (`off`), nothing is installed.
+
+# Security: the pass on a change
+
+```sh
+agent-os security pass [--base <branch>] [--report <file>…]   # exit 1 on a FAIL
+```
+
+`/pr` (and `/mr`) runs it before the review. The `security-review` slot's skill, when bound, runs after it.
+
+- **Layers.** The layers the diff touches come from stack.yaml paths. Without a stack they come from the file paths: workflows → CI; Dockerfiles, compose and Terraform → infrastructure; SQL and migrations → data; auth, login and session files → auth; routes, controllers and handlers → API; components → frontend. Each layer brings its OWASP ASVS checklist items. The ones no detection covered are listed to check by hand.
+- **Detections in the changed files.** They read the files as text, and each one has the checklist item, the fix and the reason:
+
+  | Layer | Detection |
+  |---|---|
+  | API | a webhook route without signature verification (FAIL); a new non-GET endpoint, or a public one without auth, with no rate limiting (`V11.1.4`) |
+  | Data | SQL built from strings (`V5.3.4`) |
+  | Frontend | raw HTML insertion (`V5.3.3`); a secret-looking public variable (`NEXT_PUBLIC_…SECRET`, `V14.1.1`) |
+  | Auth | tokens accepted without verification (`algorithms: ['none']`, `verify: false`); cookies without HttpOnly or Secure |
+  | Infrastructure | unpinned base images; images that run as root; `0.0.0.0/0` in Terraform |
+  | CI | the errors of `agent-os ci review` |
+
+- **Scanner results, read and never run.** agent-os does not install or run scanners. It reads the reports the project's tools produce: SARIF (CodeQL, Semgrep, GitLab SAST, Trivy, …) and gitleaks JSON. They come from `security.reports` or `--report`, and only findings on the changed files are kept. **A secret's value is never copied**, only its rule and location. When no report is read, the pass says so.
+- **Missing scanners.** List the scanners the team runs in `security.scanners` (for example `["gitleaks", "osv-scanner"]`). `agent-os env` reports the ones the laptop lacks, by asking only for their version.

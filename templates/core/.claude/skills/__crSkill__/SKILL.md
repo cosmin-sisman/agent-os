@@ -15,6 +15,7 @@ Issue: $ARGUMENTS
 - Read the whole diff against `origin/{{branches.integration}}`. Remove debugging leftovers, unrelated changes and commented-out code.
 - {{#if slots.standards}}Run the standards pass with the `{{slots.standards}}` skill on the diff; fix what it finds or say in the body why not.{{else}}Run /standards review on the diff, and record any choice between solutions with `agent-os standards choice`.{{/if}}
 - {{#if slots.review}}Run the `{{slots.review}}` skill on the diff and address its findings.{{else}}No review skill is bound (`slots.review`); review the diff yourself for correctness first.{{/if}}
+- Run the security pass: `agent-os security pass`. Fix every FAIL (each names the checklist item, the fix and the reason), and go through the items it lists to check by hand for the layers you touched.{{#if slots.security-review}} Then run the `{{slots.security-review}}` skill on the diff.{{/if}}
 - {{#if slots.ui-design}}If the diff touches the user interface, run the `{{slots.ui-design}}` skill on it.{{else}}If the diff touches the user interface, say in the description that no ui-design skill is bound and the UI was reviewed by hand; continue.{{/if}}
 - Check the issue's test scenarios: each one has a test in this branch, or the body says why not.
 

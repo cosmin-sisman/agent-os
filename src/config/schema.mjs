@@ -91,6 +91,8 @@ export const SCHEMA = obj({
       osvUrl: str('An OSV-compatible querybatch endpoint, e.g. an internal mirror', { pattern: '^https?://' }),
       kevUrl: str('Where the CISA KEV catalog (JSON) is read from, e.g. an internal mirror', { pattern: '^https?://' }),
     }, 'The advisory watch', { default: {} }),
+    scanners: list(str('A scanner command, e.g. gitleaks, osv-scanner, semgrep'), 'Scanners the team runs; agent-os env reports the missing ones (agent-os never installs or runs them)', { default: [] }),
+    reports: list(str('A path to a scanner report (SARIF or gitleaks JSON)'), 'Scanner reports the security pass reads', { default: [] }),
     acceptedRisks: list(obj({
       id: str('The advisory id (GHSA-…, CVE-…, OSV id)'),
       reason: str('Why the risk is accepted'),
