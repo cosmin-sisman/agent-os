@@ -9,7 +9,7 @@ const ALREADY = /already (been )?(related|assigned|exists)|HTTP 409/i
 const STATE = { opened: 'open', closed: 'closed', merged: 'merged', locked: 'closed' }
 const PENDING = ['created', 'waiting_for_resource', 'preparing', 'pending', 'running', 'scheduled', 'manual']
 
-const issueOf = (i) => ({ number: i.iid, title: i.title, state: STATE[i.state] ?? i.state, url: i.web_url, labels: i.labels ?? [], milestone: i.milestone ? { title: i.milestone.title, dueOn: i.milestone.due_date ?? null } : null, assignees: (i.assignees ?? []).map((a) => a.username) })
+const issueOf = (i) => ({ number: i.iid, title: i.title, state: STATE[i.state] ?? i.state, url: i.web_url, labels: i.labels ?? [], milestone: i.milestone ? { title: i.milestone.title, dueOn: i.milestone.due_date ?? null } : null, assignees: (i.assignees ?? []).map((a) => a.username), createdAt: i.created_at ?? null })
 const slug = (v) => String(v).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 
 export class GitLabTracker {
@@ -108,6 +108,9 @@ export class GitLabTracker {
   recentlyClosed(login, { limit = 20 } = {}) {
     return (this.api.rest('GET', this.p(`issues?state=closed&assignee_username=${encodeURIComponent(login)}&order_by=updated_at&sort=desc&per_page=${limit}`)) ?? []).map(issueOf)
   }
+
+  /** The names of every label of the project (group labels included). */
+  labels() { return this.pages(this.p('labels?include_ancestor_groups=true')).map((l) => l.name) }
 
   userId(username) {
     if (!this.cache.users.has(username)) {

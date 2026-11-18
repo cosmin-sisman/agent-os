@@ -43,6 +43,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 | `src/tracker/` | the tracker interface (`tracker.mjs`), the GitHub adapter (`github.mjs`) with the gh client (`gh.mjs`), the GitLab adapter (`gitlab.mjs`, client in `src/platform/glab.mjs`); fake gh and glab for tests in `__fixtures__/` |
 | `src/workflow/` | the work loop: `/next` (`next.mjs`: deterministic ranking, design §9), `/start` (`start.mjs`: claim, branch name and base, link, In Progress, check out), `/pr` (`pr.mjs`: body rules, preflight, open), `/ship` (`ship.mjs`: readiness, merge, Closes vs Refs, clean-up) |
 | `src/gate/` | the gate: suites selected from `gatePaths` globs, run, results table, the saved result `/pr` requires (`gate.mjs`) |
+| `src/doctor/` | doctor: the registry of checks (`checks.mjs`), the runner, fixes and readiness score (`doctor.mjs`) |
 | `src/journal/` | the journal: one file per entry, its schema and validation, list filters, unique names (`journal.mjs`) |
 | `src/env/` | environment checks (`checks.mjs`), version ranges (`semver.mjs`) and the probe that looks at the machine (`probe.mjs`); a fake probe for tests in `__fixtures__/` |
 | `src/hooks/` | the hooks runner (`runner.mjs`: events, handlers, isolation, adoption mode, the settings block) and guard rules (`guards.mjs`) |

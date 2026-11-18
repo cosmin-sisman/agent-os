@@ -76,7 +76,7 @@ agent-os update --no-pr                                # do it on the branch, pu
 
 **The update**:
 
-1. **Preflight.** Requires a clean working tree, a target that is not older than the pin (and not a pre-release, unless `--channel next`), and the target's minimum Node version. `doctor` joins the preflight with #27.
+1. **Preflight.** Requires a clean working tree, a target that is not older than the pin (and not a pre-release, unless `--channel next`), the target's minimum Node version, and no failure from `doctor --ci`.
 2. **Branch.** It creates `chore/agent-os-<version>` from `origin/<branches.integration>`. Nothing is written to the integration or default branch.
 3. **Migrate.** Runs the migrations after the pin up to the target, in order.
 4. **Pin.** Sets `version` in `agent-os.json`, except with `--channel next`.

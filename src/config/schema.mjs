@@ -92,6 +92,7 @@ export const SCHEMA = obj({
   }, 'Guards that refuse risky shell commands before they run (PreToolUse)', { default: {} }),
   adoption: obj({
     warnOnlyUntil: str('Until this date (YYYY-MM-DD) guards only warn instead of refusing', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
+    cutoff: str('Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD)', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
   }, 'Adoption mode for projects new to agent-os', { default: {} }),
   machine: obj({
     maxWorkers: int('Most agent sessions to run in parallel on this laptop', { minimum: 1, default: 3 }),

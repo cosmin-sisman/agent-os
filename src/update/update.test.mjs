@@ -114,6 +114,9 @@ test('preflight: a dirty tree, a pre-release without --channel next, or an older
     assert.match(pre.problems[0], /pre-release: pass --channel next/)
     const old = await runUpdate(f.cwd, { git: f.git, vocab: vocabularyFor('github') }, { release: { ...RELEASE, version: '0.0.9' }, templatesRoot: f.v2, migrationsDir: f.migrations })
     assert.match(old.problems[0], /older than the pinned 0\.1\.0/)
+    write(f.cwd, { 'stale.md.rej': 'x' }); f.g(f.cwd, 'add', '-A'); f.g(f.cwd, 'commit', '-m', 'leftover conflict')
+    const doc = await runUpdate(f.cwd, { git: f.git, vocab: vocabularyFor('github') }, { release: RELEASE, templatesRoot: f.v2, migrationsDir: f.migrations })
+    assert.match(doc.problems[0], /^doctor \[conflicts\]: stale\.md\.rej holds an unresolved update conflict/)
     assert.doesNotMatch(f.g(f.cwd, 'branch', '--list'), /chore\/agent-os/)
   } finally { rmSync(f.root, { recursive: true, force: true }) }
 })

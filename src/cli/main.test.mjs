@@ -47,21 +47,21 @@ test('an unknown command with no close match points to --help', async () => {
 })
 
 test('a planned command exits 2 and names its issue', async () => {
-  const { code, stderr } = await cli('doctor')
+  const { code, stderr } = await cli('lessons')
   assert.equal(code, EXIT.CANNOT_RUN)
-  assert.match(stderr, /"doctor" is planned/)
-  assert.match(stderr, /issues\/27/)
+  assert.match(stderr, /"lessons" is planned/)
+  assert.match(stderr, /issues\/24/)
 })
 
 test('with --json, a failing command prints one JSON object with an error field and exits 2', async () => {
-  const { code, stdout, stderr } = await cli('doctor', '--json')
+  const { code, stdout, stderr } = await cli('lessons', '--json')
   assert.equal(code, EXIT.CANNOT_RUN)
   assert.equal(stderr, '')
   const out = JSON.parse(stdout)
   assert.equal(out.ok, false)
   assert.equal(out.exitCode, 2)
   assert.equal(typeof out.error.message, 'string')
-  assert.match(out.error.hint, /#27/)
+  assert.match(out.error.hint, /#24/)
 })
 
 test('with --json, a successful command prints one JSON object with its result', async () => {
@@ -86,10 +86,10 @@ test('an unknown option exits 2 with a short message and a hint', async () => {
 })
 
 test('<command> --help explains that command, including planned ones', async () => {
-  const { code, stdout } = await cli('doctor', '--help')
+  const { code, stdout } = await cli('lessons', '--help')
   assert.equal(code, EXIT.OK)
-  assert.match(stdout, /agent-os doctor: /)
-  assert.match(stdout, /Status: planned \(follow #27/)
+  assert.match(stdout, /agent-os lessons: /)
+  assert.match(stdout, /Status: planned \(follow #24/)
 })
 
 test('--cwd must be an existing directory', async () => {

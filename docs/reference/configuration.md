@@ -108,6 +108,7 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `guards.disable` | team | array | `[]` | Built-in guards turned off for this project |
 | `adoption` | team | object | `{}` | Adoption mode for projects new to agent-os |
 | `adoption.warnOnlyUntil` | team | string |  | Until this date (YYYY-MM-DD) guards only warn instead of refusing |
+| `adoption.cutoff` | team | string |  | Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD) |
 | `machine` | personal | object | `{}` | This laptop's limits |
 | `machine.maxWorkers` | personal | integer | `3` | Most agent sessions to run in parallel on this laptop |
 | `machine.minFreeMb` | personal | integer | `1500` | Refuse heavy commands below this much free memory |
