@@ -17,3 +17,7 @@ Closes #
 ## Notes for reviewers
 
 <!-- Optional. -->
+
+## Before merge
+
+<!-- Optional. Steps that must happen before merging, as "- [ ] …" items; /ship refuses while one is unchecked. -->

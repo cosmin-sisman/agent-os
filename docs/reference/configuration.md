@@ -52,6 +52,7 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `branches.production` | team | string | `"main"` | Releases merge into this branch |
 | `branches.requiredChecks` | team | array | `[]` | Checks that must pass before merging into either branch |
 | `branches.requiredApprovals` | team | integer | `0` | Approving reviews required on pull or merge requests |
+| `branches.mergeMethod` | team | string: `squash`, `merge`, `rebase` | `"squash"` | How /ship merges change requests into the integration branch |
 | `languages` | team | object | `{}` | Language per area |
 | `languages.chat` | personal | string: `en`, `ro` | `"en"` | Language the agent talks to you in (en, or ro written without diacritics) |
 | `languages.issues` | team | string: `en`, `ro` | `"en"` | Issue titles, bodies and comments the agent starts (en, or ro written without diacritics) |

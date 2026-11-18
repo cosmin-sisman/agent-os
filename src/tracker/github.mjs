@@ -9,6 +9,26 @@ const ALREADY = /already|duplicate sub-issues|already exists|has already been ta
 /** An issue from the REST API, in the tracker's shape. */
 const issueOf = (i) => ({ number: i.number, title: i.title, state: i.state, url: i.html_url, labels: (i.labels ?? []).map((l) => (typeof l === 'string' ? l : l.name)), milestone: i.milestone ? { title: i.milestone.title, dueOn: i.milestone.due_on ?? null } : null, assignees: (i.assignees ?? []).map((a) => a.login) })
 
+const CONTEXTS = 'contexts(first:100){ nodes{ __typename ... on CheckRun { name status conclusion startedAt detailsUrl } ... on StatusContext { context state targetUrl createdAt } } }'
+
+/**
+ * The checks of a commit, one per name: the latest run wins, as for required checks. A re-run after a fix leaves the
+ * old failed run on the same commit, and the platform's own rollup state still counts it.
+ */
+export function checksOf(rollup) {
+  const latest = new Map()
+  for (const c of rollup?.contexts?.nodes ?? []) {
+    const check = c.__typename === 'StatusContext'
+      ? { name: c.context, at: c.createdAt ?? '', state: c.state === 'SUCCESS' ? 'success' : c.state === 'PENDING' || c.state === 'EXPECTED' ? 'pending' : 'failure', url: c.targetUrl ?? null }
+      : { name: c.name, at: c.startedAt ?? '', state: c.status !== 'COMPLETED' ? 'pending' : ['SUCCESS', 'NEUTRAL', 'SKIPPED'].includes(c.conclusion) ? 'success' : 'failure', url: c.detailsUrl ?? null }
+    const seen = latest.get(check.name)
+    if (!seen || check.at >= seen.at) latest.set(check.name, check)
+  }
+  const all = [...latest.values()].map(({ at, ...c }) => c)
+  const overall = !all.length ? (rollup ? (rollup.state === 'SUCCESS' ? 'success' : rollup.state === 'PENDING' ? 'pending' : 'failure') : 'none') : all.some((c) => c.state === 'failure') ? 'failure' : all.some((c) => c.state === 'pending') ? 'pending' : 'success'
+  return { overall, all }
+}
+
 export class GitHubTracker {
   /**
    * @param {{ repo: string, host?: string, board?: { owner: string, number: number } }} target
@@ -81,9 +101,9 @@ export class GitHubTracker {
    * state of the checks on their last commit.
    */
   pullRequests(filter) {
-    const q = 'query($q:String!){ search(query:$q, type:ISSUE, first:50){ nodes{ ... on PullRequest { number title url isDraft reviewDecision commits(last:1){ nodes{ commit{ statusCheckRollup{ state } } } } } } } }'
+    const q = `query($q:String!){ search(query:$q, type:ISSUE, first:50){ nodes{ ... on PullRequest { number title url isDraft reviewDecision commits(last:1){ nodes{ commit{ statusCheckRollup{ state ${CONTEXTS} } } } } } } } }`
     const nodes = this.gh.graphql(q, { q: `repo:${this.repo} is:pr is:open ${filter}` })?.search?.nodes ?? []
-    return nodes.filter((n) => n?.number).map((n) => ({ number: n.number, title: n.title, url: n.url, draft: Boolean(n.isDraft), review: n.reviewDecision ?? null, checks: n.commits?.nodes?.[0]?.commit?.statusCheckRollup?.state ?? null }))
+    return nodes.filter((n) => n?.number).map((n) => ({ number: n.number, title: n.title, url: n.url, draft: Boolean(n.isDraft), review: n.reviewDecision ?? null, checks: (() => { const r = n.commits?.nodes?.[0]?.commit?.statusCheckRollup; return r ? { success: 'SUCCESS', pending: 'PENDING', failure: 'FAILURE', none: null }[checksOf(r).overall] : null })() }))
   }
 
   /** Open and closed issue counts per milestone (or one milestone by title). */
@@ -241,15 +261,31 @@ export class GitHubTracker {
   /** The state of a pull request: review decision and every check on its last commit. */
   pullRequestStatus(number) {
     const [owner, name] = this.repo.split('/')
-    const q = 'query($o:String!,$n:String!,$p:Int!){ repository(owner:$o,name:$n){ pullRequest(number:$p){ number url state isDraft mergeable reviewDecision commits(last:1){ nodes{ commit{ oid statusCheckRollup{ state contexts(first:100){ nodes{ __typename ... on CheckRun { name status conclusion detailsUrl } ... on StatusContext { context state targetUrl } } } } } } } } } }'
+    const q = `query($o:String!,$n:String!,$p:Int!){ repository(owner:$o,name:$n){ pullRequest(number:$p){ number title body url state isDraft mergeable mergeStateStatus reviewDecision baseRefName headRefName isCrossRepository author{ login } commits(last:1){ nodes{ commit{ oid statusCheckRollup{ state ${CONTEXTS} } } } } } } }`
     const pr = this.gh.graphql(q, { o: owner, n: name, p: number })?.repository?.pullRequest
     if (!pr) throw new CliError(`pull request #${number} not found`)
     const commit = pr.commits?.nodes?.[0]?.commit
-    const checks = (commit?.statusCheckRollup?.contexts?.nodes ?? []).map((c) => (c.__typename === 'StatusContext'
-      ? { name: c.context, state: c.state === 'SUCCESS' ? 'success' : c.state === 'PENDING' || c.state === 'EXPECTED' ? 'pending' : 'failure', url: c.targetUrl ?? null }
-      : { name: c.name, state: c.status !== 'COMPLETED' ? 'pending' : ['SUCCESS', 'NEUTRAL', 'SKIPPED'].includes(c.conclusion) ? 'success' : 'failure', url: c.detailsUrl ?? null }))
-    const overall = !checks.length ? 'none' : checks.some((c) => c.state === 'failure') ? 'failure' : checks.some((c) => c.state === 'pending') ? 'pending' : 'success'
-    return { number: pr.number, url: pr.url, state: pr.state.toLowerCase(), draft: Boolean(pr.isDraft), mergeable: pr.mergeable ?? null, review: pr.reviewDecision ?? null, head: commit?.oid ?? null, checks: overall, failing: checks.filter((c) => c.state === 'failure'), pending: checks.filter((c) => c.state === 'pending').map((c) => c.name), all: checks }
+    const { overall, all: checks } = checksOf(commit?.statusCheckRollup)
+    return { number: pr.number, title: pr.title ?? null, body: pr.body ?? '', author: pr.author?.login ?? null, base: pr.baseRefName ?? null, branch: pr.headRefName ?? null, fork: Boolean(pr.isCrossRepository), mergeState: pr.mergeStateStatus ?? null, url: pr.url, state: pr.state.toLowerCase(), draft: Boolean(pr.isDraft), mergeable: pr.mergeable ?? null, review: pr.reviewDecision ?? null, head: commit?.oid ?? null, checks: overall, failing: checks.filter((c) => c.state === 'failure'), pending: checks.filter((c) => c.state === 'pending').map((c) => c.name), all: checks }
+  }
+
+  /** Merges a pull request, only if its head is still `sha` (so what was checked is what is merged). */
+  mergePullRequest(number, { method = 'squash', sha, title }, { dryRun = false } = {}) {
+    const request = { method: 'PUT', path: `repos/${this.repo}/pulls/${number}/merge`, body: { merge_method: method, ...(sha ? { sha } : {}), ...(title && method === 'squash' ? { commit_title: `${title} (#${number})` } : {}) } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    const r = this.gh.rest(request.method, request.path, request.body)
+    return { number, merged: Boolean(r?.merged), sha: r?.sha ?? null }
+  }
+
+  /** Deletes a branch on the remote. */
+  deleteBranch(branch, { dryRun = false } = {}) {
+    const request = { method: 'DELETE', path: `repos/${this.repo}/git/refs/heads/${branch.split('/').map(encodeURIComponent).join('/')}` }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    try { this.gh.rest(request.method, request.path) } catch (err) {
+      if (/HTTP 422|Reference does not exist/i.test(err.output ?? err.message)) return { branch, deleted: false, already: true }
+      throw err
+    }
+    return { branch, deleted: true }
   }
 
   /** Review threads of a pull request, with every comment. */

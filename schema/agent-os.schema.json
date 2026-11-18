@@ -102,6 +102,16 @@
           "minimum": 0,
           "maximum": 10,
           "default": 0
+        },
+        "mergeMethod": {
+          "type": "string",
+          "enum": [
+            "squash",
+            "merge",
+            "rebase"
+          ],
+          "description": "How /ship merges change requests into the integration branch",
+          "default": "squash"
         }
       },
       "additionalProperties": false

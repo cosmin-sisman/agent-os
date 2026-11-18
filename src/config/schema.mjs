@@ -32,6 +32,7 @@ export const SCHEMA = obj({
     production: str('Releases merge into this branch', { default: 'main' }),
     requiredChecks: list(str('A check name, such as ci'), 'Checks that must pass before merging into either branch', { default: [] }),
     requiredApprovals: int('Approving reviews required on pull or merge requests', { minimum: 0, maximum: 10, default: 0 }),
+    mergeMethod: oneOf(['squash', 'merge', 'rebase'], 'How /ship merges change requests into the integration branch', { default: 'squash' }),
   }, 'Branch roles', { default: {} }),
   languages: obj({
     chat: lang('Language the agent talks to you in'),

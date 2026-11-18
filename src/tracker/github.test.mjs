@@ -116,3 +116,13 @@ test('the factory refuses GitLab until #92 and needs a project', () => {
   assert.throws(() => createTracker({ platform: { type: 'gitlab', project: 'g/p' } }), (err) => /planned/.test(err.message) && /issues\/92/.test(err.hint))
   assert.throws(() => createTracker({ platform: { type: 'github' } }), /platform\.project is not set/)
 })
+
+test('checks: the latest run of each check wins, even when the platform rollup still says FAILURE', async () => {
+  const { checksOf } = await import('./github.mjs')
+  const run = (name, conclusion, startedAt) => ({ __typename: 'CheckRun', name, status: 'COMPLETED', conclusion, startedAt })
+  const r = checksOf({ state: 'FAILURE', contexts: { nodes: [run('ci', 'FAILURE', '2026-11-18T02:44:52Z'), run('pr-title', 'FAILURE', '2026-11-18T02:44:22Z'), run('ci', 'SUCCESS', '2026-11-18T02:46:07Z'), run('pr-title', 'SUCCESS', '2026-11-18T02:45:38Z')] } })
+  assert.equal(r.overall, 'success')
+  assert.deepEqual(r.all.map((c) => `${c.name}=${c.state}`), ['ci=success', 'pr-title=success'])
+  assert.equal(checksOf({ state: 'FAILURE', contexts: { nodes: [run('ci', 'SUCCESS', '1'), run('ci', 'FAILURE', '2')] } }).overall, 'failure', 'a later failure still fails')
+  assert.equal(checksOf(null).overall, 'none')
+})
