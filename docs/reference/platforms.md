@@ -108,3 +108,20 @@ An unknown version counts as too old, so `doctor` never fails on what the instan
 ### Data stays in
 
 On a self-managed host (`platform.host` set), `/upstream` is off by default: it shows the cleaned draft and saves it to a file, and nothing reaches the public repository. Set `upstream.enabled: true` to turn it on deliberately.
+
+## Switching platform (plan)
+
+`agent-os platform switch --to github|gitlab --project <owner/name> [--host <url>] [--map <file>] --plan` shows what moving the project to the other platform changes in the repository. It writes nothing but `.agent-os/cache/platform-switch.json`. The platform's importer moves the issues and change requests; agent-os only re-renders its own files.
+
+| Part of the plan | What |
+|---|---|
+| remove | the old route's managed files, unchanged since agent-os wrote them (the lock's hashes) |
+| conflicts | managed files edited by hand: kept, never deleted; port or eject them first |
+| add | the new route's files (`.gitlab/…` or `.github/…`) |
+| rewrite | core files whose text depends on the platform (pull request ↔ merge request, `/pr` ↔ `/mr`) |
+| ci | on GitLab, `.gitlab-ci.yml` with an `include:` of each agent-os job file, when it is missing; otherwise the includes to add by hand |
+| manual | the team's own files under the old route's folders (such as `.github/workflows/ci.yml`), to port by hand |
+| config | `platform.type`, `platform.project`, `platform.host`, and `platform.board` dropped when leaving GitHub |
+| journal | references in journal entries to re-link from the importer's map (`{"#12": "#7", "#40": "!3"}`), and the ones the map lacks |
+
+It exits 1 while conflicts or the team's own files would leave something from the old route behind. Once they are handled, no file from the old route remains. Applying the plan (one branch, `chore/platform-switch-<to>`, and one change request on the new platform) is a later step.

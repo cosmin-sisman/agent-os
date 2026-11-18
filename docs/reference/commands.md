@@ -204,7 +204,7 @@ agent-os hook <SessionStart|PreToolUse|PostToolUse|Stop>   (reads the event JSON
 Show the code platform and its login, or detect it from the git remote (GitHub, GitLab). Status: new (#90).
 
 ```
-agent-os platform [show | detect [--remote <url>] [--write] [--yes] | probe [--refresh]]
+agent-os platform [show | detect [--remote <url>] [--write] [--yes] | probe [--refresh] | switch --to github|gitlab --project <owner/name> [--host <url>] [--map <importer-map.json>] --plan]
 ```
 
 | Option | What |
@@ -213,6 +213,11 @@ agent-os platform [show | detect [--remote <url>] [--write] [--yes] | probe [--r
 | `--write` | Save the detected platform to agent-os.json (asks first) |
 | `--yes` (`-y`) | Do not ask before writing |
 | `--refresh` | probe: ask the platform again instead of using the cached map |
+| `--to <value>` | switch: the platform to move to (github or gitlab) |
+| `--project <value>` | switch: the project on the new platform (owner/name or group/name) |
+| `--host <value>` | switch: a self-managed host on the new platform, https://… |
+| `--map <value>` | switch: the importer's map of old to new references, JSON {"#12": "#7", "#40": "!3"} |
+| `--plan` | switch: show and save the plan; nothing in the repository changes |
 
 ## lang
 
