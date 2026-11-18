@@ -61,4 +61,13 @@ Changing a layer is an architecture decision, so each change does three things:
 
 Unknown layers and technologies are refused with the closest match. Setting what is already there changes nothing.
 
+## Areas from the stack
+
+Every layer in use (status `chosen`) is an **area**:
+- **Labels:** `agent-os setup` creates `area:<layer>` (in ro, `zona:<layer>`; `area::<layer>` where labels are scoped) for each layer in use. The color follows the layer's group, and the description comes from the catalog. Adding a layer to stack.yaml and running setup adds its label. Existing labels keep their color and description.
+- **Change requests:** `agent-os pr create` labels the change request with the areas of the layers its changed files fall under (the layer `paths`), next to the issue's type and area labels.
+- **Lessons:** recall before a change matches cards by the areas of the changed files, as well as by path and text.
+- **Overlap:** overlapping changes show the areas the shared files belong to.
+- **CODEOWNERS:** layers that list `owners` (logins or teams) and `paths` produce a managed block in the project's CODEOWNERS (`.github/`, `.gitlab/`, `docs/` or the root, whichever exists). The team's own lines around the block are never touched, and a block edited by hand gets a `.rej` instead of being overwritten.
+
 `detect`, `drift`, `import` and `render` come with later issues.

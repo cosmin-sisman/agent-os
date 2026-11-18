@@ -51,13 +51,19 @@ export const MILESTONES = load('milestones')
 export function label(id, lang, { scoped = false } = {}) {
   const entry = LABELS.find((l) => l.id === id)
   if (!entry) throw new CliError(`unknown core label "${id}"`)
-  const name = entry.name[lang]
+  return renderLabel(entry, lang, { scoped })
+}
+
+/** A label entry (core or generated, such as the stack's area labels) rendered for a language and platform. */
+export function renderLabel(entry, lang, { scoped = false } = {}) {
+  const id = entry.id
+  const name = entry.name[lang] ?? entry.name.en
   // Colors are quoted in labels.yaml; String/padStart also guards against an unquoted 000000 read as the number 0.
-  return { id, color: String(entry.color).padStart(6, '0'), name: scoped ? name.replace(':', '::') : name, description: entry.description[lang] }
+  return { id, color: String(entry.color).padStart(6, '0'), name: scoped ? name.replace(':', '::') : name, description: entry.description[lang] ?? entry.description.en }
 }
 
 /** Every core label for the configured `labels` language. */
-export const labelSet = (config, options) => LABELS.map((l) => label(l.id, languageFor(config, 'labels'), options))
+export const labelSet = (config, options, extra = []) => [...LABELS, ...extra].map((l) => renderLabel(l, languageFor(config, 'labels'), options))
 
 /** A core milestone title and description, with {n} and {date} filled in. */
 export function milestone(id, lang, vars = {}) {

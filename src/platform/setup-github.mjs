@@ -51,7 +51,7 @@ export function desiredRuleset(config) {
  * @param {ReturnType<import('../tracker/gh.mjs').ghClient>} client
  * @param {{ only?: string[] }} [options] areas: branches, ruleset, labels, milestones
  */
-export function planGitHubSetup(config, client, { only } = {}) {
+export function planGitHubSetup(config, client, { only, areas = [] } = {}) {
   const repo = config.platform.project
   const want = (area) => !only || only.includes(area)
   const steps = []
@@ -104,11 +104,11 @@ export function planGitHubSetup(config, client, { only } = {}) {
   if (want('labels')) {
     const existing = all(client, `repos/${repo}/labels`)
     const byName = new Map(existing.map((l) => [l.name.toLowerCase(), l]))
-    for (const l of labelSet(config)) {
+    for (const l of labelSet(config, undefined, areas)) {
       const current = byName.get(l.name.toLowerCase())
       // Existing labels are completed, never replaced: their color always stays, and so does a description someone
       // wrote. A description agent-os itself wrote (in any language) may follow the labels language.
-      const entry = LABELS.find((x) => x.id === l.id)
+      const entry = [...LABELS, ...areas].find((x) => x.id === l.id)
       const ours = (d) => !d || Object.values(entry.description).includes(d)
       if (current) {
         const keepColor = current.color.toLowerCase() !== l.color.toLowerCase()

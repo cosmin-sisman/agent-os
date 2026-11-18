@@ -2,9 +2,10 @@
 // section, how it was tested, the issue it closes), a journal entry on the branch and a passing gate for exactly
 // this commit; then it pushes, opens it, copies the issue's labels and records it on the issue.
 
+import { areaLabelName, areasFor } from '../stack/areas.mjs'
 import { CliError } from '../cli/errors.mjs'
 import { checkTitle, referencedIssues } from '../conventions/conventions.mjs'
-import { findDiacritics } from '../i18n/i18n.mjs'
+import { findDiacritics, languageFor } from '../i18n/i18n.mjs'
 import { readResult } from '../gate/gate.mjs'
 import { labelId } from './next.mjs'
 import { lessonsForChange } from '../lessons/lessons.mjs'
@@ -73,7 +74,7 @@ export function preflight({ config, git, cwd, tracker }, { title, body, base = c
   // A slot that is not bound is a warning, never a stop: the change request goes ahead without that pass.
   const warnings = []
   if (!slotsFor(config)['ui-design'] && files.some((f) => UI_FILE.test(f))) warnings.push('this change touches the user interface and no ui-design skill is bound (slots.ui-design): review the UI by hand, or bind one')
-  return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion, lessons, overlaps, warnings }
+  return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion, lessons, overlaps, warnings, files, areas: areasFor(files, cwd) }
 }
 
 /**
@@ -87,7 +88,9 @@ export function openChangeRequest(deps, { title, body, base = deps.config.branch
   const existing = tracker.pullRequestFor(pre.branch)
   if (existing) throw new CliError(`${pre.branch} already has ${vocab.cr} ${vocab.crRef}${existing.number}`, { hint: existing.url })
   const issues = referencedIssues(body)
-  const labels = [...new Set(issues.flatMap((n) => tracker.get(n).labels).filter((l) => /^(type|area):/.test(labelId(l))))]
+  // The issue's type and area labels, plus the areas of the layers the changed files belong to (stack.yaml paths).
+  const fromLayers = areasFor(pre.files ?? [], deps.cwd).map((id) => areaLabelName(id, languageFor(deps.config, 'labels')))
+  const labels = [...new Set([...issues.flatMap((n) => tracker.get(n).labels).filter((l) => /^(type|area):/.test(labelId(l))), ...fromLayers])]
   const steps = [`push ${pre.branch}`, `open "${title}" into ${base}${draft ? ' as a draft' : ''}`, ...(labels.length ? [`label it ${labels.join(', ')}`] : []), ...issues.map((n) => `record it on #${n}`)]
   if (dryRun) return { opened: false, dryRun: true, steps, labels, ...pre }
   const push = git(['push', '-u', 'origin', pre.branch])

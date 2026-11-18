@@ -2,7 +2,7 @@
 // merges only with a passing pipeline and resolved threads, approval rules where the tier has them, scoped labels and
 // the rolling milestone. Like the GitHub setup, it completes what exists and never replaces it. Design §20.
 
-import { LABELS, MILESTONES, label, languageFor, milestone } from '../i18n/i18n.mjs'
+import { LABELS, MILESTONES, label, languageFor, milestone, renderLabel } from '../i18n/i18n.mjs'
 
 const step = (area, action, description, apply) => ({ area, action, description, apply })
 const enc = encodeURIComponent
@@ -24,7 +24,7 @@ const exists = (client, path) => { try { client.rest('GET', path); return true }
  * @param {ReturnType<import('./glab.mjs').glabClient>} client
  * @param {{ only?: string[] }} [options]
  */
-export function planGitLabSetup(config, client, { only } = {}) {
+export function planGitLabSetup(config, client, { only, areas = [] } = {}) {
   const id = enc(config.platform.project)
   const p = (path) => `projects/${id}/${path}`
   const want = (area) => !only || only.includes(area)
@@ -68,8 +68,8 @@ export function planGitLabSetup(config, client, { only } = {}) {
     const lang = languageFor(config, 'labels')
     const existing = all(client, p('labels?include_ancestor_groups=false'))
     const byName = new Map(existing.map((l) => [l.name.toLowerCase(), l]))
-    for (const entry of LABELS) {
-      const l = label(entry.id, lang, { scoped: true })
+    for (const entry of [...LABELS, ...areas]) {
+      const l = renderLabel(entry, lang, { scoped: true })
       const ours = (d) => !d || Object.values(entry.description).includes(d)
       const current = byName.get(l.name.toLowerCase())
       if (current) {

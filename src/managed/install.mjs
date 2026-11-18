@@ -1,6 +1,7 @@
 // What agent-os installs into a project: the core templates plus the route of the configured platform, rendered for
 // the project's configuration. The lock records the platform, so an update only ever writes the active route.
 
+import { codeownersLines, codeownersPath } from '../stack/areas.mjs'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -58,6 +59,8 @@ export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
   items.push({ key: 'AGENTS.md#agent-os', content: agentsBlock(config), route: 'core' })
   items.push({ key: 'CLAUDE.md#agent-os', content: '@AGENTS.md', route: 'core' })
   // The hooks block in .claude/settings.json, always with the pinned command (#65).
+  // CODEOWNERS from the stack's layer owners (#75), as a block: the team's own lines are never touched.
+  if (cwd) { const owners = codeownersLines(cwd); if (owners) items.push({ key: `${codeownersPath(cwd)}#areas`, content: owners, route: 'core' }) }
   items.push({ key: '.claude/settings.json#hooks', content: hooksContent(settingsHooks(hookCommand(config, { cwd }))), route: 'core' })
   return { platform, items: items.sort((a, b) => a.key.localeCompare(b.key)), aliases: aliasesFor(platform) }
 }

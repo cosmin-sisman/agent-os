@@ -2,6 +2,7 @@
 // protected, core labels and the rolling milestone in the configured languages, and the platform route's files
 // installed. Shows the plan first; --dry-run stops there.
 
+import { areaLabelEntries } from '../stack/areas.mjs'
 import { readFileSync } from 'node:fs'
 import { CliError } from '../cli/errors.mjs'
 import { loadConfig } from '../config/config.mjs'
@@ -25,7 +26,7 @@ const version = () => JSON.parse(readFileSync(new URL('../../package.json', impo
  */
 export function runSetup(ctx, config, only) {
   const remoteAreas = (only ?? SETUP_AREAS).filter((a) => a !== 'files')
-  const steps = remoteAreas.length ? planPlatformSetup(config, { gh: ctx.io.gh, glab: ctx.io.glab, only: remoteAreas }) : []
+  const steps = remoteAreas.length ? planPlatformSetup(config, { gh: ctx.io.gh, glab: ctx.io.glab, only: remoteAreas, areas: areaLabelEntries(ctx.cwd) }) : []
   const lines = steps.map((s) => (s.action === 'keep' ? s.description : `${ctx.dryRun ? 'would ' : ''}${s.description}`))
   const applied = []
   if (!ctx.dryRun) for (const s of steps.filter((x) => x.action !== 'keep')) { s.apply(); applied.push(s.description) }
