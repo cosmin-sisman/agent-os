@@ -13,6 +13,7 @@ import { readJournal, validate as validateEntry } from '../journal/journal.mjs'
 import { readLessons, validateCard } from '../lessons/lessons.mjs'
 import { checkDecisions } from '../decisions/decisions.mjs'
 import { readLock } from '../managed/managed.mjs'
+import { OUTSIDE, readRegistry } from '../registry/registry.mjs'
 import { matches } from '../util/glob.mjs'
 import { legacyFeatures, lifecycleOf, noticeFor } from '../lifecycle/legacy.mjs'
 import { readExceptions, deprecatedInUse } from '../lifecycle/manifest.mjs'
@@ -57,26 +58,30 @@ export function frontMatter(text) {
 
 // ── Local checks ───────────────────────────────────────────────────────────
 
-/** Every skill folder has a registry entry (or is managed by agent-os), every entry a folder, every SKILL.md its front matter. */
+/** Every skill folder has a valid registry entry, every entry (but plugin and builtin) a folder, every SKILL.md its front matter. */
 function skills({ cwd }) {
   const out = []
   const managed = new Set(Object.keys(readLock(cwd).items).map((k) => k.match(/^\.claude\/skills\/([^/]+)\//)?.[1]).filter(Boolean))
   const registry = new Map()
-  for (const f of walk(cwd, REGISTRY).filter((p) => p.endsWith('.json'))) {
-    try { const e = JSON.parse(read(cwd, f)); registry.set(e.name ?? f.split('/').pop().slice(0, -5), { ...e, file: f }) } catch { out.push({ level: 'fail', message: `${f} is not valid JSON`, path: f, fix: 'fix the syntax (see design §6 for the fields)' }) }
+  for (const r of readRegistry(cwd)) {
+    if (r.problems.length) out.push({ level: 'fail', path: r.path, message: `${r.path}: ${r.problems.join('; ')}`, fix: 'fix the entry (design §6), or agent-os skill register <name> --origin … --force' })
+    if (r.entry?.name) registry.set(r.entry.name, { ...r.entry, file: r.path })
   }
   const folders = dirs(cwd, SKILLS)
   for (const name of folders) {
     const path = `${SKILLS}/${name}/SKILL.md`
     const text = read(cwd, path)
-    if (!managed.has(name) && !registry.has(name)) out.push({ level: 'fail', path: `${SKILLS}/${name}`, message: `the skill folder ${SKILLS}/${name} has no registry entry`, fix: `add ${REGISTRY}/${name}.json with its origin (local, external), source and what it provides (design §6), or remove the folder` })
+    if (!registry.has(name)) {
+      if (managed.has(name)) out.push({ level: 'warn', path: `${SKILLS}/${name}`, message: `${SKILLS}/${name} is managed by agent-os but has no registry entry`, fix: 'agent-os update (it writes the core entries)' })
+      else out.push({ level: 'fail', path: `${SKILLS}/${name}`, message: `the skill folder ${SKILLS}/${name} has no registry entry`, fix: `agent-os skill register ${name} --origin local (or external with --source), or remove the folder` })
+    }
     if (text === null) { out.push({ level: 'fail', path: `${SKILLS}/${name}`, message: `${SKILLS}/${name} has no SKILL.md`, fix: `add ${path} or remove the folder` }); continue }
     const fm = frontMatter(text)
     if (!fm?.name || !fm?.description) out.push({ level: 'fail', path, message: `${path} needs front matter with name and description`, fix: 'add a --- block with name: and description: at the top' })
     else if (fm.name !== name) out.push({ level: 'warn', path, message: `${path} is named "${fm.name}" but lives in ${name}/`, fix: `rename the folder or set name: ${name}` })
   }
   for (const [name, e] of registry) {
-    if (['plugin', 'builtin'].includes(e.origin)) continue
+    if (OUTSIDE.includes(e.origin)) continue
     if (!folders.includes(name)) out.push({ level: 'fail', path: e.file, message: `${e.file} registers "${name}", which has no folder in ${SKILLS}/`, fix: `restore ${SKILLS}/${name}/ or delete ${e.file}` })
   }
   return out.length ? out : [ok(`${folders.length} skill(s), all registered`)]

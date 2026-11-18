@@ -11,6 +11,7 @@ import { hooksContent } from './managed.mjs'
 import { settingsHooks } from '../hooks/runner.mjs'
 import { hookCommand } from '../version/pin.mjs'
 import { CliError } from '../cli/errors.mjs'
+import { coreEntry, REGISTRY_DIR } from '../registry/registry.mjs'
 
 export const TEMPLATES = fileURLToPath(new URL('../../templates/', import.meta.url))
 
@@ -34,6 +35,13 @@ export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
       seen.set(f.path, route)
       items.push({ key: f.path, content: f.content, route })
     }
+  }
+  // One registry entry per core skill (#38): the registry describes every skill on disk.
+  for (const it of [...items]) {
+    const m = it.key.match(/^\.claude\/skills\/([^/]+)\/SKILL\.md$/)
+    if (!m) continue
+    const description = it.content.match(/^description:\s*(.+)$/m)?.[1].trim().replace(/^["']|["']$/g, '').split(/(?<=\.)\s/)[0]
+    items.push({ key: `${REGISTRY_DIR}/${m[1]}.json`, content: `${JSON.stringify(coreEntry(m[1], { version: config.version ?? null, description }), null, 2)}\n`, route: it.route })
   }
   // Managed blocks in the agent files: the team's own text around them is never touched (#49).
   items.push({ key: 'AGENTS.md#agent-os', content: agentsBlock(config), route: 'core' })

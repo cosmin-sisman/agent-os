@@ -35,11 +35,11 @@ test('a fresh install has 0 FAIL, on GitHub and on GitLab, in en and ro', () => 
 test('given a skill folder without a registry entry, doctor fails naming it; an entry without a folder fails too', () => {
   const cwd = freshInstall()
   try {
-    write(cwd, { '.claude/skills/deploy/SKILL.md': '---\nname: deploy\ndescription: Deploy it.\n---\n', '.agent-os/registry/gone.json': '{"name":"gone","origin":"external"}', '.agent-os/registry/code-review.json': '{"name":"code-review","origin":"builtin"}' })
+    write(cwd, { '.claude/skills/deploy/SKILL.md': '---\nname: deploy\ndescription: Deploy it.\n---\n', '.agent-os/registry/gone.json': '{"name":"gone","origin":"external","source":"github:acme/gone@v1"}', '.agent-os/registry/code-review.json': '{"name":"code-review","origin":"builtin"}' })
     const r = doctor(cwd)
     const f = findings(r, 'skills')
     assert.deepEqual(f.map((x) => x.message), ['the skill folder .claude/skills/deploy has no registry entry', '.agent-os/registry/gone.json registers "gone", which has no folder in .claude/skills/'])
-    assert.match(f[0].fix, /\.agent-os\/registry\/deploy\.json/)
+    assert.match(f[0].fix, /agent-os skill register deploy --origin local/)
     assert.equal(r.summary.fail > 0, true)
     write(cwd, { '.agent-os/registry/deploy.json': '{"name":"deploy","origin":"local"}' })
     rmSync(join(cwd, '.agent-os/registry/gone.json'))
