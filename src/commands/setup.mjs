@@ -26,9 +26,9 @@ const version = () => JSON.parse(readFileSync(new URL('../../package.json', impo
 export function runSetup(ctx, config, only) {
   const remoteAreas = (only ?? SETUP_AREAS).filter((a) => a !== 'files')
   const steps = remoteAreas.length ? planPlatformSetup(config, { gh: ctx.io.gh, only: remoteAreas }) : []
-  const lines = steps.map((s) => `${ctx.dryRun ? 'would ' : ''}${s.description}`)
+  const lines = steps.map((s) => (s.action === 'keep' ? s.description : `${ctx.dryRun ? 'would ' : ''}${s.description}`))
   const applied = []
-  if (!ctx.dryRun) for (const s of steps) { s.apply(); applied.push(s.description) }
+  if (!ctx.dryRun) for (const s of steps.filter((x) => x.action !== 'keep')) { s.apply(); applied.push(s.description) }
   let files = null
   if (!only || only.includes('files')) {
     const r = installRoutes(ctx.cwd, config, { version: version(), dryRun: ctx.dryRun })
@@ -36,7 +36,8 @@ export function runSetup(ctx, config, only) {
     for (const f of r.results.filter((x) => x.action !== 'unchanged')) lines.push(`${ctx.dryRun ? 'would ' : ''}${f.action === 'conflict' ? `keep ${f.key} (local edits conflict; see ${f.rej ?? `${f.key}.rej`})` : `${f.action.replace('installed', 'install')} ${f.key}`}`)
   }
   const plan = steps.map(({ area, action, description }) => ({ area, action, description }))
-  ctx.output({ dryRun: ctx.dryRun, steps: plan, files }, lines.length ? lines.join('\n') : 'nothing to change: the repository is already set up')
+  const changes = steps.some((x) => x.action !== 'keep') || (files ?? []).some((f) => f.action !== 'unchanged')
+  ctx.output({ dryRun: ctx.dryRun, steps: plan, files }, (changes ? lines : [...lines, 'nothing to change: the repository is already set up']).join('\n'))
   return files ? exitCodeFor(files) : 0
 }
 

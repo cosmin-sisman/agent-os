@@ -106,16 +106,23 @@ export function planGitHubSetup(config, client, { only } = {}) {
     const byName = new Map(existing.map((l) => [l.name.toLowerCase(), l]))
     for (const l of labelSet(config)) {
       const current = byName.get(l.name.toLowerCase())
+      // Existing labels are completed, never replaced: their color always stays, and so does a description someone
+      // wrote. A description agent-os itself wrote (in any language) may follow the labels language.
+      const entry = LABELS.find((x) => x.id === l.id)
+      const ours = (d) => !d || Object.values(entry.description).includes(d)
       if (current) {
-        if (current.color.toLowerCase() !== l.color.toLowerCase() || (current.description ?? '') !== l.description) {
-          steps.push(step('labels', 'update', `update label ${l.name}: color or description`, () => client.rest('PATCH', `repos/${repo}/labels/${encodeURIComponent(current.name)}`, { color: l.color, description: l.description })))
+        const keepColor = current.color.toLowerCase() !== l.color.toLowerCase()
+        if (current.description !== l.description && ours(current.description)) {
+          steps.push(step('labels', 'update', `set the description of label ${l.name}${current.description ? ' in the labels language' : ' (it had none)'}; its color stays`, () => client.rest('PATCH', `repos/${repo}/labels/${encodeURIComponent(current.name)}`, { description: l.description })))
+        } else if (keepColor || !ours(current.description)) {
+          steps.push(step('labels', 'keep', `keep label ${l.name} as it is: ${[keepColor && `color #${current.color} (the convention uses #${l.color})`, !ours(current.description) && 'its own description'].filter(Boolean).join(' and ')}`, () => {}))
         }
         continue
       }
-      const entry = LABELS.find((x) => x.id === l.id)
       const other = Object.values(entry.name).map((n) => byName.get(n.toLowerCase())).find(Boolean)
       if (other) {
-        steps.push(step('labels', 'rename', `rename label ${other.name} → ${l.name} (it stays on its issues)`, () => client.rest('PATCH', `repos/${repo}/labels/${encodeURIComponent(other.name)}`, { new_name: l.name, color: l.color, description: l.description })))
+        const patch = { new_name: l.name, ...(ours(other.description) ? { description: l.description } : {}) }
+        steps.push(step('labels', 'rename', `rename label ${other.name} → ${l.name} (it stays on its issues; its color${ours(other.description) ? '' : ' and its own description'} stay${ours(other.description) ? 's' : ''})`, () => client.rest('PATCH', `repos/${repo}/labels/${encodeURIComponent(other.name)}`, patch)))
       } else {
         steps.push(step('labels', 'create', `create label ${l.name}`, () => client.rest('POST', `repos/${repo}/labels`, { name: l.name, color: l.color, description: l.description })))
       }
@@ -134,7 +141,7 @@ export function planGitHubSetup(config, client, { only } = {}) {
     if (!current && otherLang) {
       const n = Object.keys(entry.title).map((l) => matches(otherLang, l)).find(Boolean)[1]
       const next = milestone('rolling-release', lang, { n })
-      steps.push(step('milestones', 'rename', `rename milestone "${otherLang.title}" → "${next.title}" (its issues stay)`, () => client.rest('PATCH', `repos/${repo}/milestones/${otherLang.number}`, { title: next.title, description: next.description })))
+      steps.push(step('milestones', 'rename', `rename milestone "${otherLang.title}" → "${next.title}" (its issues, due date${otherLang.description ? ' and description' : ''} stay)`, () => client.rest('PATCH', `repos/${repo}/milestones/${otherLang.number}`, { title: next.title, ...(otherLang.description ? {} : { description: next.description }) })))
     } else if (!current) {
       const done = milestones.map((m) => Number(m.title.match(/Release (\d+)/)?.[1] ?? 0))
       const next = milestone('rolling-release', lang, { n: Math.max(0, ...done) + 1 })
