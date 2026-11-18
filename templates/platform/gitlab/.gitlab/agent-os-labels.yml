@@ -1,6 +1,6 @@
 {{#if ci.labels}}
 # Keeps the project's labels in step with agent-os.json and stack.yaml (agent-os setup --only labels): it completes
-# labels and never replaces or deletes them. Include it from .gitlab-ci.yml (include: - local: .gitlab/agent-os-labels.yml).
+# labels and never replaces or deletes them. agent-os includes it from .gitlab-ci.yml (the managed `include` block) (include: - local: .gitlab/agent-os-labels.yml).
 #   agent-os/labels-preview: in a merge request pipeline it only reports what would change. It reads labels with
 #                            AGENT_OS_LABELS_READ_TOKEN (read_api) when set, and otherwise skips; it never writes.
 #   agent-os/labels:         on a push to the protected {{{branches.integration}}} branch only, with AGENT_OS_LABELS_TOKEN: a project

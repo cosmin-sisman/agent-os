@@ -16,7 +16,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
 import { planInstall } from '../managed/install.mjs'
-import { readLock, removeManaged } from '../managed/managed.mjs'
+import { placeInclude, readLock, removeManaged } from '../managed/managed.mjs'
 
 export const PLAN_FILE = '.agent-os/cache/platform-switch.json'
 const ROUTE_DIRS = { github: ['.github'], gitlab: ['.gitlab'] }
@@ -71,10 +71,16 @@ export function switchPlan(cwd, config, { to, project, host, map = {} }) {
   const managedPaths = new Set(Object.keys(lock.items).map((k) => k.split('#')[0]))
   const manual = (ROUTE_DIRS[from] ?? []).flatMap((d) => walk(cwd, d)).filter((f) => !managedPaths.has(f)).sort()
   const ci = []
-  if (to === 'gitlab') {
-    const includes = after.items.filter((i) => /^\.gitlab\/agent-os-[\w-]+\.yml$/.test(i.key)).map((i) => i.key)
-    if (existsSync(join(cwd, '.gitlab-ci.yml'))) ci.push({ path: '.gitlab-ci.yml', action: 'edit by hand', why: 'it exists: add the includes to its include: list', includes })
-    else ci.push({ path: '.gitlab-ci.yml', action: 'add', content: ['# The CI entry point: the agent-os jobs, included from the files agent-os manages.', 'include:', ...includes.map((p) => `  - local: ${p}`), ''].join('\n'), includes })
+  // The include block install writes (#233), previewed with the same placer: added, completed, or left to the person.
+  const include = after.items.find((i) => i.key === '.gitlab-ci.yml#include')
+  if (include) {
+    const file = join(cwd, '.gitlab-ci.yml')
+    const existing = existsSync(file) ? readFileSync(file, 'utf8') : ''
+    const content = placeInclude(existing, `# agent-os:begin include\n${include.content}\n# agent-os:end include`)
+    const includes = include.content.split('\n').map((l) => l.replace(/^\s*- local: /, ''))
+    ci.push(content === null
+      ? { path: '.gitlab-ci.yml', action: 'edit by hand', why: 'its include: is not a list agent-os can complete', includes }
+      : { path: '.gitlab-ci.yml', action: existing ? 'complete' : 'add', why: existing ? 'the agent-os includes go into its include list' : undefined, content, includes })
   }
   if (to === 'github' && existsSync(join(cwd, '.gitlab-ci.yml'))) ci.push({ path: '.gitlab-ci.yml', action: manual.includes('.gitlab-ci.yml') ? 'port by hand' : 'remove', why: 'GitHub runs .github/workflows/' })
   const configChanges = [

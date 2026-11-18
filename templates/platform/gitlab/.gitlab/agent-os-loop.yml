@@ -1,7 +1,6 @@
 {{#if ci.loop}}
-# The self-improvement loop, enforced on every merge request (agent-os, design §10). Include it from .gitlab-ci.yml:
-#   include:
-#     - local: .gitlab/agent-os-loop.yml
+# The self-improvement loop, enforced on every merge request (agent-os, design §10). agent-os includes it from .gitlab-ci.yml
+# (the managed `include` block, inside the project's own include list).
 # It passes when doctor --ci has no failure, the Lessons section says something, and a lesson or decision has its
 # journal entry. Managed by agent-os: change it through agent-os.json, not by hand.
 agent-os/loop:
