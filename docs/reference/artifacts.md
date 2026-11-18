@@ -31,4 +31,15 @@ agent-os artifact log <id>         # the folder's git history
 - **list** shows each artifact with its type, kind and status, its stale sources and its problems, newest first.
 - **log** lists commit, date, author and subject for the artifact's folder.
 
-`build`, `verify`, `link` and `publish` come with later issues. The Pages build (`npm run site`) already indexes every artifact and marks stale ones.
+## Build and verify
+
+```sh
+agent-os artifact build <id> [--dry-run]   # a page made from template.html and its sources
+agent-os artifact build --living           # every living artifact that has a template (what CI rebuilds)
+agent-os artifact verify [<id>] [--strict] # stale when a source changed; --strict exits 1 then
+```
+
+- **build** takes `template.html` from the artifact's folder and replaces its `__DATA__` placeholder with every YAML or JSON source, parsed and keyed by file name (`catalog/layers.yaml` → `layers`). The data is embedded as ASCII JSON that cannot close its `<script>`. A template that is a fragment gets the document skeleton. Then build records a sha256 for every source, the template included, in `artifact.yaml`; the rest of the file is kept. An artifact with no template is written by hand, and build refuses it.
+- **verify** compares each source with its recorded hash. A changed or missing source makes the artifact stale. A living one is rebuilt with `build`; a snapshot stays as it was, since a new date makes a new artifact. Without `--strict` stale artifacts are reported and the command exits 0; with `--strict` it exits 1. `list` and the Pages index show the same staleness.
+
+`link` and `publish` come with later issues. Rebuilding living artifacts in a project's CI comes with the installable Pages workflow (#84).
