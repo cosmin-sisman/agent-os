@@ -12,7 +12,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 
 - All repository text is in English. The *installed* templates exist in `en` and `ro`; `ro` is Romanian **without diacritics** (ASCII only).
 - Zero runtime dependencies. Use only Node built-ins (`node:fs`, `node:child_process`, `node:test`, `node:util` `parseArgs`).
-- Every mechanical step is a CLI subcommand with `--dry-run` and `--json`. Skills call the CLI; they never build `gh` or `git` commands from scratch.
+- Every mechanical step is a CLI subcommand with `--dry-run` and `--json`. A command never writes to stdout or stderr directly: it calls `ctx.output()` and `ctx.debug()` and throws `CliError` with a hint; exit codes are 0 ok, 1 check failed, 2 could not run. A new command is a registry entry plus a file in `src/commands/`. Skills call the CLI; they never build `gh` or `git` commands from scratch.
 - Tests are `*.test.mjs` next to the code they test, using `node:test`; `npm test` runs them all. The required check is the `ci` job (`.github/workflows/ci.yml`).
 - Text files are LF on every OS (`.gitattributes`): artifacts record sha256 hashes of their sources.
 - Never commit generated indexes or caches. They are rendered on demand into `.agent-os/cache/`.
@@ -25,6 +25,9 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 
 | Path | What |
 |---|---|
+| `bin/agent-os.mjs` | the executable; it only calls `src/cli/main.mjs` |
+| `src/cli/` | the runner (`main.mjs`), the command registry with lifecycle states (`registry.mjs`), global options, the `Context` every command receives, exit codes and `CliError` |
+| `src/commands/` | one file per implemented command, exporting `run(ctx)` and optionally `options` and `usage` |
 | `docs/design/` | the target design |
 | `docs/decisions/` | decision records, date-based ids |
 | `docs/research/` | research notes behind decisions |

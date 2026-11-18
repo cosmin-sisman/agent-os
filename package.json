@@ -4,8 +4,21 @@
   "description": "A working agreement between people, coding agents and GitHub, installed into any repository with one command.",
   "type": "module",
   "private": true,
+  "bin": {
+    "agent-os": "bin/agent-os.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "catalog/",
+    "!**/*.test.mjs"
+  ],
   "engines": {
     "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "site": "node scripts/site/build.mjs _site --strict"
   },
   "license": "MIT",
   "repository": {
@@ -19,9 +32,5 @@
     "github",
     "workflow",
     "ai-coding"
-  ],
-  "scripts": {
-    "test": "node --test",
-    "site": "node scripts/site/build.mjs _site --strict"
-  }
+  ]
 }
