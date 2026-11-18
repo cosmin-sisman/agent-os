@@ -15,6 +15,7 @@
     "templates/",
     "migrations/",
     "manifest.json",
+    "changelog.yaml",
     "!**/*.test.mjs",
     "!**/__fixtures__/**"
   ],

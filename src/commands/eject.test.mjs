@@ -30,7 +30,7 @@ test('eject removes a path from management, with --dry-run first', async () => {
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 
-test('update --relock rebuilds a broken lock; update alone points to #68', async () => {
+test('update --relock rebuilds a broken lock', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'aos-relock-'))
   try {
     applyManaged(dir, [{ key: 'a.md', content: 'a\n' }], { version: '0.1.0' })
@@ -39,9 +39,6 @@ test('update --relock rebuilds a broken lock; update alone points to #68', async
     assert.equal(r.code, 0)
     assert.match(r.stdout, /rebuilt \.agent-os\/lock\.json: 1 managed item/)
     assert.ok(readLock(dir).items['a.md'])
-    const planned = await cli(dir, 'update')
-    assert.equal(planned.code, 2)
-    assert.match(planned.stderr, /issues\/68/)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
 

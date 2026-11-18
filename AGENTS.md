@@ -34,7 +34,9 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 | `src/platform/` | platform detection: remotes, known hosts, probing unknown hosts (`detect.mjs`); a fake network for tests in `__fixtures__/` |
 | `migrations/` | one migration per version that changes projects (`<version>.mjs`), with a fixture project each in `__fixtures__/`; contract in its README |
 | `src/migrations/` | the migrations runner: order, idempotency, dry runs, the lock record |
+| `changelog.yaml` | what each release changes, by group; read by `update --plan` and the release notes |
 | `src/lifecycle/` | the lifecycle manifest (`manifest.mjs`) and its exceptions (`lifecycle.yaml`); `manifest.json` at the root is the last release's baseline, rebuilt at release |
+| `src/update/` | the update flow: plan (grouped changes from `changelog.yaml` and the manifest), preflight, branch, migrations, apply, journal, gate, change request (`update.mjs`) |
 | `src/version/` | the pinned version: the hook command, mismatch checks (`pin.mjs`) |
 | `src/managed/install.mjs` | the install plan: core plus the active platform route, rendered; the lock records the platform |
 | `src/managed/` | managed files: three-way merge (`merge3.mjs`), the lock, merge bases, Markdown blocks, settings.json hooks, eject and relock (`managed.mjs`) |
