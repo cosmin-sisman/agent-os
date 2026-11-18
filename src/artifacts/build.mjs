@@ -26,7 +26,8 @@ export function pageFrom(template, data) {
 
 /** Replaces the `sources:` block of artifact.yaml text with fresh hashes, keeping everything else. */
 export function withSources(text, sources) {
-  const block = ['sources:', ...sources.map((s) => `  - path: ${s.path}\n    sha256: ${s.sha256}`)].join('\n')
+  // Hashes are quoted: an all-digit hash (or one like 12e45…) would otherwise be read back as a number.
+  const block = ['sources:', ...sources.map((s) => `  - path: ${s.path}\n    sha256: "${s.sha256}"`)].join('\n')
   const lines = text.split('\n')
   const at = lines.findIndex((l) => /^sources:/.test(l))
   if (at < 0) return `${text.replace(/\s*$/, '')}\n${block}\n`

@@ -115,6 +115,7 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `npmRegistry` | team | string |  | The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs |
 | `artifacts` | team | object | `{}` | Artifacts (artifacts/<date>-<slug>/) |
 | `artifacts.maxPageKb` | team | integer | `2048` | doctor warns when an artifact page is larger than this |
+| `artifacts.pages` | team | boolean | `false` | Install the workflow that publishes artifacts to GitHub or GitLab Pages (the index is built in CI, never committed) |
 | `ci` | team | object | `{}` | How generated CI jobs run: image and runners |
 | `ci.image` | team | string |  | The container image generated CI jobs run in, e.g. from the internal registry (default node:22) |
 | `ci.tags` | team | array | `[]` | Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels) |

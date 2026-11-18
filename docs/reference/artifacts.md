@@ -42,4 +42,28 @@ agent-os artifact verify [<id>] [--strict] # stale when a source changed; --stri
 - **build** takes `template.html` from the artifact's folder and replaces its `__DATA__` placeholder with every YAML or JSON source, parsed and keyed by file name (`catalog/layers.yaml` → `layers`). The data is embedded as ASCII JSON that cannot close its `<script>`. A template that is a fragment gets the document skeleton. Then build records a sha256 for every source, the template included, in `artifact.yaml`; the rest of the file is kept. An artifact with no template is written by hand, and build refuses it.
 - **verify** compares each source with its recorded hash. A changed or missing source makes the artifact stale. A living one is rebuilt with `build`; a snapshot stays as it was, since a new date makes a new artifact. Without `--strict` stale artifacts are reported and the command exits 0; with `--strict` it exits 1. `list` and the Pages index show the same staleness.
 
-`link` and `publish` come with later issues. Rebuilding living artifacts in a project's CI comes with the installable Pages workflow (#84).
+## The site: `agent-os artifact site` and the Pages workflow
+
+```sh
+agent-os artifact site [<out>] [--strict]   # default out: .agent-os/cache/site (ignored by git)
+```
+
+It copies every valid artifact folder (without build-only files such as `template.html`) and writes an `index.html`:
+- sections by type, newest first;
+- each card shows the date, kind, status, `areas` (an optional list in `artifact.yaml`), linked items and the verification status (sources verified, or stale);
+- an index by linked item.
+
+Links point at the platform (`#N` → issues, `!N` → merge requests, on a self-managed host too). The index is self-contained like the artifacts. It is built in CI and never committed: the command refuses an output folder inside `artifacts/`. `--strict` exits 1 when an artifact is stale or has invalid metadata.
+
+**The workflow.** Set `"artifacts": { "pages": true }` in `agent-os.json` and install. That adds `.github/workflows/agent-os-pages.yml` (GitHub Pages, deployed with `actions/deploy-pages`) or `.gitlab/agent-os-pages.yml` (a `pages` job; include it from `.gitlab-ci.yml`). Without the setting, no Pages workflow is installed. On a push to the integration branch that touches `artifacts/`, the job:
+1. rebuilds living artifacts (`artifact build --living`);
+2. builds the site;
+3. publishes it.
+
+Both pass `agent-os ci review`, and they use `ci.image`, `ci.tags` and `npmRegistry` like the other generated jobs.
+
+**Private repositories.**
+- GitHub Pages for a private repository needs a plan that supports it (Enterprise Cloud can restrict it to members).
+- On GitLab, the Pages access control setting limits the site to project members. If the administrator disabled Pages, the job still keeps the site as its artifact (30 days), linked from the pipeline.
+
+`link` and `publish` come with later issues.

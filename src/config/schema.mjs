@@ -100,6 +100,7 @@ export const SCHEMA = obj({
   npmRegistry: str('The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs', { pattern: '^https?://' }),
   artifacts: obj({
     maxPageKb: int('doctor warns when an artifact page is larger than this', { minimum: 16, default: 2048 }),
+    pages: bool('Install the workflow that publishes artifacts to GitHub or GitLab Pages (the index is built in CI, never committed)', { default: false }),
   }, 'Artifacts (artifacts/<date>-<slug>/)', { default: {} }),
   ci: obj({
     image: str('The container image generated CI jobs run in, e.g. from the internal registry (default node:22)'),

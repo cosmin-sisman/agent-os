@@ -576,6 +576,11 @@
           "description": "doctor warns when an artifact page is larger than this",
           "minimum": 16,
           "default": 2048
+        },
+        "pages": {
+          "type": "boolean",
+          "description": "Install the workflow that publishes artifacts to GitHub or GitLab Pages (the index is built in CI, never committed)",
+          "default": false
         }
       },
       "additionalProperties": false

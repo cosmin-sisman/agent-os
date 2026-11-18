@@ -93,6 +93,7 @@ test('every workflow agent-os generates passes its own review: no errors, no war
   const variants = [
     {}, { version: '0.4.2' },
     { version: '0.4.2', npmRegistry: 'https://npm.corp/', ci: { image: 'registry.corp/node:22', tags: ['internal'] } },
+    { version: '0.4.2', artifacts: { pages: true } },
   ]
   let reviewed = 0
   for (const type of ['github', 'gitlab']) {

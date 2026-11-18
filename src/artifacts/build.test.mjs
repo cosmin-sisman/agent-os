@@ -33,8 +33,8 @@ test('a fragment template gets the document skeleton; a full document is left as
 
 test('the sources block is replaced and the rest of artifact.yaml kept', () => {
   const text = '# c\nid: x\nsources:\n  - path: a\n    sha256: old\nrefs: ["#1"]\n'
-  assert.equal(withSources(text, [{ path: 'a', sha256: 'new' }]), '# c\nid: x\nsources:\n  - path: a\n    sha256: new\nrefs: ["#1"]\n')
-  assert.equal(withSources('id: x\n', [{ path: 'a', sha256: 'h' }]), 'id: x\nsources:\n  - path: a\n    sha256: h\n')
+  assert.equal(withSources(text, [{ path: 'a', sha256: 'new' }]), '# c\nid: x\nsources:\n  - path: a\n    sha256: "new"\nrefs: ["#1"]\n')
+  assert.equal(withSources('id: x\n', [{ path: 'a', sha256: 'h' }]), 'id: x\nsources:\n  - path: a\n    sha256: "h"\n')
 })
 
 test('given a catalog change, the stack map shows as stale until rebuilt; verify fails only with --strict', async () => {
