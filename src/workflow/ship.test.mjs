@@ -126,3 +126,10 @@ test('--keep-branch and forks keep the branch; --dry-run merges nothing', () => 
   assert.deepEqual(d.calls, [])
   assert.match(r.steps[0], /^merge PR #160 into development \(squash, head abc1234\)$/)
 })
+
+test('a Refs issue that was already closed (a follow-up fix) gets a follow-up comment, not "stays open", and is not reopened', () => {
+  const t = fakeTracker({ states: { 4: 'open', 5: 'closed' } })
+  const r = run(t)
+  assert.deepEqual(t.calls.filter((c) => c[1] === 5), [['comment', 5, 'PR #160 is merged; it follows up on this issue.']])
+  assert.deepEqual(r.issues[1], { number: 5, action: 'commented, already closed' })
+})

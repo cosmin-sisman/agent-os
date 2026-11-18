@@ -47,12 +47,14 @@ const TEXT = {
   en: {
     closed: (cr) => `Shipped in ${cr}.`,
     stays: (cr) => `${cr} is merged and is part of this issue, which stays open.`,
+    related: (cr) => `${cr} is merged; it follows up on this issue.`,
     reopened: (cr) => `Reopened: ${cr} only references this issue (Refs), so it is not done yet.`,
     back: (who, problems, base) => `@${who}, this cannot be merged yet: ${problems.join('; ')}. Please update it from ${base} and push; /ship will merge it once it is green.`,
   },
   ro: {
     closed: (cr) => `Livrat in ${cr}.`,
     stays: (cr) => `${cr} a fost integrat si face parte din acest issue, care ramane deschis.`,
+    related: (cr) => `${cr} a fost integrat; continua acest issue.`,
     reopened: (cr) => `Redeschis: ${cr} doar face referire la acest issue (Refs), deci nu e gata inca.`,
     back: (who, problems, base) => `@${who}, nu se poate integra inca: ${problems.join('; ')}. Te rog actualizeaza din ${base} si fa push; /ship il integreaza cand e verde.`,
   },
@@ -80,7 +82,7 @@ export function ship({ config, tracker, caps, git, vocab }, { number, issuesLang
   const steps = [
     `merge ${cr} into ${s.base} (${config.branches.mergeMethod ?? 'squash'}, head ${String(s.head).slice(0, 7)})`,
     ...closes.map((n) => `close #${n} with a comment${has(caps, 'board') ? ' and set it to Done' : ''}`),
-    ...refs.map((n) => `comment on #${n}; it stays open`),
+    ...refs.map((n) => `comment on #${n}${before.get(n) === 'closed' ? ' (already closed)' : '; it stays open'}`),
     ...(keepBranch || s.fork ? [] : [`delete the branch ${s.branch}`]),
   ]
   if (dryRun) return { shipped: false, dryRun: true, number, steps, closes, refs }
@@ -98,6 +100,7 @@ export function ship({ config, tracker, caps, git, vocab }, { number, issuesLang
   for (const n of refs) {
     const now = tracker.get(n).state
     if (now === 'closed' && before.get(n) === 'open') { tracker.update(n, { state: 'open' }); tracker.comment(n, t.reopened(cr)); issues.push({ number: n, action: 'reopened' }) }
+    else if (now === 'closed') { tracker.comment(n, t.related(cr)); issues.push({ number: n, action: 'commented, already closed' }) }
     else { tracker.comment(n, t.stays(cr)); issues.push({ number: n, action: 'commented, stays open' }) }
   }
   const cleanup = keepBranch || s.fork ? [] : cleanBranch({ tracker, git, config }, s.branch)
