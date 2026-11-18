@@ -29,6 +29,12 @@ export function parse(text, { file = '<input>' } = {}) {
   const lines = tokenize(text, file)
   const state = { lines, i: 0, file }
   if (!lines.length) return null
+  // A document that is a single inline value: `[]`, `{a: 1}`, `"text"` or a plain scalar.
+  if (lines.length === 1 && !isItem(lines[0].text) && !splitKey(lines[0].text)) {
+    const value = parseInline(state, lines[0], lines[0].text, lines[0].indent)
+    state.i = 1
+    return value
+  }
   const value = parseBlock(state, lines[0].indent)
   if (state.i < lines.length) {
     const l = lines[state.i]

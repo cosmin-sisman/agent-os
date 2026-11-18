@@ -15,6 +15,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 - Every mechanical step is a CLI subcommand with `--dry-run` and `--json`. A command never writes to stdout or stderr directly: it calls `ctx.output()` and `ctx.debug()` and throws `CliError` with a hint; exit codes are 0 ok, 1 check failed, 2 could not run. A new command is a registry entry plus a file in `src/commands/`. Skills call the CLI; they never build `gh` or `git` commands from scratch.
 - Tests are `*.test.mjs` next to the code they test, using `node:test`; `npm test` runs them all. The required check is the `ci` job (`.github/workflows/ci.yml`).
 - Text files are LF on every OS (`.gitattributes`): artifacts record sha256 hashes of their sources.
+- Removing or renaming anything shipped (a command, flag, config key, template, catalog entry, hook handler) first goes through `src/lifecycle/lifecycle.yaml`: deprecate it with a replacement and a removal version. A test fails the PR otherwise.
 - Never commit generated indexes or caches. They are rendered on demand into `.agent-os/cache/`.
 - Hooks and scripts must run on Windows, macOS and Linux: Node only, no shell-specific syntax.
 - `--dry-run` stubs return the same shape as the real call (an empty list, not `{}`), or the dry run crashes where the real run works. (lesson: dry-run-shapes)
@@ -30,6 +31,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 | `src/config/` | the configuration schema (one definition for validation, defaults and the published JSON Schemas) and the loader for `agent-os.json` + `.agent-os/local.json` |
 | `src/templates/` | the template engine (`engine.mjs`) and folder rendering with language variants (`tree.mjs`); test fixtures in `__fixtures__/` (not published) |
 | `src/platform/` | platform detection: remotes, known hosts, probing unknown hosts (`detect.mjs`); a fake network for tests in `__fixtures__/` |
+| `src/lifecycle/` | the lifecycle manifest (`manifest.mjs`) and its exceptions (`lifecycle.yaml`); `manifest.json` at the root is the last release's baseline, rebuilt at release |
 | `src/version/` | the pinned version: the hook command, mismatch checks (`pin.mjs`) |
 | `src/managed/install.mjs` | the install plan: core plus the active platform route, rendered; the lock records the platform |
 | `src/managed/` | managed files: three-way merge (`merge3.mjs`), the lock, merge bases, Markdown blocks, settings.json hooks, eject and relock (`managed.mjs`) |

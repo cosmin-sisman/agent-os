@@ -22,3 +22,25 @@ agent-os version --check              # compare with the pin; exit 1 with the fi
 | nothing is pinned | `agent-os config set version <running>` |
 
 Upgrading the pin is a team decision made in a pull or merge request (`agent-os update`, #68).
+
+## Lifecycle: nothing disappears without warning
+
+`manifest.json` lists every item agent-os ships, with its state. Items are commands, their flags, configuration keys, templates, catalog entries and hook handlers. It is rebuilt and committed at each release, and it is the baseline the next changes are checked against.
+
+| State | Means |
+|---|---|
+| `new` | appeared recently; may still change before it becomes stable |
+| `stable` | covered by the compatibility promise |
+| `deprecated` | still works; has `deprecatedIn`, `removeIn` and a `replacement` |
+| `legacy` | kept only for projects that opt in |
+| `removed` | gone; kept in the manifest with the migration that handles it |
+
+Allowed changes: new → stable or deprecated; stable → deprecated; deprecated → legacy, removed (or back to stable); legacy → removed. **Nothing goes from stable to removed directly.** Every pull request runs these rules against the committed manifest. An item that disappears without a lifecycle entry, a deprecation without its replacement or removal version, or a removal without its migration fails the build.
+
+States change only in [`src/lifecycle/lifecycle.yaml`](../../src/lifecycle/lifecycle.yaml).
+
+```bash
+agent-os manifest check     # the rules, against the last released manifest
+agent-os manifest build     # at release: write manifest.json
+agent-os manifest usage     # deprecated items this project still uses (config keys, commands and flags in its hooks)
+```
