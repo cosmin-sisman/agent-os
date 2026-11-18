@@ -35,3 +35,16 @@ Rules ship for TypeScript, JavaScript, Python, SQL and YAML, in `en` and `ro`. A
 Every rule is kept under the 6 KB budget for `.claude/rules/**/*.md`, which `doctor` checks.
 
 The `/standards` skill (review, explain, choose between solutions) is #102, and the on-edit reminders and `doctor --ci` checks are #103.
+
+## `/standards` and `standards choice`
+
+The `/standards` skill reviews a file or a diff in a fixed order (correctness, clarity, headers and TODOs, language rules, needless complexity), explains a rule, and runs the decision procedure. `/pr` calls it before code review unless the `standards` slot binds another skill.
+
+```bash
+agent-os standards choice --title "Cache for the catalog API" \
+  --option "lru: in-process LRU per instance" --option "redis: shared Redis" \
+  --pick lru --why "One instance serves this traffic, so a shared cache only adds a moving part" \
+  --criterion simplicity="no new service" [--record catalog-cache]
+```
+
+It refuses a choice with fewer than two or more than three candidates, a pick outside them, and a reason that is not one sentence. The output, for the change request description, ends with *Only lru is implemented; redis is not.* `--record` writes an accepted decision record with the comparison, for choices that are hard to reverse.
