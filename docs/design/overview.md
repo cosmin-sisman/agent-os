@@ -49,6 +49,7 @@ CLAUDE.md                         # "@AGENTS.md"
 agent-os.json                     # team config (committed)
 .agent-os/
   lock.json                       # managed files: path, version, hash (committed)
+  base/<path>                     # the merge base of each managed item: what agent-os last installed (committed)
   registry/<skill>.json           # one file per registered skill (committed)
   journal/YYYY/MM/<entry>.md      # history, one file per entry (committed)
   lessons/{inbox,active,retired}/ # lessons learned, one file per lesson (committed)
@@ -66,7 +67,7 @@ agent-os.json                     # team config (committed)
 docs/decisions/<date>-<slug>.md   # decision records, date-based ids
 ```
 
-**Managed versus owned.** A managed file is listed in `lock.json` with the hash it was installed with. `agent-os update` replaces it when the local hash still matches. When the file was edited locally, it runs a three-way merge, and any conflict goes to a `.rej` file plus a proposal. `agent-os eject <path>` turns a managed file into an owned one. Files that are part managed, part owned (`AGENTS.md`, `.claude/settings.json`) carry a managed block or managed entries, and agent-os never touches anything outside them. Decision: [managed files](../decisions/2026-11-18-managed-files-and-lock.md).
+**Managed versus owned.** A managed file is listed in `lock.json` with the hash it was installed with, and `.agent-os/base/` keeps that installed content as the merge base (reference: [managed files](../reference/managed-files.md)). `agent-os update` replaces it when the local hash still matches. When the file was edited locally, it runs a three-way merge, and any conflict goes to a `.rej` file plus a proposal. `agent-os eject <path>` turns a managed file into an owned one. Files that are part managed, part owned (`AGENTS.md`, `.claude/settings.json`) carry a managed block or managed entries, and agent-os never touches anything outside them. Decision: [managed files](../decisions/2026-11-18-managed-files-and-lock.md).
 
 ## 4. Configuration and languages
 
@@ -320,6 +321,8 @@ A project depends on more than its code: MCP servers (a database, a design tool,
 - **Repository side:** `.mcp.json` declares every `project` server with the right transport and URL. Placeholders such as `${VAR}` are used instead of literal secrets, and no token is committed (the secret scan covers `.mcp.json`).
 - **Laptop side:** each server is installed in the right scope and connected (`claude mcp list`), user-scope servers exist, CLIs meet their versions, `gh auth status` or `glab auth status --hostname <host>` shows the scopes, and variables are set. Values are never printed, only whether they are present.
 - **Drift:** a server installed locally but not declared, or declared but authenticated against the wrong account or project, is reported with the exact command that fixes it.
+
+`requires.plugins` is declared but not checked yet: there is no stable command to list installed Claude Code plugins.
 
 It runs during `init`, as a fast offline subset at SessionStart (only what can be checked in under a second), in full on `/env`, and before `/release`. Results are personal, so they go to `.agent-os/cache/`, never into git. CI checks only the repository side. Decision: [environment check](../decisions/2026-11-18-environment-check.md).
 
