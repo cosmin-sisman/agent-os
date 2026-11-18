@@ -91,3 +91,12 @@ test('no suites configured is a warning, not a crash', () => {
     assert.match(resultsTable(r), /No gate suites ran/)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
+
+test('test gaps are a gate input: listed in the result and warned about, never a failure', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'aos-gate-'))
+  try {
+    const r = runGate({ config: { ...CONFIG, testing: { exclude: ['src/gen/'], map: {} } }, git: fakeGit({ committed: ['src/a.ts', 'src/gen/x.ts'] }), cwd: dir, exec: exec() }, { dryRun: true })
+    assert.deepEqual(r.gaps, ['src/a.ts'])
+    assert.ok(r.warnings.some((w) => /1 changed file\(s\) with no changed test: src\/a\.ts/.test(w)))
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})

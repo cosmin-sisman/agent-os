@@ -3,7 +3,7 @@
 // scenarios.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { planScenarios, sectionText, testGaps, untickedScenarios, withResults, withScenarios } from './test.mjs'
+import { expectedTests, planScenarios, sectionText, testGaps, untickedScenarios, withResults, withScenarios } from './test.mjs'
 import { ship } from '../workflow/ship.mjs'
 import { vocabularyFor } from '../platform/vocabulary.mjs'
 
@@ -30,6 +30,13 @@ test('feature criteria become scenarios; existing ones are kept and not proposed
 test('gaps: changed source files without a changed test that names them; tests, docs, fixtures and exclusions are not gaps', () => {
   const files = ['src/a.mjs', 'src/a.test.mjs', 'src/b.ts', 'app/models/user.py', 'tests/test_user.py', 'docs/x.md', 'src/__fixtures__/f.mjs', 'gen/api.ts', 'cmd/run.go']
   assert.deepEqual(testGaps(files, { exclude: ['gen/'] }), ['src/b.ts', 'cmd/run.go'])
+})
+
+test('gaps follow testing.map: mapped sources need one of their named tests; excluded globs are never gaps', () => {
+  const map = { 'lib/**/*.rb': ['spec/{name}_spec.rb'], 'src/**/*.ts': ['{dir}/{name}.test.ts', '{dir}/{name}.check.ts'] }
+  assert.deepEqual(expectedTests('src/x/a.ts', map['src/**/*.ts']), ['src/x/a.test.ts', 'src/x/a.check.ts'])
+  const files = ['lib/billing/invoice.rb', 'spec/invoice_spec.rb', 'lib/tax.rb', 'src/a.ts', 'src/b.ts', 'src/b.check.ts', 'src/gen/schema.ts']
+  assert.deepEqual(testGaps(files, { map, exclude: ['src/gen/**'] }), ['lib/tax.rb', 'src/a.ts'])
 })
 
 test('the results table goes into its own block in the change request, replaced on every run', () => {

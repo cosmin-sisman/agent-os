@@ -2,6 +2,7 @@
 // results table written into the change request, and the changed logic that has no test. Design §12.
 
 import { labelId } from '../workflow/next.mjs'
+import { matches } from '../util/glob.mjs'
 
 export const HEADINGS = {
   scenarios: ['Test scenarios', 'Scenarii de test'],
@@ -80,11 +81,36 @@ const CODE = /\.(js|mjs|cjs|ts|tsx|jsx|py|rb|go|rs|java|kt|cs|php|swift|ex|exs|v
 const TEST = /(^|\/)(__tests__|tests?|spec)\/|\.(test|spec)\.[^/]+$|(^|\/)test_[^/]+\.py$|_test\.(go|py)$/i
 const stem = (f) => f.split('/').pop().replace(/\.(test|spec)(?=\.)/, '').replace(/^test_/, '').replace(/_test(?=\.)/, '').replace(/\.[^.]+$/, '')
 
-/** Changed source files with no changed test that names them. */
-export function testGaps(files, { exclude = [] } = {}) {
+/** The test paths a source file is expected to have under one of testing.map's templates. */
+export function expectedTests(file, templates) {
+  const parts = file.split('/')
+  const base = parts.pop()
+  const dot = base.lastIndexOf('.')
+  const vars = { dir: parts.join('/') || '.', name: dot > 0 ? base.slice(0, dot) : base, ext: dot > 0 ? base.slice(dot + 1) : '' }
+  return templates.map((t) => t.replace(/\{(dir|name|ext)\}/g, (_, k) => vars[k]).replace(/^\.\//, ''))
+}
+
+const excluded = (f, exclude) => exclude.some((x) => f.startsWith(x) || matches(f, x))
+
+/**
+ * Changed source files with no changed test. A file a testing.map glob matches needs one of the tests its templates
+ * name; any other code file needs a changed test with the same stem. Excluded paths, tests, docs and fixtures are
+ * never gaps.
+ */
+export function testGaps(files, { exclude = [], map = {} } = {}) {
+  const changed = new Set(files)
   const tests = files.filter((f) => TEST.test(f))
   const stems = new Set(tests.map(stem))
-  return files.filter((f) => CODE.test(f) && !TEST.test(f) && !/(^|\/)(__fixtures__|fixtures|docs?)\//.test(f) && !exclude.some((x) => f.startsWith(x)) && !stems.has(stem(f)))
+  const mapped = Object.entries(map)
+  const ruleOf = (f) => mapped.find(([glob]) => matches(f, glob))
+  // A file some template names as a test is a test, even when a source glob also matches it.
+  const named = new Set(files.flatMap((f) => { const r = ruleOf(f); return r ? expectedTests(f, r[1]) : [] }))
+  return files.filter((f) => {
+    if (excluded(f, exclude) || TEST.test(f) || named.has(f) || /(^|\/)(__fixtures__|fixtures|docs?)\//.test(f)) return false
+    const rule = ruleOf(f)
+    if (rule) return !expectedTests(f, rule[1]).some((t) => changed.has(t))
+    return CODE.test(f) && !stems.has(stem(f))
+  })
 }
 
 const BEGIN = '<!-- agent-os:test-results -->'
