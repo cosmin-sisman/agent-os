@@ -67,6 +67,7 @@ export const COMMANDS = [
   { name: 'ingest', summary: 'Turn specifications into epics and sub-issues that cite their sections; contradictions are resolved first', status: 'new', issue: 53, load: () => import('../commands/ingest.mjs') },
   { name: 'discover', summary: 'Infer the conventions an active repository follows, each with its evidence; apply only the accepted ones', status: 'new', issue: 52, load: () => import('../commands/discover.mjs') },
   { name: 'audit', summary: 'Plan an audit (subject, lenses, a brief per lens) and merge the lenses\' findings', status: 'new', issue: 105, load: () => import('../commands/audit.mjs') },
+  { name: 'runbook', summary: 'Write deploy, rollback and restore runbooks and the takeover dossier from the release flow', status: 'new', issue: 54, load: () => import('../commands/runbook.mjs') },
   { name: 'sbom', summary: 'Generate a software bill of materials (CycloneDX) from the lockfiles', status: 'new', issue: 108, load: () => import('../commands/sbom.mjs') },
   { name: 'security', summary: 'Watch the advisories that touch the dependencies (OSV, GHSA, KEV); keep the Security digest', status: 'new', issue: 108, load: () => import('../commands/security.mjs') },
 ]
