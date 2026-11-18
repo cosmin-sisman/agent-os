@@ -28,6 +28,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 |---|---|
 | `bin/agent-os.mjs` | the executable; it only calls `src/cli/main.mjs` |
 | `src/cli/` | the runner (`main.mjs`), the command registry with lifecycle states (`registry.mjs`), global options, the `Context` every command receives, exit codes and `CliError` |
+| `src/conventions/` | title and commit message conventions (`agent-os check`) |
 | `src/config/` | the configuration schema (one definition for validation, defaults and the published JSON Schemas) and the loader for `agent-os.json` + `.agent-os/local.json` |
 | `src/templates/` | the template engine (`engine.mjs`) and folder rendering with language variants (`tree.mjs`); test fixtures in `__fixtures__/` (not published) |
 | `src/platform/` | platform detection: remotes, known hosts, probing unknown hosts (`detect.mjs`); a fake network for tests in `__fixtures__/` |

@@ -204,6 +204,54 @@
       },
       "additionalProperties": false
     },
+    "conventions": {
+      "type": "object",
+      "description": "Title and commit message conventions",
+      "default": {},
+      "properties": {
+        "types": {
+          "type": "array",
+          "description": "Allowed types in change-request titles and commit subjects",
+          "default": [
+            "feat",
+            "fix",
+            "docs",
+            "chore",
+            "refactor",
+            "perf",
+            "test",
+            "ci",
+            "build",
+            "style",
+            "revert"
+          ],
+          "items": {
+            "type": "string",
+            "description": "A change type"
+          }
+        },
+        "maxTitleLength": {
+          "type": "integer",
+          "description": "Longest change-request title or commit subject, issue suffix included",
+          "minimum": 30,
+          "maximum": 200,
+          "default": 72
+        },
+        "exempt": {
+          "type": "array",
+          "description": "Titles exempt from the checks (syncs, bots)",
+          "default": [
+            "^chore: sync \\S+ into \\S+$",
+            "^(chore|build)\\(deps(-dev)?\\): "
+          ],
+          "items": {
+            "type": "string",
+            "description": "A regular expression; matching titles are not checked"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "packs": {
       "type": "array",
       "description": "Optional packs installed in this project",

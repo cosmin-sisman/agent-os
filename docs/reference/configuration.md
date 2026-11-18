@@ -64,6 +64,10 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `languages.codeComments` | team | string: `en`, `ro` | `"en"` | Comments written in code (en, or ro written without diacritics) |
 | `languages.docs` | team | string: `en`, `ro` | `"en"` | Human documentation in docs/ (en, or ro written without diacritics) |
 | `languages.journal` | team | string: `en`, `ro` | `"en"` | Journal entries and decision records (en, or ro written without diacritics) |
+| `conventions` | team | object | `{}` | Title and commit message conventions |
+| `conventions.types` | team | array | `["feat","fix","docs","chore","refactor","perf","test","ci","build","style","revert"]` | Allowed types in change-request titles and commit subjects |
+| `conventions.maxTitleLength` | team | integer | `72` | Longest change-request title or commit subject, issue suffix included |
+| `conventions.exempt` | team | array | `["^chore: sync \\S+ into \\S+$","^(chore|build)\\(deps(-dev)?\\): "]` | Titles exempt from the checks (syncs, bots) |
 | `packs` | team | array | `[]` | Optional packs installed in this project |
 | `slots` | team | object | `{}` | Capability slots and the skills bound to them |
 | `slots.<name>` | team | string or null |  | The skill bound to this slot, or null for none |
