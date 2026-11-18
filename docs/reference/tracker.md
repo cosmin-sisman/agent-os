@@ -44,3 +44,18 @@ It searches for duplicates first. When an issue looks like the same request, it 
 Parent, blockers, the issues it blocks and several assignees follow the platform's capabilities: native sub-issues and blocking links on GitHub, the documented fallbacks elsewhere.
 
 The `/ticket` skill (`templates/core/.claude/skills/ticket/SKILL.md`) walks an agent through it: agreement, duplicates, facts, title and body in the issues language with test scenarios, labels, milestone, relationships, create, report, learn.
+
+## Starting work: `start` and `/start`
+
+```bash
+agent-os start 14 --dry-run     # the branch, its base and the steps, nothing sent
+agent-os start 14               # assign @me, create and link the branch, check it out, In Progress
+agent-os start 31 --hotfix      # hotfix/31-<slug>, cut from the production branch
+```
+
+- The branch is `<type>/<n>-<slug>`: `feat`, `fix`, `docs` or `chore` from the issue's type label (in either language), and a short ASCII slug of the title without its `<Area>:` prefix.
+- The base is `branches.integration` (`development` by default), or `branches.production` with `--hotfix`.
+- With linked branches (GitHub: `gh issue develop --base`), the branch appears in the issue's Development panel. Without them it is created from `origin/<base>` and the change request links it through `Closes #N`.
+- It stops, changing nothing, when the issue is assigned to someone else (ask in its comments; `--force` once they agree), has open sub-issues (start one of them), is an epic, is closed or is a pull request.
+- The branch is checked out in place. `--worktree` puts it in `.claude/worktrees/<branch>` instead, for parallel sessions; it is off by default.
+- With a board, the issue moves to In Progress.

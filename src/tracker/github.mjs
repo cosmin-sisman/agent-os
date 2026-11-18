@@ -23,6 +23,12 @@ export class GitHubTracker {
 
   // ── Reads ────────────────────────────────────────────────────────────────
 
+  /** The login of the person the CLI is authenticated as. */
+  whoami() {
+    this.cache.me ??= this.gh.rest('GET', 'user')?.login ?? null
+    return this.cache.me
+  }
+
   /** One issue with its labels, milestone, assignees and state. */
   get(number) {
     const i = this.gh.rest('GET', `repos/${this.repo}/issues/${number}`)
