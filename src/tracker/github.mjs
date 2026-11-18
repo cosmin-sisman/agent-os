@@ -87,6 +87,11 @@ export class GitHubTracker {
     return all
   }
 
+  /** Open issues assigned to a person, most recently updated first. */
+  assignedIssues(login, { limit = 10 } = {}) {
+    return (this.gh.rest('GET', `repos/${this.repo}/issues?state=open&assignee=${encodeURIComponent(login)}&sort=updated&direction=desc&per_page=${limit}`) ?? []).filter((i) => !i.pull_request).map(issueOf)
+  }
+
   /** Issues closed recently with this person assigned, newest first. */
   recentlyClosed(login, { limit = 20 } = {}) {
     return (this.gh.rest('GET', `repos/${this.repo}/issues?state=closed&assignee=${encodeURIComponent(login)}&sort=updated&direction=desc&per_page=${limit}`) ?? []).filter((i) => !i.pull_request).map(issueOf)

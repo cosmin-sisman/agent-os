@@ -52,3 +52,16 @@ Projects add rules in `agent-os.json`:
 ## Adoption mode
 
 `"adoption": { "warnOnlyUntil": "2026-12-31" }` turns guard refusals into warnings until that date, so a team can see what the guards would stop before they start enforcing it.
+
+## The SessionStart context
+
+Two handlers give each session its bearings, within one budget (`contextBudgets.SessionStart`, 1.5 KB by default):
+
+| Handler | Lines (most important first) | Needs |
+|---|---|---|
+| `session` | your branch and its issue (or, on the integration branch, a pointer to `/start` and `/next`); the lessons for the files you changed (at most 2); how many lessons wait in the inbox; the skills installed here | nothing: it reads the working tree |
+| `session-remote` | the issue's title and state; issues assigned to you; reviews requested from you (at most 5 each) | the platform login; it gives up after 3 seconds |
+
+- **Budget:** when the lines don't fit, the least important ones are dropped first, so the injection never exceeds the budget.
+- **Offline:** without the platform (no network, no login, too slow), only the local lines are injected. A context handler that fails is left out quietly, with no warning, and the session is never blocked.
+- **Privacy:** nothing is taken from `.agent-os/local.json` or from environment variables.
