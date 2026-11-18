@@ -30,7 +30,7 @@ export const COMMANDS = [
   { name: 'update', summary: 'Upgrade agent-os in this project (--relock today; the full flow is #68)', status: 'new', issue: 6, load: () => import('../commands/update.mjs') },
   { name: 'eject', summary: 'Stop managing a file, block or hooks entry; the content stays as it is', status: 'new', issue: 6, load: () => import('../commands/eject.mjs') },
   { name: 'hook', summary: 'Run the Claude Code hook handlers for an event (called from .claude/settings.json)', status: 'new', issue: 8, load: () => import('../commands/hook.mjs') },
-  { name: 'platform', summary: 'Detect, probe or switch the code platform (GitHub, GitLab)', status: 'planned', issue: 90 },
+  { name: 'platform', summary: 'Show the code platform and its login, or detect it from the git remote (GitHub, GitLab)', status: 'new', issue: 90, load: () => import('../commands/platform.mjs') },
   { name: 'lang', summary: 'Show the language of each area, check ro text for diacritics, print the language rule', status: 'new', issue: 7, load: () => import('../commands/lang.mjs') },
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'planned', issue: 18 },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'planned', issue: 33 },
