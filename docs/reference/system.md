@@ -92,4 +92,27 @@ The graph is system.yaml's components and `consumes` edges when the file exists,
 
 `agent-os overlap` (and `pr preflight`) also name the components two changes share, a finer unit than layers.
 
-Endpoint inventory (#114), system checks (#115) and the system map artifact (#118) build on this file.
+## Endpoint inventory
+
+```sh
+agent-os system endpoints [--undocumented] [--json]
+```
+
+Every route the code declares, next to every operation the specs document. Source files are read **as text** by framework-specific patterns; nothing is imported or run:
+- Express, Hono, Fastify, Koa;
+- NestJS (`@Controller` and `@Get`…);
+- Next.js (`app/**/route.ts`, `pages/api/**`) and Astro endpoints;
+- FastAPI, Django (`urls.py`);
+- Rails (`config/routes.rb`, `resources`);
+- Spring (`@RequestMapping` and `@GetMapping`…);
+- ASP.NET (minimal APIs and `[Http…]` attributes);
+- Go routers (chi, gin, echo, `HandleFunc`).
+
+For each route the inventory gives:
+- method, path, component (from system.yaml or the workspaces), file and line;
+- `auth`: **marked** when an authentication marker is visible (middleware such as `requireAuth`, `Depends(get_current_user)`, `@PreAuthorize`, `[Authorize]`, `@UseGuards`…), otherwise **unknown**. Unknown is never "none", since auth may live elsewhere;
+- **documented** or not, by comparing with the OpenAPI specs that system.yaml names or that the repository holds. Paths are normalized across styles (`:id`, `{id}`, `<int:id>`, `[id]`).
+
+Spec operations no code declares are listed too. **Frameworks the project uses that agent-os cannot read yet** (Remix, SvelteKit, Nuxt, Laravel, Phoenix, tRPC procedures, GraphQL servers…) are reported, not silently skipped. Test files are left out. The inventory is written to `.agent-os/cache/endpoints.json`, rendered on demand and never committed.
+
+System checks (#115) and the system map artifact (#118) build on this file.

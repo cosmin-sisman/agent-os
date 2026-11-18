@@ -2,7 +2,7 @@
 // components, their dependencies as edges, each with its evidence) and lists what it could not read; `check`
 // validates system.yaml; `show` prints its components and edges.
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { FILE, readSystem, validateSystem } from '../system/system.mjs'
@@ -10,16 +10,18 @@ import { detectSystem, systemYaml } from '../system/detect.mjs'
 import { loadCatalog } from '../stack/catalog.mjs'
 import { readStack } from '../stack/stack.mjs'
 import { contractReview } from '../system/contracts.mjs'
+import { inventory } from '../system/endpoints.mjs'
 import { changedFiles } from '../gate/gate.mjs'
 import { systemGit } from '../workflow/start.mjs'
 import { loadConfig } from '../config/config.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 
-export const usage = 'agent-os system detect [--write] | check | show | contracts [--base <branch>]   (endpoints, checks: later issues)'
+export const usage = 'agent-os system detect [--write] | check | show | contracts [--base <branch>] | endpoints [--undocumented]   (checks: a later issue)'
 
 export const options = {
   write: { type: 'boolean', description: 'detect: write system.yaml (only when there is none)' },
   base: { type: 'string', description: 'contracts: the branch to compare with (default branches.integration)' },
+  undocumented: { type: 'boolean', description: 'endpoints: only the routes no spec documents, and spec operations no code declares' },
 }
 
 const knownLayers = (cwd) => { const s = readStack(cwd); return s?.layers ? Object.keys(s.layers) : [...loadCatalog({ cwd }).layers.keys()] }
@@ -38,6 +40,19 @@ export async function run(ctx) {
       lines.push('', `${ctx.dryRun ? 'would write' : 'wrote'} ${FILE}: answer the questions in it, then agent-os system check`)
     }
     ctx.output(d, lines.join('\n'))
+    return EXIT.OK
+  }
+  if (action === 'endpoints') {
+    const inv = inventory(ctx.cwd)
+    const cache = join(ctx.cwd, '.agent-os', 'cache')
+    mkdirSync(cache, { recursive: true })
+    writeFileSync(join(cache, 'endpoints.json'), `${JSON.stringify(inv, null, 2)}\n`)
+    const list = ctx.values.undocumented ? inv.endpoints.filter((e) => !e.documented) : inv.endpoints
+    const lines = list.map((e) => `${e.method.padEnd(7)} ${e.path.padEnd(32)} ${(e.component ?? '-').padEnd(12)} ${e.auth === 'marked' ? 'auth   ' : 'auth ? '} ${e.documented ? 'documented  ' : 'UNDOCUMENTED'}  ${e.file}:${e.line}`)
+    if (inv.specOnly.length) lines.push('', 'in a spec but declared by no code:', ...inv.specOnly.map((o) => `  ${o.method} ${o.path}  (${o.spec})`))
+    if (inv.unread.length) lines.push('', `not read (agent-os has no extractor for them yet): ${inv.unread.join(', ')}; their routes are missing from this list`)
+    lines.push('', `${inv.endpoints.length} route(s) from ${inv.frameworks.join(', ') || 'no known framework'}; ${inv.endpoints.filter((e) => !e.documented).length} undocumented; specs: ${inv.specs.join(', ') || 'none'}. Cached in .agent-os/cache/endpoints.json (never committed).`)
+    ctx.output(inv, lines.join('\n'))
     return EXIT.OK
   }
   const system = readSystem(ctx.cwd)
