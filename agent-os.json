@@ -45,5 +45,8 @@
   "adoption": {
     "warnOnlyUntil": "2026-12-02",
     "cutoff": "2026-11-18"
+  },
+  "milestones": {
+    "rolling": false
   }
 }

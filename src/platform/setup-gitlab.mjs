@@ -85,7 +85,8 @@ export function planGitLabSetup(config, client, { only, areas = [] } = {}) {
     }
   }
 
-  if (want('milestones')) {
+  // milestones.rolling false: the project plans with its own milestones, so no rolling one is created (#248).
+  if (want('milestones') && config.milestones?.rolling !== false) {
     const lang = languageFor(config, 'milestones')
     const milestones = all(client, p('milestones'))
     const entry = MILESTONES.find((m) => m.id === 'rolling-release')

@@ -761,6 +761,19 @@
       },
       "additionalProperties": false
     },
+    "milestones": {
+      "type": "object",
+      "description": "Milestones agent-os manages",
+      "default": {},
+      "properties": {
+        "rolling": {
+          "type": "boolean",
+          "description": "Keep a rolling \"Stage 0 - Release N\" milestone: setup creates it and release finish closes and opens it. Turn it off when the project plans with its own milestones (v0.x)",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
     "adoption": {
       "type": "object",
       "description": "Adoption mode for projects new to agent-os",

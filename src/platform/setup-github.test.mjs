@@ -93,6 +93,12 @@ test('the desired ruleset follows the configured branches, checks and approvals'
   assert.deepEqual(r.rules.find((x) => x.type === 'required_status_checks').parameters.required_status_checks, [{ context: 'ci' }, { context: 'lint' }, { context: 'agent-os/loop' }])
 })
 
+test('given milestones.rolling false, setup creates no rolling milestone', () => {
+  const gh = fakeGitHubRepo({ milestones: [{ title: 'v0.2 Core workflow', state: 'open' }] })
+  assert.deepEqual(planGitHubSetup(config({ milestones: { rolling: false } }), ghClient(gh.run), { only: ['milestones'] }), [])
+  assert.equal(planGitHubSetup(config(), ghClient(gh.run), { only: ['milestones'] }).length, 1, 'the default still creates it')
+})
+
 test('the rolling milestone is created after the last release number, or renamed into the milestones language', () => {
   const gh = fakeGitHubRepo({ milestones: [{ title: 'Release 3 - 2026-10-01', state: 'closed' }] })
   assert.match(planGitHubSetup(config(), ghClient(gh.run), { only: ['milestones'] })[0].description, /create milestone "Stage 0 - Release 4 \(in progress\)"/)
