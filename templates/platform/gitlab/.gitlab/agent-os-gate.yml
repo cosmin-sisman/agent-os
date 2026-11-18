@@ -1,0 +1,18 @@
+# The gate (agent-os): the same suites the diff needs locally (`agent-os gate`), selected from "gate" and "gatePaths"
+# in agent-os.json. Include it from .gitlab-ci.yml:
+#   include:
+#     - local: .gitlab/agent-os-gate.yml
+# Merge request pipelines compare with the target branch; pushes to the long-lived branches run every suite.
+agent-os/gate:
+  stage: test
+  image: node:22
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "{{{branches.integration}}}" || $CI_COMMIT_BRANCH == "{{{branches.production}}}"
+  variables:
+    GIT_DEPTH: "0"
+  before_script:
+    - if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"; fi
+    - if [ -f package-lock.json ]; then npm ci; fi
+  script:
+    - npx -y @cosmin-sisman/agent-os{{#if version}}@{{{version}}}{{/if}} gate --from-ci

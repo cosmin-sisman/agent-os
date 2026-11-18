@@ -24,7 +24,16 @@ agent-os gate --base main     # against another branch
 - Every selected suite runs, even after one fails, so the results table is complete. A failure exits with 1 and shows the last lines of its output.
 - The result is saved to `.agent-os/cache/gate.json` (never committed) with the commit it ran on and whether the tree was clean.
 
-Generating the CI workflow from the same definition comes with #43.
+### In CI: `gate --from-ci`
+
+agent-os installs `.github/workflows/agent-os-gate.yml` (GitHub) or `.gitlab/agent-os-gate.yml` (GitLab; include it from `.gitlab-ci.yml`). Both run `agent-os gate --from-ci` with the pinned version:
+
+- **On a change request:** the base branch is read from the event (the GitHub event file, or GitLab's merge request variables), and the same selection as locally runs. The same diff gives the same suites on a laptop and in CI.
+- **On a push** to the integration or production branch: every suite runs.
+- **Job summary:** on GitHub the results table is added to the job summary.
+- **Dependencies:** the job installs them with `npm ci` when there is a `package-lock.json`. Remove that step if your suites need none.
+
+Making `agent-os/gate` a required check is a ruleset setting (`agent-os setup`).
 
 ## `pr`
 
