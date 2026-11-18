@@ -404,6 +404,24 @@ export class GitHubTracker {
     return { number, labels }
   }
 
+  /** Requests reviews on a pull request from people (login) and teams (org/team). */
+  requestReviewers(number, owners, { dryRun = false } = {}) {
+    const people = owners.filter((o) => !o.includes('/')).map((o) => o.replace(/^@/, ''))
+    const teams = owners.filter((o) => o.includes('/')).map((o) => o.replace(/^@/, '').split('/').pop())
+    const request = { method: 'POST', path: `repos/${this.repo}/pulls/${number}/requested_reviewers`, body: { reviewers: people, team_reviewers: teams } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    if (people.length || teams.length) this.gh.rest(request.method, request.path, request.body)
+    return { number, reviewers: people, teams }
+  }
+
+  /** A file of another repository at a ref (a pinned commit or tag), or null when it is not there. */
+  fileAt(repo, path, ref) {
+    try {
+      const r = this.gh.rest('GET', `repos/${repo}/contents/${path.split('/').map(encodeURIComponent).join('/')}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}`)
+      return r?.content ? Buffer.from(r.content, r.encoding === 'base64' ? 'base64' : 'utf8').toString('utf8') : null
+    } catch (err) { if (/HTTP 404/.test(err.output ?? err.message)) return null; throw err }
+  }
+
   /** Comments on a pull request (a pull request is an issue for comments on GitHub). */
   commentChangeRequest(number, body, options) { return this.comment(number, body, options) }
 

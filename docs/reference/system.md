@@ -52,4 +52,28 @@ How the draft is built:
 - a bad `repo`;
 - layers that stack.yaml doesn't have (warning).
 
-Endpoint inventory (#114), system checks (#115), contract diffs (#116) and the system map artifact (#118) build on this file.
+## Contract diffs in change requests
+
+```sh
+agent-os system contracts [--base <branch>]   # the contract changes on this branch (exit 1 when one is breaking)
+```
+
+For each spec that system.yaml names (`provides: - http: { spec: … }`) and the diff touches, the version on the base branch is compared with the branch's. OpenAPI (JSON or YAML), AsyncAPI and GraphQL SDL are reduced to their surface:
+- operations and their parameters;
+- request and response fields, with local `$ref`s resolved;
+- channels and payload fields;
+- types, fields and arguments.
+
+Breaking:
+- **anything removed**: an operation, a parameter, a field (a removed field is always breaking), a channel, a type;
+- **an input made stricter**: an optional parameter or field that becomes required, a new required input on something that existed. A renamed endpoint is a removal plus an addition, so it is breaking.
+
+Additions are listed but are not breaking.
+
+`agent-os pr create` runs the same comparison. A breaking change:
+- labels the change request `contract:breaking` (ro `contract:incompatibil`);
+- requests reviews from the owners of every consumer (components whose `consumes` names the provider), people and teams. GitLab has no group reviewers, so groups are reported to mention instead.
+
+A consumer in another repository (`repo: owner/name`, pinned with `ref:`) that lists no owners here has them read from that repository's system.yaml at the pinned ref, through the platform.
+
+Endpoint inventory (#114), system checks (#115) and the system map artifact (#118) build on this file.

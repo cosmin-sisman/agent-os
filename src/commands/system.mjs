@@ -2,18 +2,24 @@
 // components, their dependencies as edges, each with its evidence) and lists what it could not read; `check`
 // validates system.yaml; `show` prints its components and edges.
 
-import { existsSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { FILE, readSystem, validateSystem } from '../system/system.mjs'
 import { detectSystem, systemYaml } from '../system/detect.mjs'
 import { loadCatalog } from '../stack/catalog.mjs'
 import { readStack } from '../stack/stack.mjs'
+import { contractReview } from '../system/contracts.mjs'
+import { changedFiles } from '../gate/gate.mjs'
+import { systemGit } from '../workflow/start.mjs'
+import { loadConfig } from '../config/config.mjs'
+import { createTracker } from '../tracker/tracker.mjs'
 
-export const usage = 'agent-os system detect [--write] | check | show   (endpoints, checks, contract diffs: later issues)'
+export const usage = 'agent-os system detect [--write] | check | show | contracts [--base <branch>]   (endpoints, checks: later issues)'
 
 export const options = {
   write: { type: 'boolean', description: 'detect: write system.yaml (only when there is none)' },
+  base: { type: 'string', description: 'contracts: the branch to compare with (default branches.integration)' },
 }
 
 const knownLayers = (cwd) => { const s = readStack(cwd); return s?.layers ? Object.keys(s.layers) : [...loadCatalog({ cwd }).layers.keys()] }
@@ -41,6 +47,17 @@ export async function run(ctx) {
   if (action === 'check') {
     ctx.output(v, v.problems.length ? `${FILE}: ${v.problems.length} problem(s)\n  - ${v.problems.join('\n  - ')}` : `${FILE}: valid${v.warnings.length ? ` (${v.warnings.length} warning(s))` : ''}`)
     return v.problems.length ? EXIT.CHECK_FAILED : EXIT.OK
+  }
+  if (action === 'contracts') {
+    const { merged } = loadConfig(ctx.cwd)
+    const git = ctx.io.git ?? systemGit(ctx.cwd)
+    const base = ctx.values.base ?? merged.branches.integration
+    const tracker = (() => { try { return ctx.io.tracker ?? (merged.platform?.project ? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab }) : null) } catch { return null } })()
+    const r = contractReview({ git, tracker, readFile: (f) => { try { return readFileSync(join(ctx.cwd, f), 'utf8') } catch { return null } } }, { system, base, files: changedFiles(git, base) })
+    const lines = r.changes.length ? r.changes.flatMap((c) => [`${c.spec} (${c.component}): ${c.breaking.length} breaking, ${c.other.length} other`, ...c.breaking.map((b) => `  BREAKING ${b}`), ...c.other.slice(0, 10).map((o) => `  ${o}`), ...(c.consumers.length ? [`  consumers: ${c.consumers.map((x) => `${x.id}${x.owners.length ? ` (${x.owners.join(', ')})` : ' (no owners)'}`).join(', ')}`] : [])]) : ['no contract that system.yaml names has changed']
+    if (r.breaking) lines.push('', `pr create will label it contract:breaking and request reviews from ${r.owners.join(', ') || 'nobody (no consumer lists owners)'}`)
+    ctx.output(r, lines.join('\n'))
+    return r.breaking ? EXIT.CHECK_FAILED : EXIT.OK
   }
   if (action === 'show') {
     const comps = Object.entries(system.components ?? {})

@@ -331,6 +331,27 @@ export class GitLabTracker {
     return { number, ...request.body }
   }
 
+  /** Requests reviews on a merge request from people (usernames), keeping the reviewers it already has. Groups have no reviewer API: they are reported. */
+  requestReviewers(number, owners, { dryRun = false } = {}) {
+    const people = owners.filter((o) => !o.includes('/')).map((o) => o.replace(/^@/, ''))
+    const groups = owners.filter((o) => o.includes('/'))
+    if (groups.length) this.warnings.push(`GitLab has no group reviewers: mention ${groups.join(', ')} in the merge request instead`)
+    if (dryRun) return { dryRun: true, requests: people.length ? [{ method: 'PUT', path: this.p(`merge_requests/${number}`), body: { reviewer_ids: people.map((u) => `<id of ${u}>`) } }] : [] }
+    if (!people.length) return { number, reviewers: [], groups }
+    const current = (this.api.rest('GET', this.p(`merge_requests/${number}`))?.reviewers ?? []).map((u) => u.id)
+    const ids = people.map((u) => this.api.rest('GET', `users?username=${encodeURIComponent(u)}`)?.[0]?.id).filter(Boolean)
+    this.api.rest('PUT', this.p(`merge_requests/${number}`), { reviewer_ids: [...new Set([...current, ...ids])] })
+    return { number, reviewers: people, groups }
+  }
+
+  /** A file of another project at a ref (a pinned commit or tag), or null when it is not there. */
+  fileAt(project, path, ref) {
+    try {
+      const r = this.api.rest('GET', `projects/${encodeURIComponent(project)}/repository/files/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref ?? 'HEAD')}`)
+      return r?.content ? Buffer.from(r.content, r.encoding === 'base64' ? 'base64' : 'utf8').toString('utf8') : null
+    } catch (err) { if (/HTTP 404/.test(err.output ?? err.message)) return null; throw err }
+  }
+
   labelChangeRequest(number, labels, { dryRun = false } = {}) {
     const request = { method: 'PUT', path: this.p(`merge_requests/${number}`), body: { add_labels: labels.join(',') } }
     if (dryRun) return { dryRun: true, requests: [request] }

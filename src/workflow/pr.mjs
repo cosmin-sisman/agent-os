@@ -3,6 +3,10 @@
 // this commit; then it pushes, opens it, copies the issue's labels and records it on the issue.
 
 import { areaLabelName, areasFor } from '../stack/areas.mjs'
+import { readSystem } from '../system/system.mjs'
+import { contractReview } from '../system/contracts.mjs'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
 import { checkTitle, referencedIssues } from '../conventions/conventions.mjs'
 import { findDiacritics, languageFor } from '../i18n/i18n.mjs'
@@ -91,13 +95,24 @@ export function openChangeRequest(deps, { title, body, base = deps.config.branch
   // The issue's type and area labels, plus the areas of the layers the changed files belong to (stack.yaml paths).
   const fromLayers = areasFor(pre.files ?? [], deps.cwd).map((id) => areaLabelName(id, languageFor(deps.config, 'labels')))
   const labels = [...new Set([...issues.flatMap((n) => tracker.get(n).labels).filter((l) => /^(type|area):/.test(labelId(l))), ...fromLayers])]
-  const steps = [`push ${pre.branch}`, `open "${title}" into ${base}${draft ? ' as a draft' : ''}`, ...(labels.length ? [`label it ${labels.join(', ')}`] : []), ...issues.map((n) => `record it on #${n}`)]
-  if (dryRun) return { opened: false, dryRun: true, steps, labels, ...pre }
+  // Contract changes (#116): a breaking change to a spec system.yaml names is labelled and its consumers' owners asked
+  // to review, here or in other repositories (their system.yaml read at its pinned ref).
+  let contracts = { changes: [], breaking: false, owners: [] }
+  const system = readSystem(deps.cwd)
+  if (system) {
+    try { contracts = contractReview({ git, tracker, readFile: (f) => { try { return readFileSync(join(deps.cwd, f), 'utf8') } catch { return null } } }, { system, base, files: pre.files ?? [] }) } catch { /* a contract that cannot be read is not a reason to refuse the change request */ }
+  }
+  const me = (() => { try { return tracker.whoami?.() ?? null } catch { return null } })()
+  const reviewers = contracts.owners.filter((o) => o.replace(/^@/, '') !== me)
+  if (contracts.breaking) labels.push(languageFor(deps.config, 'labels') === 'ro' ? 'contract:incompatibil' : 'contract:breaking')
+  const steps = [`push ${pre.branch}`, `open "${title}" into ${base}${draft ? ' as a draft' : ''}`, ...(labels.length ? [`label it ${labels.join(', ')}`] : []), ...(reviewers.length ? [`request reviews from ${reviewers.join(', ')} (consumers of the changed contract)`] : []), ...issues.map((n) => `record it on #${n}`)]
+  if (dryRun) return { opened: false, dryRun: true, steps, labels, contracts, ...pre }
   const push = git(['push', '-u', 'origin', pre.branch])
   if (push.status !== 0) throw new CliError(`git push failed: ${(push.stderr || push.stdout).trim().split('\n')[0]}`)
   const cr = tracker.createPullRequest({ title, body, head: pre.branch, base, draft })
   if (labels.length) tracker.labelChangeRequest(cr.number, labels)
+  if (reviewers.length && tracker.requestReviewers) tracker.requestReviewers(cr.number, reviewers)
   const note = issuesLang === 'ro' ? `${vocab.cr} ${vocab.crRef}${cr.number} este deschis pentru acest issue.` : `${vocab.cr} ${vocab.crRef}${cr.number} is open for this issue.`
   for (const n of issues) tracker.comment(n, note)
-  return { opened: true, number: cr.number, url: cr.url, labels, steps, ...pre, warnings: tracker.warnings ?? [] }
+  return { opened: true, number: cr.number, url: cr.url, labels, contracts, reviewers, steps, ...pre, warnings: tracker.warnings ?? [] }
 }
