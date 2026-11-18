@@ -65,3 +65,13 @@ Two handlers give each session its bearings, within one budget (`contextBudgets.
 - **Budget:** when the lines don't fit, the least important ones are dropped first, so the injection never exceeds the budget.
 - **Offline:** without the platform (no network, no login, too slow), only the local lines are injected. A context handler that fails is left out quietly, with no warning, and the session is never blocked.
 - **Privacy:** nothing is taken from `.agent-os/local.json` or from environment variables.
+
+## The on-edit standards reminder
+
+The `standards` handler runs on PostToolUse for Edit, Write and MultiEdit (the matcher already in the hooks block). It reads the edited file and checks only what the edit added:
+- a `TODO`, `FIXME` or `XXX` without `#N`, naming its line;
+- a comment not in English (unless `languages.codeComments` is `ro`);
+- a file over `standards.maxFileLines` (500 by default);
+- for a new file (Write), a missing header.
+
+It answers with `additionalContext` for the agent and never blocks the edit. It has an 800 ms timeout and reminds each finding once per session. `doctor` runs the same checks, as warnings, on the files the branch changes (`standards`), and checks headers on new files (`headers`).

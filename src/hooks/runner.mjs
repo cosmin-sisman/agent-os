@@ -9,6 +9,7 @@ import { checkEnvironment } from '../env/checks.mjs'
 import { systemProbe } from '../env/probe.mjs'
 import { versionStatus } from '../version/pin.mjs'
 import { budgetBytes, fitBudget, localContext, remoteContext } from './session.mjs'
+import { editReminders } from './edit.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 import { systemGit } from '../workflow/start.mjs'
 
@@ -65,6 +66,16 @@ export const CORE_HANDLERS = [
       let tracker
       try { tracker = createTracker(config) } catch { return null }
       return { lines: remoteContext({ tracker, branch: r.status === 0 ? r.stdout.trim() : null }).lines }
+    },
+  },
+  {
+    name: 'standards',
+    events: ['PostToolUse'],
+    kind: 'reminder',
+    timeoutMs: 800,
+    run(input, { config, cwd }) {
+      const text = editReminders(input, { config, cwd })
+      return text ? { context: text } : null
     },
   },
   {
@@ -158,6 +169,7 @@ export async function runEvent(event, input, { config, cwd, env = {}, handlers =
     const fit = fitBudget(contexts, budgetBytes(config.contextBudgets?.SessionStart))
     if (fit.text) out.hookSpecificOutput = { hookEventName: 'SessionStart', additionalContext: fit.text }
   }
+  else if (contexts.length && event === 'PostToolUse') out.hookSpecificOutput = { hookEventName: 'PostToolUse', additionalContext: contexts.map((c) => c.text).join('\n') }
   if (warnings.length) out.systemMessage = warnings.join('\n')
   return Object.keys(out).length ? out : null
 }

@@ -55,6 +55,9 @@ export const SCHEMA = obj({
   packs: list(str('A pack id'), 'Optional packs installed in this project', { default: [] }),
   slots: map({ type: ['string', 'null'], description: 'The skill bound to this slot, or null for none' }, 'Capability slots and the skills bound to them', { default: {} }),
   gate: map(str('The command that runs this suite'), 'Test and check suites by name', { default: {} }),
+  standards: obj({
+    maxFileLines: int('Remind when a code file grows past this many lines', { minimum: 50, default: 500 }),
+  }, 'Mechanical standards checks (on edit and in doctor)', { default: {} }),
   testing: obj({
     exclude: list(str('A path prefix that needs no tests (generated code, vendored files)'), 'Paths agent-os test gaps leaves out', { default: [] }),
   }, 'Test planning and gaps', { default: {} }),

@@ -74,6 +74,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `slots.<name>` | team | string or null |  | The skill bound to this slot, or null for none |
 | `gate` | team | object | `{}` | Test and check suites by name |
 | `gate.<name>` | team | string |  | The command that runs this suite |
+| `standards` | team | object | `{}` | Mechanical standards checks (on edit and in doctor) |
+| `standards.maxFileLines` | team | integer | `500` | Remind when a code file grows past this many lines |
 | `testing` | team | object | `{}` | Test planning and gaps |
 | `testing.exclude` | team | array | `[]` | Paths agent-os test gaps leaves out |
 | `gatePaths` | team | object | `{}` | Path globs and the gate suites a change to them needs ("docs/**": ["docs"]); without it every suite runs |
