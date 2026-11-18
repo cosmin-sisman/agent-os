@@ -64,6 +64,20 @@ export const SCHEMA = obj({
   }, 'Compliance constraints', { default: {} }),
   contextBudgets: map(str('A size such as 8KB', { pattern: '^\\d+(\\.\\d+)?\\s?(B|KB|MB)$' }), 'Size budgets per file or glob', { default: {} }),
   legacy: list(str('A legacy feature id'), 'Legacy features this project keeps enabled', { default: [] }),
+  guards: obj({
+    rules: list(obj({
+      id: str('A short name, shown when the rule refuses something'),
+      type: oneOf(['forbid-flags', 'forbid-pattern', 'require-env', 'min-free-memory'], 'What the rule checks'),
+      pattern: str('A regular expression matched against each shell command (after splitting on && || ; |)'),
+      flags: list(str('A flag such as --no-verify'), 'forbid-flags: flags refused after a matching command', { default: [] }),
+      env: str('require-env: the variable that must be set, e.g. DB_RESET_OK=1 in the command or the environment', { pattern: '^[A-Za-z_][A-Za-z0-9_]*$' }),
+      message: str('What to tell the agent when the rule refuses'),
+    }, 'One guard rule', { required: ['id', 'type', 'pattern'] }), 'Project guard rules, added to the built-in ones', { default: [] }),
+    disable: list(str('The id of a built-in guard'), 'Built-in guards turned off for this project', { default: [] }),
+  }, 'Guards that refuse risky shell commands before they run (PreToolUse)', { default: {} }),
+  adoption: obj({
+    warnOnlyUntil: str('Until this date (YYYY-MM-DD) guards only warn instead of refusing', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
+  }, 'Adoption mode for projects new to agent-os', { default: {} }),
   machine: obj({
     maxWorkers: int('Most agent sessions to run in parallel on this laptop', { minimum: 1, default: 3 }),
     minFreeMb: int('Refuse heavy commands below this much free memory', { minimum: 0, default: 1500 }),

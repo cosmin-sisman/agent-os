@@ -337,6 +337,89 @@
         "type": "string",
         "description": "A legacy feature id"
       }
+    },
+    "guards": {
+      "type": "object",
+      "description": "Guards that refuse risky shell commands before they run (PreToolUse)",
+      "default": {},
+      "properties": {
+        "rules": {
+          "type": "array",
+          "description": "Project guard rules, added to the built-in ones",
+          "default": [],
+          "items": {
+            "type": "object",
+            "description": "One guard rule",
+            "required": [
+              "id",
+              "type",
+              "pattern"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "A short name, shown when the rule refuses something"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "forbid-flags",
+                  "forbid-pattern",
+                  "require-env",
+                  "min-free-memory"
+                ],
+                "description": "What the rule checks"
+              },
+              "pattern": {
+                "type": "string",
+                "description": "A regular expression matched against each shell command (after splitting on && || ; |)"
+              },
+              "flags": {
+                "type": "array",
+                "description": "forbid-flags: flags refused after a matching command",
+                "default": [],
+                "items": {
+                  "type": "string",
+                  "description": "A flag such as --no-verify"
+                }
+              },
+              "env": {
+                "type": "string",
+                "description": "require-env: the variable that must be set, e.g. DB_RESET_OK=1 in the command or the environment",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+              },
+              "message": {
+                "type": "string",
+                "description": "What to tell the agent when the rule refuses"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "disable": {
+          "type": "array",
+          "description": "Built-in guards turned off for this project",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "The id of a built-in guard"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "adoption": {
+      "type": "object",
+      "description": "Adoption mode for projects new to agent-os",
+      "default": {},
+      "properties": {
+        "warnOnlyUntil": {
+          "type": "string",
+          "description": "Until this date (YYYY-MM-DD) guards only warn instead of refusing",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

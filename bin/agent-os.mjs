@@ -15,5 +15,11 @@ process.exitCode = await run(process.argv.slice(2), {
   cwd: process.cwd(),
   env: process.env,
   ask,
+  readStdin: async () => {
+    if (process.stdin.isTTY) return ''
+    let data = ''
+    for await (const chunk of process.stdin) data += chunk
+    return data
+  },
 })
 rl?.close()
