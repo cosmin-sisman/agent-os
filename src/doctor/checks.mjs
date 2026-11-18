@@ -203,7 +203,7 @@ function hooks({ cwd, config }) {
   return unpinned.length ? [{ level: 'fail', path: '.claude/settings.json', message: `${unpinned.length} hook(s) do not run the pinned version ${config.version ?? ''}`.trim(), fix: 'agent-os update --relock, then agent-os update (it rewrites the hooks block with the pinned command)' }] : [ok(`${cmds.length} hook(s), on the pinned version`)]
 }
 
-const DEFAULT_BUDGETS = { 'AGENTS.md': '8KB', 'CLAUDE.md': '8KB', '.claude/rules/*.md': '6KB' }
+const DEFAULT_BUDGETS = { 'AGENTS.md': '8KB', 'CLAUDE.md': '8KB', '.claude/rules/**/*.md': '6KB' }
 const bytes = (s) => { const m = String(s).match(/^(\d+(?:\.\d+)?)\s?(B|KB|MB)$/); return m ? Number(m[1]) * { B: 1, KB: 1024, MB: 1024 ** 2 }[m[2]] : Infinity }
 
 /** Files agents load every session stay within their size budgets (warn at 80%). */
