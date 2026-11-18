@@ -15,6 +15,10 @@ Closes #
 
 <!-- Required. A lesson for the rules, or "None: <reason>". -->
 
+## Artifacts
+
+<!-- Optional. Artifacts this change adds or updates: artifacts/<id>/ (agent-os artifact link <id> <ref> comments with the link). -->
+
 ## Notes for reviewers
 
 <!-- Optional. -->
