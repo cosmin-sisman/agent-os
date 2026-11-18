@@ -113,6 +113,8 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `guards.rules[].message` | team | string |  | What to tell the agent when the rule refuses |
 | `guards.disable` | team | array | `[]` | Built-in guards turned off for this project |
 | `npmRegistry` | team | string |  | The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs |
+| `artifacts` | team | object | `{}` | Artifacts (artifacts/<date>-<slug>/) |
+| `artifacts.maxPageKb` | team | integer | `2048` | doctor warns when an artifact page is larger than this |
 | `ci` | team | object | `{}` | How generated CI jobs run: image and runners |
 | `ci.image` | team | string |  | The container image generated CI jobs run in, e.g. from the internal registry (default node:22) |
 | `ci.tags` | team | array | `[]` | Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels) |
