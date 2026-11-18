@@ -8,6 +8,9 @@ import { checkCommand, rulesFor } from './guards.mjs'
 import { checkEnvironment } from '../env/checks.mjs'
 import { systemProbe } from '../env/probe.mjs'
 import { versionStatus } from '../version/pin.mjs'
+import { budgetBytes, fitBudget, localContext, remoteContext } from './session.mjs'
+import { createTracker } from '../tracker/tracker.mjs'
+import { systemGit } from '../workflow/start.mjs'
 
 export const EVENTS = ['SessionStart', 'PreToolUse', 'PostToolUse', 'Stop']
 
@@ -39,6 +42,29 @@ export const CORE_HANDLERS = [
       if (typeof command !== 'string' || !/^(Bash|PowerShell)$/.test(input.tool_name ?? '')) return
       const broken = checkCommand(command, { rules: rulesFor(config), env, minFreeMb: config.machine?.minFreeMb ?? 0 })
       if (broken.length) return { decision: 'deny', message: broken.map((b) => `agent-os guard "${b.id}": ${b.message}`).join('\n') }
+    },
+  },
+  {
+    name: 'session',
+    events: ['SessionStart'],
+    kind: 'context',
+    timeoutMs: 1500,
+    run(input, { config, cwd }) {
+      return { lines: localContext({ config, cwd, git: systemGit(cwd) }).lines }
+    },
+  },
+  {
+    name: 'session-remote',
+    events: ['SessionStart'],
+    kind: 'context',
+    timeoutMs: 3000,
+    run(input, { config, cwd }) {
+      if (!config.platform?.project) return null
+      const git = systemGit(cwd)
+      const r = git(['rev-parse', '--abbrev-ref', 'HEAD'])
+      let tracker
+      try { tracker = createTracker(config) } catch { return null }
+      return { lines: remoteContext({ tracker, branch: r.status === 0 ? r.stdout.trim() : null }).lines }
     },
   },
   {
@@ -112,11 +138,13 @@ export async function runEvent(event, input, { config, cwd, env = {}, handlers =
     try {
       result = await withTimeout(h.run(input, { config, cwd, env }), h.timeoutMs ?? 5000)
     } catch (err) {
-      if (log.firstTime(input.session_id ?? 'no-session', h.name)) warnings.push(`agent-os: the "${h.name}" hook failed and was skipped (${err?.message ?? err}); it will not be reported again this session`)
+      // A context handler that fails (offline, slow platform) is simply left out: the session starts with less.
+      if (h.kind !== 'context' && log.firstTime(input.session_id ?? 'no-session', h.name)) warnings.push(`agent-os: the "${h.name}" hook failed and was skipped (${err?.message ?? err}); it will not be reported again this session`)
       continue
     }
     if (!result) continue
-    if (result.context) contexts.push(result.context)
+    if (result.context) contexts.push({ p: 50, text: result.context })
+    if (result.lines) contexts.push(...result.lines)
     if (result.decision === 'deny' && h.kind === 'guard' && event === 'PreToolUse') {
       if (adoption) warnings.push(`${result.message}\n(adoption mode until ${config.adoption.warnOnlyUntil}: allowed this time)`)
       else denials.push(result.message)
@@ -124,7 +152,12 @@ export async function runEvent(event, input, { config, cwd, env = {}, handlers =
   }
   const out = {}
   if (denials.length) out.hookSpecificOutput = { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: denials.join('\n') }
-  else if (contexts.length && event === 'SessionStart') out.hookSpecificOutput = { hookEventName: 'SessionStart', additionalContext: contexts.join('\n\n') }
+  else if (contexts.length && event === 'SessionStart') {
+    // The injection never exceeds its budget (contextBudgets.SessionStart, 1.5 KB by default): the least important
+    // lines are dropped first.
+    const fit = fitBudget(contexts, budgetBytes(config.contextBudgets?.SessionStart))
+    if (fit.text) out.hookSpecificOutput = { hookEventName: 'SessionStart', additionalContext: fit.text }
+  }
   if (warnings.length) out.systemMessage = warnings.join('\n')
   return Object.keys(out).length ? out : null
 }

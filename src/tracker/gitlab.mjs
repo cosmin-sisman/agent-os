@@ -105,6 +105,10 @@ export class GitLabTracker {
 
   openIssues() { return this.pages(this.p('issues?state=opened'), 20).map(issueOf) }
 
+  assignedIssues(login, { limit = 10 } = {}) {
+    return (this.api.rest('GET', this.p(`issues?state=opened&assignee_username=${encodeURIComponent(login)}&order_by=updated_at&sort=desc&per_page=${limit}`)) ?? []).map(issueOf)
+  }
+
   recentlyClosed(login, { limit = 20 } = {}) {
     return (this.api.rest('GET', this.p(`issues?state=closed&assignee_username=${encodeURIComponent(login)}&order_by=updated_at&sort=desc&per_page=${limit}`)) ?? []).map(issueOf)
   }
