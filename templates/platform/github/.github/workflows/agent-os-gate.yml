@@ -11,6 +11,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same pull request cancels the run in progress.
+concurrency:
+  group: agent-os-gate-{{{expr.open}}} github.event.pull_request.number || github.ref {{{expr.close}}}
+  cancel-in-progress: true
+
 jobs:
   gate:
     name: agent-os/gate

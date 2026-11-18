@@ -9,6 +9,8 @@ agent-os/loop:
 {{#if runner.tags}}
   tags: {{{runner.tags}}}
 {{/if}}
+  timeout: 5m
+  interruptible: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   variables:

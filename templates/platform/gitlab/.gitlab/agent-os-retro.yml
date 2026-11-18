@@ -10,6 +10,7 @@ agent-os/retro:
 {{#if runner.tags}}
   tags: {{{runner.tags}}}
 {{/if}}
+  timeout: 10m
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
   script:
