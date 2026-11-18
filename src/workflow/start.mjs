@@ -2,6 +2,7 @@
 // right base and link it to the issue, move it to In Progress, check it out (in a worktree only when asked).
 
 import { spawnSync } from 'node:child_process'
+import { MAX_OUTPUT, spawnProblem } from '../util/spawn.mjs'
 import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
 import { LABELS } from '../i18n/i18n.mjs'
@@ -13,7 +14,9 @@ const TYPE_PREFIX = { feature: 'feat', bug: 'fix', docs: 'docs', chore: 'chore',
 
 /** The real git, in a directory. Returns { status, stdout, stderr }. */
 export const systemGit = (cwd) => (args) => {
-  const r = spawnSync('git', args, { cwd, encoding: 'utf8', windowsHide: true })
+  const r = spawnSync('git', args, { cwd, encoding: 'utf8', maxBuffer: MAX_OUTPUT, windowsHide: true })
+  const problem = spawnProblem(r, 'git')
+  if (problem) return { status: r.status ?? 1, stdout: '', stderr: problem }
   return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' }
 }
 
