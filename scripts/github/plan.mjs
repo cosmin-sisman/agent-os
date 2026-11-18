@@ -130,7 +130,7 @@ export const issues = [
   e('E2', 'Core workflow: from ticket to release', M2,
     'The core skills and the CLI subcommands they call: /ticket, /start, /pr, /ship, /release, /next, on a repository set up with development as the default branch.',
     'This is the flow every other milestone plugs into.', `${D} §7, §8, §9; ${ADR('integration-branch-is-default')}`),
-  i('gh-setup', 'GitHub setup: development as default branch, rulesets, labels, milestones, forms', M2, ['type:feature', 'area:github', 'priority:p0', 'size:m'], 'E2', {
+  i('gh-setup', 'Platform setup on GitHub: development as default branch, rulesets, labels, milestones, forms', M2, ['type:feature', 'area:github', 'priority:p0', 'size:m'], 'E2', {
     context: 'Closes #N only closes issues when the PR merges into the default branch.',
     goal: '`agent-os github setup` makes a repository ready: integration branch created and default, rulesets on both branches, labels and milestones from config, issue forms and PR template in the configured languages.',
     in: ['branch creation and default switch', 'rulesets: no direct push, no force push, no deletion, required checks when present', 'label sync (create, update, rename by stable id)', '`agent-os lang set <area> <lang>` renames labels and milestones in place', 'dry-run plan'],
@@ -390,7 +390,7 @@ export const issues = [
     ac: ['every issue created by /ticket has scenarios', 'every PR from /pr has a results table'],
     scenarios: ['Given a bug issue, then plan adds a regression scenario that must fail before the fix'],
   }, ['gate', 'ticket']),
-  i('gh-actions', '/gh-actions: write and review workflows by best practice', M6, ['type:feature', 'area:ci', 'area:skills', 'priority:p1', 'size:m'], 'E6', {
+  i('gh-actions', '/ci: write and review CI by best practice (GitHub Actions, GitLab CI)', M6, ['type:feature', 'area:ci', 'area:skills', 'priority:p1', 'size:m'], 'E6', {
     context: 'Workflows are security-sensitive and easy to get wrong.',
     goal: 'A skill with a checklist and a reviewer: least-privilege permissions, SHA-pinned actions, concurrency, timeouts, caching, no untrusted expressions in run, pull_request_target rules, OIDC, reusable workflows, actionlint.',
     in: ['review mode for existing workflows', 'templates for gate, loop, retro, labels'],
@@ -459,9 +459,9 @@ export const issues = [
     ac: ['every created issue cites its source section'],
     scenarios: ['Given two specs that disagree, then /ingest-docs asks before creating issues'],
   }, ['init', 'ticket']),
-  i('maintenance', 'Maintenance profile: /audit and /runbook', M7, ['type:feature', 'area:init', 'priority:p3', 'size:m'], 'E7', {
+  i('maintenance', 'Maintenance profile: /runbook and the takeover dossier', M7, ['type:feature', 'area:init', 'priority:p3', 'size:m'], 'E7', {
     context: 'Finished products need safe upkeep and easy takeover.',
-    goal: '/audit checks dependencies, advisories, secrets and licenses and files prioritized issues; /runbook writes deploy, rollback and restore procedures from the release flow.',
+    goal: '/runbook writes deploy, rollback and restore procedures from the release flow; a takeover dossier (architecture, dangerous operations, accounts) helps new maintainers. Audits use /audit with the project preset (E13).',
     in: [],
     out: [],
     ac: ['audit is read-only until issues are confirmed'],
@@ -500,7 +500,7 @@ export const issues = [
     goal: 'Quick starts for the four profiles, configuration reference, language areas, skills catalog, FAQ.',
     in: [], out: [], ac: ['every command documented'], scenarios: ['Given a new user, then the greenfield guide works end to end'],
   }, ['init']),
-  i('dogfood', 'Dogfood: install agent-os on this repository', M8, ['type:chore', 'dogfood', 'priority:p1', 'size:m'], 'E8', {
+  i('dogfood', 'Dogfood: install agent-os on this repository', M8, ['type:chore', 'dogfood', 'area:distribution', 'priority:p1', 'size:m'], 'E8', {
     context: 'Until now the conventions here are applied by hand (CONTRIBUTING.md).',
     goal: 'Run init on this repository and remove the hand-written parts the package now provides.',
     in: [], out: [], ac: ['doctor and the loop check pass on this repository'], scenarios: ['Given a new PR here, then the loop check runs'],
@@ -663,3 +663,195 @@ issues.push(
     in: [], out: [], ac: ['an external script tag fails the check'], scenarios: ['Given a page loading a CDN script, then doctor fails naming the URL'],
   }, ['artifact-format', 'doctor']),
 )
+
+// ── Added 2026-11-18: GitHub and GitLab as first-class platforms ─────────────
+labels.push(
+  ['area:platform', '0e8a16', 'Platform adapters, capability probing, self-managed'],
+  ['platform:github', '24292f', 'Specific to GitHub'],
+  ['platform:gitlab', 'fc6d26', 'Specific to GitLab'],
+)
+issues.push(
+  e('E12', 'Platforms: GitHub and GitLab, cloud or self-managed', M2,
+    'Choose GitHub or GitLab at init (including GitHub Enterprise Server and GitLab self-managed or Dedicated); every command, template and skill follows that platform, driven by probed capabilities with fallbacks.',
+    'Many teams run GitLab, often on-premise. A GitHub-only package excludes them.', `${D} §20; ${ADR('platforms-github-and-gitlab')}`),
+  i('platform-config', 'Platform selection, remote detection and auth through gh or glab', M2, ['type:feature', 'area:platform', 'priority:p0', 'size:m'], 'E12', {
+    context: 'Every command needs to know which platform and host it talks to.',
+    goal: '`platform.type`, `host`, `project`, `caFile` in agent-os.json; init detects from the git remote (github.com, gitlab.com, or probes an unknown host) and confirms; auth is delegated to `gh auth` / `glab auth login --hostname`.',
+    in: ['no token is ever stored by agent-os'], out: [], ac: ['an unknown host is identified or reported, never guessed'],
+    scenarios: ['Given a remote on git.company.internal, then init probes /api/v4/version and proposes GitLab self-managed'],
+  }, ['config']),
+  i('capability-probe', 'Capability probing and documented fallbacks (`agent-os platform probe`)', M2, ['type:feature', 'area:platform', 'priority:p0', 'size:m'], 'E12', {
+    context: 'GitLab features depend on tier and version; GitHub Enterprise Server lags github.com.',
+    goal: 'Probe sub-items, dependencies, exclusive labels, multiple assignees, boards, pages, rulesets/push rules, MCP; cache the capability map; every capability has a fallback skills use automatically.',
+    in: ['refresh in doctor and in CI'], out: [], ac: ['skills never branch on the platform name, only on capabilities'],
+    scenarios: ['Given GitLab Free without blocking links, then /ticket uses relates-to + blocked label + Blocked by line'],
+  }, ['platform-config']),
+  i('gitlab-adapter', 'GitLab tracker adapter: issues, epics, child tasks, links, scoped labels, merge requests', M2, ['type:feature', 'area:platform', 'platform:gitlab', 'priority:p0', 'size:l'], 'E12', {
+    context: 'The tracker interface has a GitHub implementation first.',
+    goal: 'Implement the same interface on GitLab REST v4 + GraphQL via glab: issues, epics and child tasks, blocks / is blocked by links, scoped labels, milestones, iterations, assignees, merge requests (!N) and their closing patterns.',
+    in: ['pagination and rate limits', 'reference syntax #N, !N, &N'], out: [], ac: ['the same skill scenarios pass on both adapters'],
+    scenarios: ['Given /ticket with a parent epic, then the issue is attached to the epic on Premium and gets a Parent line on Free'],
+  }, ['tracker', 'capability-probe']),
+  i('gitlab-setup', 'Platform setup on GitLab: default branch, protected branches, push rules, scoped labels, templates', M2, ['type:feature', 'area:platform', 'platform:gitlab', 'priority:p0', 'size:m'], 'E12', {
+    context: 'The GitHub setup has no GitLab counterpart yet.',
+    goal: 'Create the integration branch and make it default, protect both branches, push rules and approval rules when available, scoped labels from the dictionaries, milestones, `.gitlab/issue_templates` and `.gitlab/merge_request_templates` in the configured languages.',
+    in: ['dry-run plan', 'idempotent'], out: [], ac: ['a second run changes nothing'],
+    scenarios: ['Given labels in ro, then scoped labels like tip::bug are created'],
+  }, ['gitlab-adapter', 'templates']),
+  i('platform-routes', 'Platform routes for templates and the lock; platform vocabulary', M2, ['type:feature', 'area:platform', 'area:cli', 'priority:p0', 'size:m'], 'E12', {
+    context: 'A GitLab project must never receive a .github folder, and the other way round.',
+    goal: 'templates/platform/{github,gitlab}; the lock records the platform; skills render the platform vocabulary (/mr and !N on GitLab, /pr and #N on GitHub) with aliases in the registry.',
+    in: [], out: [], ac: ['update writes only the active route'], scenarios: ['Given platform gitlab, then /pr is an alias of /mr'],
+  }, ['lock', 'templates']),
+  i('self-managed', 'Self-managed and on-premise: private CA, proxies, air-gapped install, version gates, runner tags', M2, ['type:feature', 'area:platform', 'platform:gitlab', 'priority:p1', 'size:l'], 'E12', {
+    context: 'Company GitLab instances run behind private CAs and proxies, sometimes without internet access.',
+    goal: 'caFile passed to Node and glab; proxy support; install from an npm tarball or internal registry; features gated by the probed version; runner tags and internal images for generated CI; /upstream off by default.',
+    in: ['GitHub Enterprise Server equivalents where they apply'], out: [], ac: ['works with no internet access after install'],
+    scenarios: ['Given an air-gapped runner, then the gate job runs from the internal registry image'],
+  }, ['capability-probe']),
+  i('gitlab-ci', 'agent-os CI/CD components for GitLab: gate, loop check, retro, labels, pages', M6, ['type:feature', 'area:ci', 'platform:gitlab', 'priority:p1', 'size:m'], 'E12', {
+    context: 'Generated CI exists as GitHub workflows only.',
+    goal: 'Versioned CI/CD components included from .gitlab-ci.yml, following /ci best practices (rules, interruptible, timeouts, protected variables, id_tokens, pinned images, needs).',
+    in: ['GitLab Pages job for artifacts with a CI-artifacts fallback'], out: [], ac: ['glab ci lint passes on every generated file'],
+    scenarios: ['Given an MR with an empty Lessons section, then the loop job fails'],
+  }, ['gate', 'loop-ci']),
+  i('gitlab-matrix', 'Test matrix against gitlab.com and a self-managed GitLab', M6, ['type:chore', 'area:testing', 'platform:gitlab', 'priority:p1', 'size:m'], 'E12', {
+    context: 'Two adapters need the same guarantees.',
+    goal: 'Contract tests for the tracker interface run against GitHub, gitlab.com and a GitLab CE container in scheduled CI.',
+    in: [], out: [], ac: ['a contract test failing on one platform blocks the release'],
+    scenarios: ['Given a change to the adapter interface, then both implementations are tested'],
+  }, ['gitlab-adapter', 'repo-ci']),
+  i('platform-switch', '`agent-os platform switch`: move a project between GitHub and GitLab', M8, ['type:feature', 'area:platform', 'priority:p3', 'size:m'], 'E12', {
+    context: 'Teams migrate between platforms.',
+    goal: 'Re-render every platform route on a branch, like update; re-link journal refs after the platform importer moved issues.',
+    in: [], out: ['moving issues (the platforms\' importers do that)'], ac: ['no file from the old route remains'],
+    scenarios: ['Given a GitHub project switched to GitLab, then .github/ is removed and .gitlab-ci.yml is added in one MR'],
+  }, ['platform-routes']),
+)
+const EPIC_AREAS = { E1: 'area:cli', E2: 'area:skills', E3: 'area:loop', E4: 'area:collab', E5: 'area:registry', E6: 'area:testing', E7: 'area:init', E8: 'area:distribution', E9: 'area:stack', E10: 'area:artifacts', E11: 'area:updates', E12: 'area:platform' }
+for (const it of issues) if (it.epic && EPIC_AREAS[it.key]) it.labels = [...it.labels, EPIC_AREAS[it.key]]
+
+// ── Added 2026-11-18: audit, coding standards, security, chat language ──────
+const M10 = 'v0.9 Audit and security'
+labels.push(
+  ['area:audit', '0e8a16', 'The /audit skill and its lenses'],
+  ['area:standards', '0e8a16', 'Coding standards'],
+  ['area:security', '0e8a16', 'The /security skill: watch, check, prepare'],
+  ['security', 'b60205', 'Hardening work that reveals nothing exploitable (vulnerabilities go to private advisories)'],
+)
+milestones.push([M10, '/audit for ideas, specs, projects, releases, problems and systems through lenses with evidence; /security: relevant advisories, layer checks in every change request, threat models, abuse cases, private reporting.'])
+issues.push(
+  i('chat-lang', 'Personal chat language at install and `init --me` for new teammates', M1, ['type:feature', 'area:i18n', 'area:init', 'priority:p0', 'size:s', 'good first issue'], 'E1', {
+    context: 'The chat language is personal; team areas (issues, PRs, commits, code) are shared.',
+    goal: 'init always asks first which language the agent should talk in (en or ro), stores it in .agent-os/local.json; `agent-os init --me` asks only the personal questions for someone joining later.',
+    in: [], out: [], ac: ['init --me never modifies committed files'], scenarios: ['Given a team with issues in ro, when a teammate picks chat en, then the agent chats in English and still writes issues in ASCII ro'],
+  }, ['config', 'i18n']),
+
+  e('E14', 'Coding standards, always on', M6,
+    'English code with headers and useful comments, clarity first, optimization with judgment, and a decision procedure when several solutions fit; active without being asked.',
+    'Agents write most of the code; without an ever-present standard it drifts between sessions.', `${D} §22; ${ADR('coding-standards')}`),
+  i('standards-rules', 'Core standards rule and stack-scoped language rules', M6, ['type:feature', 'area:standards', 'priority:p0', 'size:m'], 'E14', {
+    context: 'The standard must be in every session and specific to the stack.',
+    goal: '.claude/rules/standards.md (always loaded) plus per-language rules (TypeScript, Python, SQL, …) selected from stack.yaml and scoped by paths; low aiFriendly layers add read-the-docs-first.',
+    in: [], out: [], ac: ['rules stay within the context budget'], scenarios: ['Given a Python layer in stack.yaml, then the Python rule is installed and scoped to its paths'],
+  }, ['templates']),
+  i('standards-skill', '/standards skill: review, explain, and choose between solutions', M6, ['type:feature', 'area:standards', 'area:skills', 'priority:p0', 'size:m'], 'E14', {
+    context: 'Choosing between several valid implementations is where quality is won or lost.',
+    goal: 'The decision procedure (candidates, criteria, choice with reason, record when hard to reverse); review of a file or diff; bound to the standards slot used by /pr and /mr before code-review.',
+    in: [], out: [], ac: ['only the chosen solution is implemented'], scenarios: ['Given two caching approaches, then the skill names both, picks one and states why in one sentence'],
+  }, ['slots']),
+  i('standards-checks', 'Deterministic standards checks: on-edit reminder and doctor --ci', M6, ['type:feature', 'area:standards', 'area:hooks', 'priority:p1', 'size:m'], 'E14', {
+    context: 'Some parts of the standard are mechanical and can be checked every time.',
+    goal: 'PostToolUse handler on edits (header, English comments and identifiers or the allowed area language, TODO with #N, file-size budget), reminding once without blocking; the same checks in doctor --ci.',
+    in: [], out: [], ac: ['never blocks an edit locally'], scenarios: ['Given a new TODO without an issue reference, then a reminder names the line'],
+  }, ['hooks', 'doctor']),
+
+  e('E13', 'Audit: any subject, several lenses, clean findings', M10,
+    'One /audit skill for ideas, specs, projects, releases, problems and systems, run through separate lenses with evidence, producing an artifact, proposed issues, lessons and a journal entry.',
+    'Assessments are needed at every stage; ad-hoc ones mix perspectives and are not tracked.', `${D} §21; ${ADR('audit')}`),
+  i('audit-core', '/audit: subject detection, lens presets and the findings model', M10, ['type:feature', 'area:audit', 'area:skills', 'priority:p0', 'size:l'], 'E13', {
+    context: 'Subjects range from a sentence to a whole system.',
+    goal: 'Detect and confirm the subject; choose lenses by preset; run each lens in its own subagent; merge findings with evidence, severity, confidence and one recommendation each; report strengths.',
+    in: ['product, architecture, stack, code quality, security and privacy, performance and cost, delivery, process, operations'], out: [],
+    ac: ['a finding without evidence becomes a question'], scenarios: ['Given an idea, then the product, architecture, stack and cost lenses run', 'Given a problem in the data layer, then only the related lenses run'],
+  }, ['stack-file', 'standards-skill']),
+  i('audit-outputs', 'Audit outputs: artifact, proposed issues, lessons, comparison with the previous audit', M10, ['type:feature', 'area:audit', 'area:artifacts', 'priority:p1', 'size:m'], 'E13', {
+    context: 'An audit is useful only if it turns into tracked work.',
+    goal: 'An audit artifact verified against the audited commit; issues proposed through /ticket (or an epic) on confirmation; lessons and a journal entry; a diff against the previous audit of the same subject.',
+    in: [], out: [], ac: ['nothing is filed without confirmation'], scenarios: ['Given a second audit, then fixed, new and worse findings are listed separately'],
+  }, ['audit-core', 'artifact-format', 'ticket']),
+
+  e('E15', 'Security: watch, check, prepare', M10,
+    'Advisories relevant to this project, a layer-based security pass on every change request, threat models, abuse cases and exercises, and private reporting.',
+    'Security must be continuous and specific, not a yearly scan.', `${D} §23; ${ADR('security')}`),
+  i('sec-watch', 'Advisory watch: GHSA, GitLab advisories, OSV, NVD, CISA KEV, stack vendors → Security digest', M10, ['type:feature', 'area:security', 'priority:p0', 'size:l'], 'E15', {
+    context: 'Only advisories that touch the project matter.',
+    goal: 'Match advisories to lockfiles, an SBOM (`agent-os sbom`) and stack.yaml; prioritize by KEV, EPSS, severity and reachability; a scheduled job keeps one Security digest issue current; SessionStart warns on critical items.',
+    in: ['internal mirror or visible disable on air-gapped installs'], out: [], ac: ['only package names and versions leave the project'],
+    scenarios: ['Given a KEV entry for a direct dependency, then the digest lists it first and /release refuses to ship it'],
+  }, ['stack-file', 'loop-ci']),
+  i('sec-check', 'Layer-based security pass in /pr and /mr, with scanner results', M10, ['type:feature', 'area:security', 'priority:p0', 'size:l'], 'E15', {
+    context: 'Every change request touches some layers; each layer has its own risks.',
+    goal: 'OWASP ASVS checklists per layer touched by the diff, plus results from secret scanning, dependency audit, CodeQL / GitLab SAST / Semgrep and container and IaC scanners when present; bound to the security-review slot.',
+    in: ['/env reports missing scanners'], out: [], ac: ['each finding has the fix and the reason'],
+    scenarios: ['Given a new public endpoint without rate limiting, then the pass flags it with the layer checklist item'],
+  }, ['slots', 'stack-areas']),
+  i('sec-scenarios', 'Threat models, abuse cases, security regression tests and exercises', M10, ['type:feature', 'area:security', 'area:testing', 'priority:p1', 'size:l'], 'E15', {
+    context: 'Teams rarely rehearse attacks before they happen.',
+    goal: 'STRIDE threat model per layer as a living artifact; abuse cases added by /test plan for sensitive areas; a regression test per fixed vulnerability; tabletop exercises against runbooks on demand.',
+    in: ['scenarios only against environments the project owns'], out: [], ac: ['the threat model refreshes when stack.yaml changes'],
+    scenarios: ['Given an issue in the payments area, then the test plan includes Given-an-attacker scenarios'],
+  }, ['test-skill', 'artifact-format']),
+  i('sec-report', 'Private vulnerability reporting and the release gate', M10, ['type:feature', 'area:security', 'priority:p0', 'size:m'], 'E15', {
+    context: 'Real vulnerabilities must never land in public issues.',
+    goal: 'Draft security advisories on GitHub, confidential issues on GitLab; hardening uses the security label; /release refuses known-exploited vulnerabilities in shipped dependencies without a written risk acceptance.',
+    in: [], out: [], ac: ['no code path files a vulnerability publicly'], scenarios: ['Given a confirmed injection bug, then a draft advisory is created, not an issue'],
+  }, ['capability-probe', 'release']),
+)
+for (const it of issues) if (['E13', 'E14', 'E15'].includes(it.key)) it.labels = [...it.labels, { E13: 'area:audit', E14: 'area:standards', E15: 'area:security' }[it.key]]
+
+// ── Added 2026-11-18: system map ────────────────────────────────────────────
+labels.push(
+  ['area:system', '0e8a16', 'System map: components, interfaces, exposure, contracts'],
+  ['contract:breaking', 'b60205', 'Breaks an API or event contract; consumer owners must review'],
+)
+issues.push(
+  e('E16', 'System map: repository shape, components, interfaces and exposure', M9,
+    'One system.yaml and a /system skill that map components, edges, exposure and endpoints for single apps, monorepos and multi-repo microservices, check contracts and alert consumers to breaking changes.',
+    'Architecture knowledge is implicit; contracts drift and breaking changes reach consumers unannounced.', `${D} §24; ${ADR('system-map')}`),
+  i('system-file', 'system.yaml schema and `/system detect`', M9, ['type:feature', 'area:system', 'priority:p0', 'size:l'], 'E16', {
+    context: 'Components, kinds, exposure and edges are not written down anywhere.',
+    goal: 'Schema (kind, path or repo, layer, exposure, provides, consumes, owners); detect drafts it from workspaces, manifests, routes and platform configuration and asks where it cannot read.',
+    in: ['pnpm/npm/yarn workspaces, Turborepo, Nx, Go workspaces, Cargo, Maven'], out: [], ac: ['every detected item cites its evidence file'],
+    scenarios: ['Given a pnpm monorepo with apps/ and packages/, then detect lists each workspace package as a component with its dependencies'],
+  }, ['yaml', 'stack-file']),
+  i('endpoints', 'Endpoint inventory from code and specs, on demand', M9, ['type:feature', 'area:system', 'priority:p1', 'size:l'], 'E16', {
+    context: 'Nobody has a complete list of routes and their auth.',
+    goal: 'Extract routes from common frameworks and from OpenAPI/AsyncAPI/GraphQL specs; render method, path, component, auth and documented-or-not, cached and never committed.',
+    in: ['Express, Hono, Fastify, Next/Astro routes, FastAPI, Django, Rails, Spring, ASP.NET, Go routers'], out: [],
+    ac: ['unknown frameworks are reported, not silently skipped'], scenarios: ['Given a route missing from openapi.yaml, then it shows as undocumented'],
+  }, ['system-file']),
+  i('system-checks', 'System checks: spec drift, exposure, auth, webhooks, cycles, deep imports', M9, ['type:feature', 'area:system', 'area:security', 'priority:p1', 'size:l'], 'E16', {
+    context: 'Most integration bugs are visible in the structure before they happen.',
+    goal: 'Checks for spec drift, unauthenticated public endpoints, internal components reachable from the internet, unsigned incoming webhooks, module cycles, deep imports, shared databases between independent services, missing timeouts and retries; in doctor and in the security pass.',
+    in: [], out: [], ac: ['each finding names the component, the file and the fix'],
+    scenarios: ['Given a public webhook route without signature verification, then the check fails with the route'],
+  }, ['endpoints']),
+  i('contracts', 'Contract diffs in change requests and consumer alerts', M9, ['type:feature', 'area:system', 'area:github', 'priority:p0', 'size:m'], 'E16', {
+    context: 'Consumers learn about breaking API changes in production.',
+    goal: 'Diff OpenAPI/AsyncAPI/GraphQL contracts per change request; label contract:breaking and request reviews from consumer owners, including in other repositories through the platform adapter.',
+    in: ['polyrepo: consumers fetched from pinned refs'], out: [], ac: ['a removed field is always breaking'],
+    scenarios: ['Given a renamed endpoint consumed by web, then the PR is labelled contract:breaking and web owners are requested'],
+  }, ['system-file', 'tracker']),
+  i('affected', 'Monorepo affected graph for the gate and ownership', M9, ['type:feature', 'area:system', 'area:testing', 'priority:p1', 'size:m'], 'E16', {
+    context: 'Running every suite on every change is slow in large monorepos.',
+    goal: 'Compute affected components from the diff and the dependency graph; the gate runs their suites only; overlap and /next use components.',
+    in: [], out: [], ac: ['local and CI compute the same affected set'], scenarios: ['Given a change in packages/db, then api and worker tests run and web tests do not'],
+  }, ['system-file', 'gate']),
+  i('api-docs', 'API docs and the system map artifact', M9, ['type:feature', 'area:system', 'area:artifacts', 'priority:p2', 'size:m'], 'E16', {
+    context: 'Specs are hard to read raw, and the architecture lives in people\'s heads.',
+    goal: 'Swagger UI or Redoc pages generated from the specs into the artifact site, and a system map diagram (components, edges, exposure) rebuilt when system.yaml or a spec changes; missing specs drafted from code on request.',
+    in: [], out: [], ac: ['pages are self-contained (no external calls)'], scenarios: ['Given a new spec, then its docs page appears in the artifact index'],
+  }, ['system-file', 'artifact-build']),
+)
+for (const it of issues) if (it.key === 'E16') it.labels = [...it.labels, 'area:system']

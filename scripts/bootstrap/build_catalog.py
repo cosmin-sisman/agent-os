@@ -192,6 +192,13 @@ for r in d['Config Tehnologii'][1:]:
     techs.append({'id': slug(n), 'name': n, 'layer': layer_id[r['B']], 'language': lang_id[r['C']], 'provider': prov_id[r['D']],
                   'runtime': r.get('E'), 'complexity': num(r.get('F')), 'aiFriendly': num(r.get('G')),
                   'note': {'en': TECH_EN[r['A']], 'ro': ascii_ro(r.get('H')).replace('Standardul agentiei', 'Alegerea implicita')}})
+# Added after the spreadsheet: GitLab as a first-class platform (design §20).
+provs.append({'id': 'gitlab', 'name': 'GitLab', 'kind': 'Code / CI', 'ease': 4, 'cost': 2, 'euRegions': 'verify', 'mcpHint': True,
+              'role': {'en': 'Repositories, CI/CD; gitlab.com or self-managed', 'ro': 'Repo-uri, CI/CD; gitlab.com sau self-managed'}})
+gi = next(n for n, t in enumerate(techs) if t['id'] == 'github-actions') + 1
+techs.insert(gi, {'id': 'gitlab-ci', 'name': 'GitLab CI/CD', 'layer': 'ci-cd', 'language': 'yaml', 'provider': 'gitlab',
+                  'runtime': 'Linux runners (shared or self-hosted)', 'complexity': 2, 'aiFriendly': 4,
+                  'note': {'en': 'Pipelines and reusable components; works on self-managed', 'ro': 'Pipeline-uri si componente reutilizabile; merge si self-managed'}})
 rts = []
 for r in d['Config OS'][1:]:
     kind, when = RT_EN[r['A']]

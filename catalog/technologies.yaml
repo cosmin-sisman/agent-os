@@ -1333,6 +1333,18 @@
     en: "Lint, tests, deploy"
     ro: "Lint, teste, deploy"
 
+- id: gitlab-ci
+  name: "GitLab CI/CD"
+  layer: ci-cd
+  language: yaml
+  provider: gitlab
+  runtime: "Linux runners (shared or self-hosted)"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Pipelines and reusable components; works on self-managed"
+    ro: "Pipeline-uri si componente reutilizabile; merge si self-managed"
+
 - id: vercel-auto-deploy
   name: "Vercel auto-deploy"
   layer: ci-cd

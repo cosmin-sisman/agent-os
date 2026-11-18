@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.svg" alt="agent-os: the operating agreement for people, coding agents and GitHub" width="760">
+  <img src="docs/assets/banner.svg" alt="agent-os: the operating agreement for people, coding agents, GitHub and GitLab" width="760">
 </p>
 
 <p align="center">
@@ -7,6 +7,7 @@
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-0ea5e9?style=flat-square"></a>
   <img alt="Node 20+" src="https://img.shields.io/badge/node-%E2%89%A520-14b8a6?style=flat-square">
   <img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-0-f97316?style=flat-square">
+  <img alt="Platforms: GitHub and GitLab" src="https://img.shields.io/badge/platforms-GitHub%20%C2%B7%20GitLab%20%C2%B7%20self--managed-6366f1?style=flat-square">
   <img alt="Languages: en, ro" src="https://img.shields.io/badge/i18n-en%20%C2%B7%20ro-f43f5e?style=flat-square">
   <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-22c55e?style=flat-square"></a>
 </p>
@@ -23,7 +24,7 @@
 
 ---
 
-**agent-os** installs a working agreement into any repository. It sets up the skills, rules, hooks and small deterministic scripts that let a team (five people or fifty, each with their own coding-agent sessions on their own laptops) move work from idea to production the same way every time. GitHub is the shared memory. Every piece of work also teaches the system something, so it keeps up with the project instead of falling behind it.
+**agent-os** installs a working agreement into any repository. It sets up the skills, rules, hooks and small deterministic scripts that let a team (five people or fifty, each with their own coding-agent sessions on their own laptops) move work from idea to production the same way every time. Your code platform is the shared memory: **GitHub or GitLab**, in the cloud or self-managed on your own servers. Every piece of work also teaches the system something, so it keeps up with the project instead of falling behind it.
 
 ```bash
 npx @cosmin-sisman/agent-os init
@@ -53,13 +54,13 @@ Every skill ends with a *Learn* step and every PR carries its lessons. Lessons c
 <td valign="top">
 
 ### 🧱 Stack map
-A bilingual catalog of 24 layers, 126 technologies, languages and providers, plus reference stacks from level 1 to 5. One readable `stack.yaml` drives labels, tests, environment checks and lessons.
+A bilingual catalog of 24 layers, 127 technologies, languages and providers, plus reference stacks from level 1 to 5. One readable `stack.yaml` drives labels, tests, environment checks and lessons.
 
 </td>
 <td valign="top">
 
 ### 👥 Built for teams
-GitHub issues, sub-issues, dependencies, assignees and comments are the coordination layer. Nothing personal is committed, local hooks only remind, and CI enforces.
+Issues, sub-issues or epics, dependencies, assignees and comments on your platform are the coordination layer. Nothing personal is committed, local hooks only remind, and CI enforces.
 
 </td>
 </tr>
@@ -88,6 +89,62 @@ Discovery reports, analyses and maps as pages that are versioned in git, publish
 
 ### 🛡️ Safe updates
 A pinned version per project, `new → stable → deprecated → legacy → removed` markers on everything shipped, and upgrades as a reviewable PR with migrations.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🦊 GitHub or GitLab, cloud or on-premise
+Choose your platform at `init`: github.com, GitHub Enterprise Server, gitlab.com, or GitLab self-managed or Dedicated. agent-os probes what your instance and tier support, installs only that platform's files (`.github/` or `.gitlab/`), speaks its vocabulary (`/pr` and `#N`, or `/mr` and `!N`) and falls back gracefully where a feature is missing.
+
+</td>
+<td valign="top">
+
+### 🧪 Testing and CI built in
+One gate definition runs locally and in CI. `/test` plans scenarios at ticket time and reports results at review time, and `/ci` writes GitHub Actions or GitLab CI pipelines by best practice.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🔍 Audit anything
+`/audit` takes an idea, specs, a project at any stage, a release, a specific problem or a whole system. It looks through separate lenses (product, architecture, stack, code, security, cost, delivery, process, operations), backs every finding with evidence, and turns the findings into an artifact plus issues.
+
+</td>
+<td valign="top">
+
+### 🛡️ Security that keeps watch
+`/security` follows the advisories that affect *your* dependencies and stack (GHSA, OSV, NVD, CISA KEV, vendors). It checks every change request by layer, writes threat models and abuse cases, and reports vulnerabilities only through private channels.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🕸️ System map
+Single app, monorepo or microservices across repositories. `/system` maps components, how they talk (REST, GraphQL, gRPC, events, webhooks) and what is public or internal. It inventories endpoints, keeps OpenAPI and AsyncAPI in sync, and alerts consumers to breaking contract changes.
+
+</td>
+<td valign="top">
+
+### 🧭 Monorepo-aware
+Workspaces in pnpm, Turborepo, Nx, Go, Cargo and Maven are detected, so tests run only on the affected packages and ownership follows components.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### ✍️ Coding standards, always on
+English code, file headers that make the codebase easy to search, clarity before cleverness, and optimization where it matters. When there are several ways to solve something, the agent compares them and picks one, with a reason.
+
+</td>
+<td valign="top">
+
+### 💬 Talks to you in your language
+Each person picks the language the agent chats in, separately from the team's languages for issues, PRs, commits and code.
 
 </td>
 </tr>
@@ -178,13 +235,14 @@ layers:
 | Milestone | Theme |
 |---|---|
 | [v0.1 Foundations](https://github.com/cosmin-sisman/agent-os/milestone/1) | CLI, config, templates, lock, languages, hooks runner, environment check, pinned versions and migrations |
-| [v0.2 Core workflow](https://github.com/cosmin-sisman/agent-os/milestone/2) | GitHub setup, tracker adapter, `/ticket` `/start` `/pr` `/ship` `/release` `/next`, safe `update` |
+| [v0.2 Core workflow](https://github.com/cosmin-sisman/agent-os/milestone/2) | GitHub **and GitLab** (cloud and self-managed) adapters, capability probing, platform setup, `/ticket` `/start` `/pr`·`/mr` `/ship` `/release` `/next`, safe `update` |
 | [v0.3 Knowledge and loop](https://github.com/cosmin-sisman/agent-os/milestone/3) | journal, lessons with recall, chronicle, `map`, `/retro`, `doctor`, the required loop check, `/upstream` |
 | [v0.4 Collaboration](https://github.com/cosmin-sisman/agent-os/milestone/4) | claim protocol, overlap detection, comment-driven work, optional orchestrator, `/handoff` |
 | [v0.5 Skill registry](https://github.com/cosmin-sisman/agent-os/milestone/5) | core / external / local registry, capability slots |
-| [v0.6 Testing and CI](https://github.com/cosmin-sisman/agent-os/milestone/6) | `/test`, one gate locally and in CI, `/gh-actions` |
+| [v0.6 Testing and CI](https://github.com/cosmin-sisman/agent-os/milestone/6) | `/test`, one gate locally and in CI, `/ci` for GitHub Actions and GitLab CI, `/standards` always on |
 | [v0.7 Init and adoption](https://github.com/cosmin-sisman/agent-os/milestone/7) | detection, profiles, retrofit and forward-only, `/discover`, `/kickoff`, packs |
-| [v0.8 Stack map and artifacts](https://github.com/cosmin-sisman/agent-os/milestone/9) | `stack.yaml`, `/stack`, catalog overlays, `/artifact`, Pages |
+| [v0.8 Stack map and artifacts](https://github.com/cosmin-sisman/agent-os/milestone/9) | `stack.yaml`, `/stack`, catalog overlays, `system.yaml`, `/system` (components, contracts, exposure), `/artifact`, Pages |
+| [v0.9 Audit and security](https://github.com/cosmin-sisman/agent-os/milestone/10) | `/audit` with lenses and evidence, `/security`: advisory watch, layer checks, threat models, private reporting |
 | [v1.0 Release](https://github.com/cosmin-sisman/agent-os/milestone/8) | Claude Code plugin, npm with provenance, skill evals, docs, dogfooding |
 
 ## 🤝 Community

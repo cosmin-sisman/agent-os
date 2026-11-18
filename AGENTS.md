@@ -15,6 +15,9 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 - Every mechanical step is a CLI subcommand with `--dry-run` and `--json`. Skills call the CLI; they never build `gh` or `git` commands from scratch.
 - Never commit generated indexes or caches. They are rendered on demand into `.agent-os/cache/`.
 - Hooks and scripts must run on Windows, macOS and Linux: Node only, no shell-specific syntax.
+- `--dry-run` stubs return the same shape as the real call (an empty list, not `{}`), or the dry run crashes where the real run works. (lesson: dry-run-shapes)
+- Idempotent platform calls treat "already linked" errors as success, and each adapter owns its own list of those messages (GitHub answers a repeated sub-issue link with 422 "duplicate sub-issues"). (lesson: platform-api-duplicates)
+- Two platforms are first-class: GitHub and GitLab (including self-managed). Features depend on probed capabilities with a fallback, never on the platform's name (design §20). Platform-specific templates live in their own route.
 
 ## Area map
 
