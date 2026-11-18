@@ -14,6 +14,8 @@ import { readLessons, validateCard } from '../lessons/lessons.mjs'
 import { checkDecisions, readDecisions } from '../decisions/decisions.mjs'
 import { DIR as ARTIFACTS_DIR, externalLoads, listArtifacts } from '../artifacts/artifact.mjs'
 import { stackDrift } from '../stack/detect.mjs'
+import { readSystem } from '../system/system.mjs'
+import { systemChecks } from '../system/checks.mjs'
 import { areaLayers } from '../stack/areas.mjs'
 import { headerOf } from '../map/map.mjs'
 import { standardsFindings } from '../standards/checks.mjs'
@@ -350,6 +352,14 @@ function stack({ cwd }) {
   return r.drift.length ? r.drift.map((d) => ({ level: 'warn', path: d.evidence[0]?.file ?? 'stack.yaml', message: d.message, fix: d.fix })) : [ok('stack.yaml matches the code')]
 }
 
+/** The system checks (spec drift, exposure, auth, webhooks, cycles, deep imports…), once the project has system.yaml. */
+function system({ cwd }) {
+  if (!readSystem(cwd)) return [ok('no system.yaml')]
+  let findings
+  try { findings = systemChecks(cwd) } catch (err) { return [{ level: 'warn', path: 'system.yaml', message: `the system checks could not run: ${err.message}`, fix: 'agent-os system check' }] }
+  return findings.length ? findings.map((f) => ({ level: f.level, path: f.file ?? 'system.yaml', message: `${f.component ? `${f.component}: ` : ''}${f.message}`, fix: f.fix })) : [ok('system checks: nothing found')]
+}
+
 /** AGENTS.md has an area map that covers every top-level source directory. */
 function areaMap({ cwd }) {
   const text = read(cwd, 'AGENTS.md')
@@ -410,6 +420,7 @@ export const CHECKS = [
   { id: 'links', area: 'agent system', run: links },
   { id: 'area-map', area: 'agent system', run: areaMap },
   { id: 'stack', area: 'agent system', run: stack },
+  { id: 'system', area: 'agent system', run: system },
   { id: 'headers', area: 'agent system', run: headers },
   { id: 'standards', area: 'agent system', run: standards },
   { id: 'budgets', area: 'context', run: budgets },

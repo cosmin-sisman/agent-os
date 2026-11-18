@@ -115,4 +115,25 @@ For each route the inventory gives:
 
 Spec operations no code declares are listed too. **Frameworks the project uses that agent-os cannot read yet** (Remix, SvelteKit, Nuxt, Laravel, Phoenix, tRPC procedures, GraphQL servers…) are reported, not silently skipped. Test files are left out. The inventory is written to `.agent-os/cache/endpoints.json`, rendered on demand and never committed.
 
-System checks (#115) and the system map artifact (#118) build on this file.
+## System checks
+
+```sh
+agent-os system checks     # exit 1 when a check fails
+```
+
+They read system.yaml, the endpoint inventory and source files as text, and never run anything. Each finding names the component, the file (with the line where there is one) and the fix.
+
+| Check | Level | What |
+|---|---|---|
+| `spec-drift` | warn | a route of a component with a spec that the spec doesn't document; a spec operation no code declares |
+| `public-auth` | warn | a route on a `public` component with no visible authentication marker (health and well-known paths excepted) |
+| `exposure` | fail | an `internal` or `private` component whose folder has a public platform file (`vercel.json`, `wrangler.toml`, `fly.toml`, …) |
+| `webhook-signature` | fail | an incoming webhook route whose file shows no signature verification (`constructEvent`, svix, HMAC with `timingSafeEqual`, …), or a `webhook` with `signed: false` |
+| `cycles` | fail / warn | components that depend on each other in a cycle (fail); JS/TS modules that import each other statically (warn; lazy `import()` is not a cycle) |
+| `deep-imports` | warn | a module reaching into another component's files by relative path, or importing `pkg/src/…` instead of the package |
+| `shared-db` | warn | services or workers that use the same `db` component without depending on each other |
+| `timeouts` | warn | outgoing calls (`fetch`, axios, got, ky, requests, httpx) in a service or worker without a timeout or signal |
+
+`doctor` runs them once the project has system.yaml (the `system` check). `pr preflight` (the security pass) warns about findings in the files the change touches.
+
+The system map artifact (#118) builds on this file.

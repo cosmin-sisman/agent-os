@@ -11,12 +11,13 @@ import { loadCatalog } from '../stack/catalog.mjs'
 import { readStack } from '../stack/stack.mjs'
 import { contractReview } from '../system/contracts.mjs'
 import { inventory } from '../system/endpoints.mjs'
+import { systemChecks } from '../system/checks.mjs'
 import { changedFiles } from '../gate/gate.mjs'
 import { systemGit } from '../workflow/start.mjs'
 import { loadConfig } from '../config/config.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 
-export const usage = 'agent-os system detect [--write] | check | show | contracts [--base <branch>] | endpoints [--undocumented]   (checks: a later issue)'
+export const usage = 'agent-os system detect [--write] | check | show | contracts [--base <branch>] | endpoints [--undocumented] | checks'
 
 export const options = {
   write: { type: 'boolean', description: 'detect: write system.yaml (only when there is none)' },
@@ -41,6 +42,14 @@ export async function run(ctx) {
     }
     ctx.output(d, lines.join('\n'))
     return EXIT.OK
+  }
+  if (action === 'checks') {
+    const findings = systemChecks(ctx.cwd)
+    const order = { fail: 0, warn: 1 }
+    const lines = [...findings].sort((a, b) => order[a.level] - order[b.level] || a.check.localeCompare(b.check)).map((f) => `${f.level === 'fail' ? 'FAIL' : 'warn'}  ${f.check.padEnd(17)} ${f.component ?? '-'}  ${f.file ?? '-'}\n      ${f.message}\n      fix: ${f.fix}`)
+    const failed = findings.filter((f) => f.level === 'fail').length
+    ctx.output({ findings }, `${lines.join('\n')}${lines.length ? '\n\n' : ''}system checks: ${failed} failing, ${findings.length - failed} warning(s)`)
+    return failed ? EXIT.CHECK_FAILED : EXIT.OK
   }
   if (action === 'endpoints') {
     const inv = inventory(ctx.cwd)
