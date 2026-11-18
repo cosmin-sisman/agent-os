@@ -1,6 +1,6 @@
 # Tracker
 
-Skills don't compose `gh` or `glab` commands. They call one tracker interface, available to people as `agent-os issue`. GitHub is implemented (REST and GraphQL through `gh api`); GitLab follows in #92.
+Skills don't compose `gh` or `glab` commands. They call one tracker interface, available to people as `agent-os issue`. Both platforms implement it with the same methods and result shapes: GitHub through `gh api` (REST and GraphQL), GitLab through `glab api` (REST v4 and GraphQL), cloud or self-managed (`platform.host`).
 
 ```bash
 agent-os issue create --title "Login: session expires too early" --body-file body.md \
@@ -77,3 +77,23 @@ The order (design §9), the same for the same platform state:
 5. Unassigned issues in the current milestone (the first open milestone in that order with open issues): by priority, then the number of their areas you closed issues in recently.
 
 Ties go to the lower issue number. Epics, blocked issues (an open "blocked by" link, or the `blocked` label where the platform has no dependency links) and issues assigned to someone else are left out and listed in `excluded`. It only reads.
+
+## GitLab specifics
+
+The GitLab adapter (`src/tracker/gitlab.mjs`) keeps the shared shapes, so every skill and command works the same way. Where GitLab differs:
+
+| Topic | On GitLab |
+|---|---|
+| Numbers | iids: `#N` issues, `!N` merge requests, `&N` epics |
+| Parent | Premium: the issue is attached to the epic `&N` (`groups/:group/epics/:N/issues/:id`). Free: an issue cannot be a child of another issue (child *tasks* are a different type), so it gets the fallback: a `Parent: #N` line, and the parent a `- [ ] #child` item |
+| Blocked by | issue links with `link_type: is_blocked_by` (Premium); a repeated link (409) counts as already linked. Without them: the `blocked` label and a `Blocked by #N` line |
+| Board status | a scoped label `status::<value>` (`status::in-progress`); other `status::` labels are removed, because GitLab boards list issues by label |
+| Assignees | by user id (looked up from the username); several only on Premium |
+| Checks | the jobs of the merge request's head pipeline; a retried job counts once, by its latest run; manual jobs allowed to fail are ignored |
+| Review | approvals (`approved`), and `requested_changes` from the detailed merge status |
+| Behind / conflicts | `detailed_merge_status: need_rebase` / `has_conflicts` |
+| Review threads | resolvable discussions; their id is `<merge request>:<discussion>` for `agent-os pr reply` |
+| Merge | `PUT …/merge` with `sha` (pinned) and `squash` |
+| Branch link | branches are not linked by the API: `/start` cuts the branch locally and `Closes #N` links it |
+
+Lists are paged by 100 (up to 2000 items), and rate limits (HTTP 429) and temporary server errors are retried with backoff.

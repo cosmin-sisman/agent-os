@@ -250,13 +250,16 @@ export class GitHubTracker {
     return list[0] ? { number: list[0].number, url: list[0].html_url } : null
   }
 
-  /** Adds labels to an issue or pull request (the issues endpoint works for both). */
-  addLabels(number, labels, { dryRun = false } = {}) {
+  /** Adds labels to a pull request (through the issues endpoint; `gh pr edit` fails on classic Projects). */
+  labelChangeRequest(number, labels, { dryRun = false } = {}) {
     const request = { method: 'POST', path: `repos/${this.repo}/issues/${number}/labels`, body: { labels } }
     if (dryRun) return { dryRun: true, requests: [request] }
     if (labels.length) this.gh.rest(request.method, request.path, request.body)
     return { number, labels }
   }
+
+  /** Comments on a pull request (a pull request is an issue for comments on GitHub). */
+  commentChangeRequest(number, body, options) { return this.comment(number, body, options) }
 
   /** The state of a pull request: review decision and every check on its last commit. */
   pullRequestStatus(number) {

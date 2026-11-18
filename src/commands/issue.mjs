@@ -52,7 +52,7 @@ export async function run(ctx) {
   const [action, ...args] = ctx.positionals
   if (action === 'new') return newIssue(ctx)
   const v = ctx.values
-  const tracker = ctx.io.tracker ?? createTracker(loadConfig(ctx.cwd).merged, { gh: ctx.io.gh })
+  const tracker = ctx.io.tracker ?? createTracker(loadConfig(ctx.cwd).merged, { gh: ctx.io.gh, glab: ctx.io.glab })
   const dry = { dryRun: ctx.dryRun }
   const body = () => (v['body-file'] ? readFileSync(resolve(ctx.cwd, v['body-file']), 'utf8') : undefined)
   let result
@@ -107,7 +107,7 @@ export async function run(ctx) {
 async function newIssue(ctx) {
   const v = ctx.values
   const { merged } = loadConfig(ctx.cwd)
-  const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh })
+  const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
   const spec = {
     title: v.title, body: v['body-file'] ? readFileSync(resolve(ctx.cwd, v['body-file']), 'utf8') : '',
     labels: resolveLabels(v.label ?? [], merged), milestone: v.milestone, status: v.status,
@@ -130,7 +130,7 @@ async function newIssue(ctx) {
       return EXIT.CHECK_FAILED
     }
   }
-  const caps = (await capabilitiesFor(merged, { cwd: ctx.cwd, gh: ctx.io.gh })).capabilities
+  const caps = (await capabilitiesFor(merged, { cwd: ctx.cwd, gh: ctx.io.gh, glab: ctx.io.glab })).capabilities
   const created = tracker.create(spec, { dryRun: ctx.dryRun })
   const number = ctx.dryRun ? '<new>' : created.number
   const actions = relationshipPlan(caps, {

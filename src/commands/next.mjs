@@ -18,8 +18,8 @@ export async function run(ctx) {
   const limit = ctx.values.limit === undefined ? 3 : Number(ctx.values.limit)
   if (!Number.isInteger(limit) || limit < 1) throw new CliError('--limit takes a whole number of at least 1')
   const { merged } = loadConfig(ctx.cwd)
-  const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh })
-  const caps = (await capabilitiesFor(merged, { cwd: ctx.cwd, gh: ctx.io.gh })).capabilities
+  const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
+  const caps = (await capabilitiesFor(merged, { cwd: ctx.cwd, gh: ctx.io.gh, glab: ctx.io.glab })).capabilities
   const r = recommend({ tracker, caps, git: ctx.io.git ?? systemGit(ctx.cwd) }, { limit })
   for (const w of r.warnings) ctx.io.stderr(`agent-os: warning: ${w}\n`)
   const lines = r.recommendations.length

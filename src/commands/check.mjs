@@ -30,7 +30,7 @@ export function run(ctx) {
     let title = rest.join(' ')
     let body = ctx.values['body-file'] ? read(ctx.cwd, ctx.values['body-file']) : ''
     if (ctx.values.pr) {
-      const pr = (ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh })).gh.rest('GET', `repos/${merged.platform.project}/pulls/${Number(ctx.values.pr)}`)
+      const pr = (ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })).gh.rest('GET', `repos/${merged.platform.project}/pulls/${Number(ctx.values.pr)}`)
       title = title || pr.title
       body = pr.body ?? ''
     }

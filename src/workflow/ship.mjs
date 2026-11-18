@@ -71,7 +71,7 @@ export function ship({ config, tracker, caps, git, vocab }, { number, issuesLang
   if (problems.length) {
     const theirs = problems.filter((p) => p.owner === 'author')
     let notified = false
-    if (theirs.length && notify && s.author && !dryRun) { tracker.comment(number, (TEXT[prsLang] ?? TEXT.en).back(s.author, theirs.map((p) => p.problem), s.base)); notified = true }
+    if (theirs.length && notify && s.author && !dryRun) { tracker.commentChangeRequest(number, (TEXT[prsLang] ?? TEXT.en).back(s.author, theirs.map((p) => p.problem), s.base)); notified = true }
     return { shipped: false, number, problems, notified, backToAuthor: theirs.length > 0 }
   }
   const { closes, refs } = issueRefs(s.body)

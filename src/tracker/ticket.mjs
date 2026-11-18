@@ -83,7 +83,7 @@ export function relationshipPlan(caps, { number, parent, blockedBy = [], blocks 
 export function applyActions(tracker, actions, { dryRun = false } = {}) {
   return actions.map((a) => {
     if (a.do === 'link' && a.type === 'blocked-by') return tracker.addBlocker(a.issue, a.blocker, { dryRun })
-    if (a.do === 'link' && ['sub-issue', 'epic-child', 'child-task'].includes(a.type)) return tracker.setParent(a.child, a.parent, { dryRun })
+    if (a.do === 'link' && ['sub-issue', 'epic-child'].includes(a.type)) return tracker.setParent(a.child, a.parent, { dryRun })
     if (a.do === 'link' && a.type === 'relates-to') return tracker.comment(a.issue, `Related to #${a.blocker}`, { dryRun })
     if (a.do === 'add-label') return tracker.update(a.issue, { addLabels: [a.label] }, { dryRun })
     if (a.do === 'body-line') return tracker.appendToBody(a.issue, a.line, { dryRun })

@@ -15,8 +15,9 @@ import { fakeGh } from '../tracker/__fixtures__/fake-gh.mjs'
 function fakeGlab(routes) {
   const calls = []
   const run = (args) => {
-    calls.push(args[1])
-    const r = routes[args[1]]
+    const path = args[args.indexOf('--method') + 2]
+    calls.push(path)
+    const r = routes[path]
     if (r === undefined || (r && r.httpStatus)) return { status: 1, stdout: '', stderr: `glab: ${r?.httpStatus ?? 404} Not Found (HTTP ${r?.httpStatus ?? 404})` }
     return { status: 0, stdout: JSON.stringify(r), stderr: '' }
   }
@@ -83,7 +84,8 @@ test('given GitLab Free without blocking links, "blocked by" becomes relates-to 
 })
 
 test('parent and assignee plans follow the capabilities', () => {
-  assert.equal(planParent({ subItems: { value: 'tasks' } }, { child: 3, parent: 1 }).actions[0].type, 'child-task')
+  assert.deepEqual(planParent({ subItems: { value: 'tasks' } }, { child: 3, parent: 1 }).actions.map((a) => a.do), ['body-line', 'checklist-item'], 'GitLab Free: an issue cannot be a child task')
+  assert.equal(planParent({ subItems: { value: 'epics' } }, { child: 3, parent: 1 }).actions[0].type, 'epic-child')
   assert.equal(planParent({ subItems: { value: true } }, { child: 3, parent: 1 }).actions[0].type, 'sub-issue')
   assert.deepEqual(planParent({}, { child: 3, parent: 1 }).actions.map((a) => a.do), ['body-line', 'checklist-item'])
   assert.deepEqual(planAssignees({ multipleAssignees: { value: false } }, { issue: 5, logins: ['ana', 'dan', 'ioan'] }).actions, [{ do: 'assign', issue: 5, logins: ['ana'] }, { do: 'comment', issue: 5, text: 'Also working on this: @dan @ioan' }])

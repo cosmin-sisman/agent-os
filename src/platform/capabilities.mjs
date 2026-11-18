@@ -109,7 +109,8 @@ export function planBlockedBy(caps, { issue, blocker }) {
 
 /** What to do to make `child` part of `parent`. */
 export function planParent(caps, { child, parent }) {
-  if (has(caps, 'subItems')) return { native: true, actions: [{ do: 'link', type: caps.subItems.value === 'tasks' ? 'child-task' : caps.subItems.value === 'epics' ? 'epic-child' : 'sub-issue', child, parent }] }
+  // GitLab Free has child *tasks* only: an issue cannot be the child of another issue there, so it takes the fallback.
+  if (has(caps, 'subItems') && caps.subItems.value !== 'tasks') return { native: true, actions: [{ do: 'link', type: caps.subItems.value === 'epics' ? 'epic-child' : 'sub-issue', child, parent }] }
   return { native: false, actions: [{ do: 'body-line', issue: child, line: `Parent: #${parent}` }, { do: 'checklist-item', issue: parent, item: `#${child}` }] }
 }
 

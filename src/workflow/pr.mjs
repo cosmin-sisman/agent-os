@@ -82,7 +82,7 @@ export function openChangeRequest(deps, { title, body, base = deps.config.branch
   const push = git(['push', '-u', 'origin', pre.branch])
   if (push.status !== 0) throw new CliError(`git push failed: ${(push.stderr || push.stdout).trim().split('\n')[0]}`)
   const cr = tracker.createPullRequest({ title, body, head: pre.branch, base, draft })
-  if (labels.length) tracker.addLabels(cr.number, labels)
+  if (labels.length) tracker.labelChangeRequest(cr.number, labels)
   const note = issuesLang === 'ro' ? `${vocab.cr} ${vocab.crRef}${cr.number} este deschis pentru acest issue.` : `${vocab.cr} ${vocab.crRef}${cr.number} is open for this issue.`
   for (const n of issues) tracker.comment(n, note)
   return { opened: true, number: cr.number, url: cr.url, labels, steps, ...pre, warnings: tracker.warnings ?? [] }

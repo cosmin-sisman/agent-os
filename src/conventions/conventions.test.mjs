@@ -70,3 +70,10 @@ test('allowed types and the length are configurable', () => {
 test('references inside inline code and code blocks are examples, not references', () => {
   assert.deepEqual(referencedIssues('Closes #19\n\nA body with `Closes #3` and a title ending `[#4]`.\n\n```\nFixes #8\n```'), [19])
 })
+
+test('names with inner capitals may start the summary; ordinary capitalized words may not', () => {
+  const c = { types: ['feat'], maxTitleLength: 72, exempt: [] }
+  assert.deepEqual(checkTitle('feat(tracker): GitLab adapter [#92]', 'Closes #92', c).problems, [])
+  assert.deepEqual(checkTitle('feat(ci): JavaScript checks', '', c).problems, [])
+  assert.match(checkTitle('feat(x): Gitlab adapter', '', c).problems[0], /lower case/)
+})

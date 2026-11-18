@@ -41,7 +41,7 @@ export async function run(ctx) {
   const git = ctx.io.git ?? systemGit(ctx.cwd)
   const vocab = vocabularyFor(merged.platform?.type)
   const lang = languageFor(merged, 'prs')
-  const tracker = () => ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh })
+  const tracker = () => ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
   const number = () => {
     if (arg) { const n = Number(String(arg).replace(/^[#!]/, '')); if (Number.isInteger(n) && n > 0) return n; throw new CliError(`"${arg}" is not a number`) }
     const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']).stdout.trim()

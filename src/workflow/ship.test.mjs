@@ -20,6 +20,7 @@ function fakeTracker({ s = status(), states = { 4: 'open', 5: 'open' }, closeOnM
     mergePullRequest: (n, o) => { calls.push(['merge', n, o]); for (const c of closeOnMerge) st[c] = 'closed'; return { merged: true, sha: 'fff9999' } },
     update: (n, ch) => { calls.push(['update', n, ch]); if (ch.state) st[n] = ch.state },
     comment: (n, b) => calls.push(['comment', n, b]),
+    commentChangeRequest: (n, b) => calls.push(['comment', n, b]),
     setStatus: (n, v) => calls.push(['status', n, v]),
     deleteBranch: (b) => { calls.push(['deleteBranch', b]); return { deleted: true } },
   }
