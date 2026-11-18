@@ -1,0 +1,5 @@
+{{! no area: rendered once, in every language }}
+{
+  "integration": {{branches.integration}},
+  "packs": {{packs}}
+}

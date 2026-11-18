@@ -12,7 +12,8 @@
     "src/",
     "catalog/",
     "schema/",
-    "!**/*.test.mjs"
+    "!**/*.test.mjs",
+    "!**/__fixtures__/**"
   ],
   "engines": {
     "node": ">=22"

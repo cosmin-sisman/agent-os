@@ -1,0 +1,11 @@
+{{! area: issues }}
+name: Bug
+description: Something works wrong
+labels: [{{labels.type.bug}}]
+body:
+  - type: textarea
+    attributes: { label: What happens }
+{{#if pack.stack-postgres}}
+  - type: input
+    attributes: { label: Migration involved }
+{{/if}}

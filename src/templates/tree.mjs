@@ -1,0 +1,81 @@
+// Renders a folder of templates for one project: picks the language variant of each file from the area it declares,
+// renders it with the project's context and returns the files in a stable order. Nothing is written here.
+
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, relative, sep } from 'node:path'
+import { render, formatFor, TemplateError } from './engine.mjs'
+import { AREAS, LANGUAGES, languageFor, labelSet } from '../i18n/i18n.mjs'
+
+const VARIANT = new RegExp(`^(.*)\\.(${LANGUAGES.join('|')})(\\.[^./]+)$`)
+const AREA_DECL = /^\{\{!\s*area:\s*([\w-]+)\s*\}\}/
+
+/**
+ * The values templates can use: the merged configuration, `pack.<id>` flags, `lang.<area>` and `labels`
+ * (core label names in the `labels` language, addressed as labels.type.bug or labels.needs-decision).
+ * @param {object} config merged configuration (src/config)
+ */
+export function buildContext(config) {
+  const labels = {}
+  for (const l of labelSet(config)) {
+    const [group, name] = l.id.includes(':') ? l.id.split(':') : [null, l.id]
+    if (group) (labels[group] ??= {})[name] = l.name
+    else labels[name] = l.name
+  }
+  return {
+    ...config,
+    pack: Object.fromEntries((config.packs ?? []).map((p) => [p, true])),
+    lang: Object.fromEntries(AREAS.map((a) => [a.id, languageFor(config, a.id)])),
+    labels,
+  }
+}
+
+function walk(dir, root = dir) {
+  return readdirSync(dir).sort().flatMap((name) => {
+    const full = join(dir, name)
+    return statSync(full).isDirectory() ? walk(full, root) : [relative(root, full).split(sep).join('/')]
+  })
+}
+
+/**
+ * Renders every template under `dir`. `name.en.ext` and `name.ro.ext` are variants of `name.ext`: they declare their
+ * area on the first line ({{! area: issues }}), and the variant in that area's language is rendered.
+ * @param {string} dir
+ * @param {object} config merged configuration
+ * @returns {{ path: string, content: string, area: string | null, lang: string | null }[]} sorted by path
+ */
+export function renderTree(dir, config) {
+  const context = buildContext(config)
+  const groups = new Map()
+  for (const file of walk(dir)) {
+    const m = file.match(VARIANT)
+    const out = m ? `${m[1]}${m[3]}` : file
+    const g = groups.get(out) ?? { out, variants: {}, plain: null }
+    if (m) g.variants[m[2]] = file
+    else g.plain = file
+    groups.set(out, g)
+  }
+  const results = []
+  for (const g of [...groups.values()].sort((a, b) => a.out.localeCompare(b.out))) {
+    const variants = Object.entries(g.variants)
+    if (g.plain && variants.length) throw new TemplateError(`${g.out} has both a plain file and language variants; keep one kind`, { file: g.plain, line: 1, col: 1 })
+    if (!variants.length) {
+      const source = readFileSync(join(dir, g.plain), 'utf8')
+      results.push({ path: g.out, content: render(source, context, { file: g.plain, format: formatFor(g.out) }), area: source.match(AREA_DECL)?.[1] ?? null, lang: null })
+      continue
+    }
+    const areas = new Set()
+    for (const [, file] of variants) {
+      const area = readFileSync(join(dir, file), 'utf8').match(AREA_DECL)?.[1]
+      if (!area) throw new TemplateError('language variants must declare their area on the first line: {{! area: <area> }}', { file, line: 1, col: 1 })
+      if (!AREAS.some((a) => a.id === area)) throw new TemplateError(`unknown area "${area}"`, { file, line: 1, col: 1 })
+      areas.add(area)
+    }
+    if (areas.size > 1) throw new TemplateError(`variants of ${g.out} declare different areas: ${[...areas].join(', ')}`, { file: variants[0][1], line: 1, col: 1 })
+    const area = [...areas][0]
+    const lang = languageFor(config, area)
+    const file = g.variants[lang]
+    if (!file) throw new TemplateError(`${g.out} has no "${lang}" variant, which the ${area} area needs`, { file: variants[0][1], line: 1, col: 1 })
+    results.push({ path: g.out, content: render(readFileSync(join(dir, file), 'utf8'), context, { file, format: formatFor(g.out) }), area, lang })
+  }
+  return results
+}
