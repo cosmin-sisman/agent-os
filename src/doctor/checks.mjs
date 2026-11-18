@@ -13,6 +13,9 @@ import { readJournal, validate as validateEntry } from '../journal/journal.mjs'
 import { readLessons, validateCard } from '../lessons/lessons.mjs'
 import { readLock } from '../managed/managed.mjs'
 import { matches } from '../util/glob.mjs'
+import { legacyFeatures, lifecycleOf, noticeFor } from '../lifecycle/legacy.mjs'
+import { readExceptions, deprecatedInUse } from '../lifecycle/manifest.mjs'
+import { TEMPLATES } from '../managed/install.mjs'
 import { versionStatus } from '../version/pin.mjs'
 import { labelId } from '../workflow/next.mjs'
 
@@ -113,6 +116,28 @@ function personal({ cwd, git }) {
   if (!tracked.length) return [ok('no personal file is tracked by git')]
   const shown = tracked.slice(0, 5)
   return [{ level: 'fail', path: shown[0], message: `git tracks personal file(s): ${shown.join(', ')}${tracked.length > 5 ? `, +${tracked.length - 5}` : ''}`, fix: `untrack them in a change request (the files stay on your laptop): git rm --cached -r -- ${[...new Set(tracked.map((f) => PERSONAL.find((p) => f === p || f.startsWith(p)) ?? f))].map((p) => p.replace(/\/$/, '')).join(' ')}` }]
+}
+
+/** Legacy features the project keeps enabled are debt; deprecated items it still uses are listed with their replacement. */
+function lifecycle({ cwd, config, templatesRoot = TEMPLATES, exceptions }) {
+  let ex = exceptions
+  if (!ex) { try { ex = readExceptions() } catch { ex = [] } }
+  const known = legacyFeatures(templatesRoot)
+  const out = []
+  for (const id of config.legacy ?? []) {
+    if (!known.includes(id)) { out.push({ level: 'fail', message: `legacy: "${id}" is not a legacy feature of this agent-os version`, fix: known.length ? `use one of ${known.join(', ')}, or remove it from legacy in agent-os.json` : 'remove it from legacy in agent-os.json (this version has no legacy features)' }); continue }
+    const e = lifecycleOf(`legacy:${id}`, ex)
+    out.push({ level: 'warn', message: `debt: the legacy feature "${id}" is enabled${e?.removeIn ? `; it is removed in ${e.removeIn}` : ''}`, fix: `${e?.replacement ? `move to ${e.replacement}, then ` : ''}remove "${id}" from legacy in agent-os.json` })
+  }
+  let team = {}
+  let local = {}
+  try { team = JSON.parse(read(cwd, 'agent-os.json') ?? '{}') } catch { /* config errors are reported elsewhere */ }
+  try { local = JSON.parse(read(cwd, '.agent-os/local.json') ?? '{}') } catch { /* idem */ }
+  let hookCommands = []
+  try { hookCommands = Object.values(JSON.parse(read(cwd, '.claude/settings.json') ?? '{}').hooks ?? {}).flat().flatMap((g) => (g.hooks ?? []).map((h) => h.command ?? '')) } catch { /* idem */ }
+  const manifest = { items: Object.fromEntries(ex.map((e) => [e.id, e])) }
+  for (const d of deprecatedInUse(manifest, { team, local, hookCommands })) out.push({ level: 'warn', message: `this project uses ${noticeFor(d.id, d)}`, fix: d.replacement ? `switch to ${d.replacement.replace(/^(command|flag|config):/, '')}` : 'see the release notes for what replaces it' })
+  return out.length ? out : [ok('no legacy feature enabled and no deprecated item in use')]
 }
 
 /** No unresolved update conflicts. */
@@ -291,6 +316,7 @@ export const CHECKS = [
   { id: 'lessons', area: 'history', run: lessons },
   { id: 'conflicts', area: 'updates', run: conflicts },
   { id: 'version', area: 'updates', run: version },
+  { id: 'lifecycle', area: 'updates', run: lifecycle },
   { id: 'gitignore', area: 'repository', run: gitignore },
   { id: 'personal', area: 'repository', run: personal },
   { id: 'issues', area: 'platform', platform: true, run: issues },

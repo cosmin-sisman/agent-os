@@ -22,7 +22,9 @@ export const TEMPLATES = fileURLToPath(new URL('../../templates/', import.meta.u
  */
 export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
   const platform = config.platform?.type ?? 'github'
-  const routes = [['core', join(templatesRoot, 'core')], [`platform/${platform}`, join(templatesRoot, 'platform', platform)]]
+  // Legacy features are installed only when the project opts in (#69); unknown ids are left to doctor.
+  const legacy = (config.legacy ?? []).filter((id) => /^[\w-]+$/.test(id)).map((id) => [`legacy/${id}`, join(templatesRoot, 'legacy', id)])
+  const routes = [['core', join(templatesRoot, 'core')], [`platform/${platform}`, join(templatesRoot, 'platform', platform)], ...legacy]
   const items = []
   const seen = new Map()
   for (const [route, dir] of routes) {

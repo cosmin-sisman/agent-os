@@ -2,6 +2,7 @@
 // every outcome into a stable exit code and either text or one JSON object. bin/agent-os.mjs calls run().
 
 import { parseArgs } from 'node:util'
+import { runNotices } from '../lifecycle/legacy.mjs'
 import { statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { EXIT, CliError } from './errors.mjs'
@@ -33,6 +34,7 @@ export async function run(argv, io) {
     const { values, positionals } = parseStrict(plan.args, { ...GLOBAL_OPTIONS, ...(mod.options ?? {}) }, command)
     const cwd = resolveCwd(io.cwd, values.cwd)
     const ctx = new Context({ command, values, positionals, cwd, io })
+    for (const note of runNotices(command, values)) io.stderr(`agent-os: note: ${note}\n`)
     ctx.debug(`command=${command} cwd=${cwd}${ctx.dryRun ? ' dry-run' : ''}`)
     const code = (await mod.run(ctx)) ?? EXIT.OK
     if (json) io.stdout(`${JSON.stringify({ ok: code === EXIT.OK, command, exitCode: code, result: ctx.result ?? null })}\n`)
