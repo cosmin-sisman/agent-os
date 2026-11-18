@@ -23,3 +23,6 @@ No. The only network calls are to your platform's API, and the advisory watch, w
 
 **Something looks wrong.**
 `agent-os doctor` checks the setup and suggests fixes; `agent-os doctor --fix` repairs what is mechanical.
+
+**We use Codex or Cursor, not only Claude Code.**
+AGENTS.md and the CLI work in any agent, and the platform checks (`agent-os/loop`, the gate, branch protection) enforce the flow in CI. Hooks run only in Claude Code, so other agents get the same feedback later, at push time. Skills are Markdown procedures: ask for `/<name>`, and point the agent to `.claude/skills/<name>/SKILL.md`. See the proposed decision on [other agents](../decisions/2026-11-18-other-agents-agents-md-first.md).
