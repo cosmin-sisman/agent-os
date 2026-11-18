@@ -230,6 +230,14 @@ export class GitLabTracker {
     })
   }
 
+  openPullRequests() {
+    return this.pages(this.p('merge_requests?state=opened'), 10).map((m) => ({ number: m.iid, title: m.title, body: m.description ?? '', author: m.author?.username ?? null, branch: m.source_branch, head: m.sha, url: m.web_url }))
+  }
+
+  pullRequestFiles(number) {
+    return this.pages(this.p(`merge_requests/${number}/diffs`), 30).flatMap((d) => [d.new_path, ...(d.renamed_file && d.old_path ? [d.old_path] : [])])
+  }
+
   pullRequestFor(branch) {
     const mr = (this.api.rest('GET', this.p(`merge_requests?state=opened&source_branch=${encodeURIComponent(branch)}&per_page=1`)) ?? [])[0]
     return mr ? { number: mr.iid, url: mr.web_url } : null

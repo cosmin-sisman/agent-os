@@ -67,3 +67,18 @@ test('start names the lessons that apply to the issue (paths it mentions, its ar
     assert.match(stdout, /Lessons that apply here:\n {2}lesson down-migrations \(path src\/db\/\*\*\): Write a down migration for every up migration\./)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
+
+test('start warns when an open PR already changes a path the issue mentions', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'aos-start-'))
+  try {
+    writeFileSync(join(dir, 'agent-os.json'), JSON.stringify({ platform: { type: 'github', project: 'acme/app' } }))
+    const gh = fakeGh(routes({
+      'GET repos/acme/app/issues/14': issue({ body: 'Rework `src/db/` access.' }),
+      'GET repos/acme/app/pulls?state=open&per_page=100&page=1': [{ number: 40, title: 'feat(db): pool', body: 'Closes #12', user: { login: 'dan' }, head: { ref: 'feat/12-pool', sha: 's1' }, html_url: 'u' }],
+      'GET repos/acme/app/pulls/40/files?per_page=100&page=1': [{ filename: 'src/db/pool.ts' }],
+    }))
+    let stdout = ''
+    await run(['start', '14', '--dry-run'], { stdout: (s) => { stdout += s }, stderr: () => {}, cwd: dir, env: {}, gh, git: () => ({ status: 0, stdout: '', stderr: '' }) })
+    assert.match(stdout, /Already being changed by others \(talk to them first\):\n {2}#40 feat\(db\): pool by @dan \(#12\): src\/db\/pool\.ts/)
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})

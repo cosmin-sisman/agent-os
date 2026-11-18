@@ -8,6 +8,7 @@ import { findDiacritics } from '../i18n/i18n.mjs'
 import { readResult } from '../gate/gate.mjs'
 import { labelId } from './next.mjs'
 import { lessonsForChange } from '../lessons/lessons.mjs'
+import { findOverlap } from '../collab/overlap.mjs'
 
 /** Section headings of the change-request template, per language. */
 export const SECTIONS = {
@@ -47,7 +48,7 @@ const out = (r) => (r.status === 0 ? r.stdout.trim() : null)
  * Everything that must be true before opening. Returns { ok, problems, branch, head, gate }.
  * @param {{ config: object, git: Function, cwd: string }} deps
  */
-export function preflight({ config, git, cwd }, { title, body, base = config.branches.integration, lang = 'en' }) {
+export function preflight({ config, git, cwd, tracker }, { title, body, base = config.branches.integration, lang = 'en' }) {
   const problems = []
   const branch = out(git(['rev-parse', '--abbrev-ref', 'HEAD']))
   const head = out(git(['rev-parse', 'HEAD']))
@@ -65,7 +66,10 @@ export function preflight({ config, git, cwd }, { title, body, base = config.bra
   else if (!gate.ok) problems.push(`the gate failed: ${gate.suites.filter((s) => !s.passed).map((s) => s.name).join(', ')} (fix it; a change request never opens with a failing check)`)
   const changed = out(git(['diff', '--name-only', `origin/${base}...HEAD`]))
   const lessons = lessonsForChange(cwd, { paths: changed ? changed.split(/\r?\n/).filter(Boolean) : [], text: `${title}\n${body}` })
-  return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion, lessons }
+  const files = changed ? changed.split(/\r?\n/).filter(Boolean) : []
+  let overlaps = []
+  if (files.length) { try { overlaps = findOverlap({ tracker, git, cwd, config }, { files, branch }).overlaps } catch { overlaps = [] } }
+  return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion, lessons, overlaps }
 }
 
 /**

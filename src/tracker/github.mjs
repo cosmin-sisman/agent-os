@@ -254,6 +254,28 @@ export class GitHubTracker {
     return { number: pr.number, url: pr.html_url }
   }
 
+  /** Every open pull request, with its branch, head commit and author. */
+  openPullRequests() {
+    const out = []
+    for (let page = 1; page <= 10; page++) {
+      const batch = this.gh.rest('GET', `repos/${this.repo}/pulls?state=open&per_page=100&page=${page}`) ?? []
+      out.push(...batch.map((p) => ({ number: p.number, title: p.title, body: p.body ?? '', author: p.user?.login ?? null, branch: p.head?.ref ?? null, head: p.head?.sha ?? null, url: p.html_url })))
+      if (batch.length < 100) break
+    }
+    return out
+  }
+
+  /** The files a pull request changes (old and new names of renames). */
+  pullRequestFiles(number) {
+    const out = []
+    for (let page = 1; page <= 30; page++) {
+      const batch = this.gh.rest('GET', `repos/${this.repo}/pulls/${number}/files?per_page=100&page=${page}`) ?? []
+      for (const f of batch) { out.push(f.filename); if (f.previous_filename) out.push(f.previous_filename) }
+      if (batch.length < 100) break
+    }
+    return out
+  }
+
   /** The open pull request for a branch, or null. */
   pullRequestFor(branch) {
     const owner = this.repo.split('/')[0]
