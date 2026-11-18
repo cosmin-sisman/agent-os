@@ -1,10 +1,13 @@
 // What agent-os installs into a project: the core templates plus the route of the configured platform, rendered for
 // the project's configuration. The lock records the platform, so an update only ever writes the active route.
 
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { renderTree } from '../templates/tree.mjs'
+import { buildContext, renderTree } from '../templates/tree.mjs'
+import { render } from '../templates/engine.mjs'
+import { languageFor } from '../i18n/i18n.mjs'
+import { languagesInUse, stackLayers } from '../stack/stack.mjs'
 import { applyManaged, readLock, writeLock } from './managed.mjs'
 import { aliasesFor } from '../platform/vocabulary.mjs'
 import { hooksContent } from './managed.mjs'
@@ -36,6 +39,8 @@ export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
       items.push({ key: f.path, content: f.content, route })
     }
   }
+  // Language rules for the stack in use, scoped to the layers' paths (#101).
+  if (cwd) for (const r of stackRules(config, { templatesRoot, cwd })) items.push(r)
   // One registry entry per core skill (#38): the registry describes every skill on disk.
   for (const it of [...items]) {
     const m = it.key.match(/^\.claude\/skills\/([^/]+)\/SKILL\.md$/)
@@ -77,4 +82,22 @@ export function agentsBlock(config) {
     `This repository follows agent-os${config.version ? ` ${config.version}` : ''}. Rules in \`.claude/rules/\`, skills in \`.claude/skills/\` (start with /next, /start, /pr and /ship), team settings in \`agent-os.json\`.`,
     `Work goes to \`${integration ?? 'development'}\` through change requests; \`${production ?? 'main'}\` changes only through /release. \`agent-os doctor\` checks the setup.`,
   ].join('\n')
+}
+
+/**
+ * The language rules for the languages stack.yaml uses: templates/stack/<language>.<en|ro>.md in the docs language,
+ * with Claude Code `paths:` front matter so each loads only for its layers' files.
+ */
+export function stackRules(config, { templatesRoot = TEMPLATES, cwd }) {
+  const lang = languageFor(config, 'docs')
+  const context = buildContext(config)
+  const out = []
+  for (const l of languagesInUse(stackLayers(cwd))) {
+    const file = join(templatesRoot, 'stack', `${l.language}.${lang}.md`)
+    if (!existsSync(file)) continue
+    const body = render(readFileSync(file, 'utf8'), { ...context, paths: l.paths.length ? l.paths.map((p) => `\`${p}\``).join(', ') : (lang === 'ro' ? 'tot repository-ul' : 'the whole repository'), lowAi: l.lowAi.join(', ') }, { file: `stack/${l.language}.${lang}.md` })
+    const front = l.paths.length ? `---\npaths:\n${l.paths.map((p) => `  - "${p}"`).join('\n')}\n---\n\n` : ''
+    out.push({ key: `.claude/rules/stack/${l.language}.md`, content: `${front}${body.replace(/^\n+/, '')}`, route: 'stack' })
+  }
+  return out
 }
