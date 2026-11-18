@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "description": "A working agreement between people, coding agents and GitHub, installed into any repository with one command.",
   "type": "module",
-  "private": true,
   "bin": {
     "agent-os": "bin/agent-os.mjs"
   },
@@ -21,6 +20,10 @@
   ],
   "engines": {
     "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "test": "node --test",

@@ -2,10 +2,10 @@
 // is a merge commit pinned to the checked head, tag, notes and milestone roll, the sync back, hotfixes, and reruns.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { finishRelease, openRelease, planRelease, releaseRisks } from './release.mjs'
+import { bumpPackage, finishRelease, openRelease, planRelease, releaseRisks } from './release.mjs'
 import { vocabularyFor } from '../platform/vocabulary.mjs'
 
 const CONFIG = { branches: { integration: 'development', production: 'main', requiredChecks: [], requiredApprovals: 0 }, languages: { milestones: 'en' }, requires: {}, gate: {} }
@@ -144,6 +144,26 @@ test('open: the release branch carries the changelog and a release journal entry
     assert.deepEqual(t.calls.at(-1), ['pr', 'release/0.2.0', 'main', 'release-3: 0.2.0'])
     const again = openRelease(deps(fakeGit({ remoteBranches: ['release/0.2.0'] }), fakeTracker({ pr: { number: 70, url: 'u/70' } }), cwd), { version: '0.2.0' })
     assert.equal(again.updated, true)
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})
+
+test('release open sets package.json and package-lock.json to the released version, in the release commit; plan reports the mismatch', () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'aos-release-'))
+  try {
+    writeFileSync(join(cwd, 'package.json'), '{\n    "name": "x",\n    "version": "0.1.0"\n}\n')
+    writeFileSync(join(cwd, 'package-lock.json'), JSON.stringify({ name: 'x', version: '0.1.0', lockfileVersion: 3, packages: { '': { name: 'x', version: '0.1.0' } } }, null, 2) + '\n')
+    const plan = planRelease(deps(fakeGit(), fakeTracker(), cwd), { version: '0.2.0' })
+    assert.deepEqual(plan.warnings, ['package.json is at 0.1.0, not 0.2.0: release open sets it in the release commit', 'package-lock.json is at 0.1.0, not 0.2.0: release open sets it too'])
+    assert.deepEqual(plan.problems, [], 'a lagging package.json is not a problem before release open')
+    const git = fakeGit()
+    const r = openRelease(deps(git, fakeTracker(), cwd), { version: '0.2.0', author: 'ana', now: new Date('2026-12-01T10:00:00Z') })
+    assert.equal(r.opened, true)
+    assert.deepEqual(git.calls.find((c) => c[0] === 'add').slice(-2), ['package.json', 'package-lock.json'], 'both files go into the release commit')
+    assert.equal(readFileSync(join(cwd, 'package.json'), 'utf8'), '{\n    "name": "x",\n    "version": "0.2.0"\n}\n', 'the indentation is kept')
+    const lock = JSON.parse(readFileSync(join(cwd, 'package-lock.json'), 'utf8'))
+    assert.deepEqual([lock.version, lock.packages[''].version], ['0.2.0', '0.2.0'])
+    assert.deepEqual(bumpPackage(cwd, '0.2.0'), [], 'already at the version: nothing to change')
+    assert.deepEqual(planRelease(deps(fakeGit(), fakeTracker(), cwd), { version: '0.2.0' }).warnings, [])
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
 
