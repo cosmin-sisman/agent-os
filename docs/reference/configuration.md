@@ -102,6 +102,16 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `requires.plugins` | team | array | `[]` | Plugins the project expects |
 | `upstream` | team | object | `{}` | Feedback to the agent-os project |
 | `upstream.enabled` | team | boolean |  | Allow /upstream to file issues on the public agent-os repository (default: on, off on a self-managed host) |
+| `security` | team | object | `{}` | Security: the advisory watch and accepted risks |
+| `security.advisories` | team | object | `{}` | The advisory watch |
+| `security.advisories.enabled` | team | boolean |  | Let the advisory watch ask OSV.dev and CISA KEV about package names and versions (default: on, off on a self-managed host) |
+| `security.advisories.osvUrl` | team | string |  | An OSV-compatible querybatch endpoint, e.g. an internal mirror |
+| `security.advisories.kevUrl` | team | string |  | Where the CISA KEV catalog (JSON) is read from, e.g. an internal mirror |
+| `security.acceptedRisks` | team | array | `[]` | Advisories the owners accepted in writing; the release gate lets them through |
+| `security.acceptedRisks[].id` | team | string |  | The advisory id (GHSA-…, CVE-…, OSV id) |
+| `security.acceptedRisks[].reason` | team | string |  | Why the risk is accepted |
+| `security.acceptedRisks[].by` | team | string |  | Who accepted it |
+| `security.acceptedRisks[].until` | team | string |  | Review again by this date (YYYY-MM-DD) |
 | `compliance` | team | object | `{}` | Compliance constraints |
 | `compliance.euOnly` | team | boolean | `false` | Flag providers without confirmed EU regions |
 | `contextBudgets` | team | object | `{}` | Size budgets per file or glob |
@@ -125,6 +135,7 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `ci.image` | team | string |  | The container image generated CI jobs run in, e.g. from the internal registry (default node:22) |
 | `ci.tags` | team | array | `[]` | Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels) |
 | `ci.labels` | team | boolean | `false` | Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels) |
+| `ci.securityWatch` | team | string: `off`, `daily`, `weekly` | `"off"` | Install the scheduled job that keeps the Security digest issue current |
 | `ci.labelsEnvironment` | team | string |  | GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret) |
 | `adoption` | team | object | `{}` | Adoption mode for projects new to agent-os |
 | `adoption.warnOnlyUntil` | team | string |  | Until this date (YYYY-MM-DD) guards only warn instead of refusing |

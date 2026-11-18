@@ -5,6 +5,7 @@
 // environment variables) stop the release until someone accepts them explicitly. Design §7.
 
 import { CliError } from '../cli/errors.mjs'
+import { releaseBlockers } from '../security/digest.mjs'
 import { checkEnvironment } from '../env/checks.mjs'
 import { systemProbe } from '../env/probe.mjs'
 import { runSuites } from '../gate/gate.mjs'
@@ -142,6 +143,9 @@ export function finishRelease(deps, { version, hotfix = false, accept = [], now 
   }
   const asks = plan.risks.filter((r) => !accept.includes(r.id) && !accept.includes(r.kind) && !checked(status?.body, r.id))
   for (const r of asks) problems.push(`ask first: ${r.detail} (accept with --accept ${r.id}, or tick it under Before merge)`)
+  // The KEV gate (#108): a known-exploited vulnerability in a shipped dependency stops the release, unless the owners
+  // accepted the risk in writing (security.acceptedRisks). It reads the last watch; it never goes to the network.
+  for (const v of releaseBlockers(cwd)) problems.push(`known exploited: ${v.id}${v.aliases.length ? ` (${v.aliases[0]})` : ''} in ${v.touched.filter((p) => !p.dev).map((p) => `${p.name}@${p.version}`).join(', ')}${v.fixed ? `; fixed in ${v.fixed}` : ''}: update it, or record the accepted risk in security.acceptedRisks (id, reason, by)`)
   const steps = [
     ...(hotfix ? [] : [cr ? `merge ${vocab.crRef}${cr.number} into ${production} with a merge commit (never squashed)` : plan.tagged ? 'the release is already merged and tagged' : `open the release ${vocab.changeRequest} first (agent-os release open --version ${version})`]),
     plan.tagged ? `${plan.tag} already exists` : `tag ${plan.tag} on ${production}`,

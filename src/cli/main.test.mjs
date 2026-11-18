@@ -9,8 +9,11 @@ import { run, route } from './main.mjs'
 import { COMMANDS } from './registry.mjs'
 import { EXIT } from './errors.mjs'
 
-/** Any command still planned, so these tests keep working as commands ship. */
-const PLANNED = COMMANDS.find((c) => !c.load)
+/**
+ * Any command still planned, so these tests keep working as commands ship; once every command has shipped, a planned
+ * entry is added for this test process only (each test file runs in its own process).
+ */
+const PLANNED = COMMANDS.find((c) => !c.load) ?? (COMMANDS.push({ name: 'planned-fixture', summary: 'A planned command (test fixture)', status: 'planned', issue: 999 }), COMMANDS.at(-1))
 
 const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'))
 
