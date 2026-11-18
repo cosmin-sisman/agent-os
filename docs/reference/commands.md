@@ -177,7 +177,7 @@ agent-os doctor [--offline | --ci] [--fix] [--check <id>…]
 | `--offline` | Local checks only: no platform calls |
 | `--ci` | What the CI loop check runs: local, deterministic checks |
 | `--fix` | Apply the mechanical fixes, then check again |
-| `--check <value>`, repeatable | Run only this check (repeat): skills, slots, commands, hooks, agents, links, area-map, stack, system, headers, standards, budgets, language, journal, lessons, decisions, artifacts, conflicts, version, lifecycle, gitignore, personal, issues, labels, titles |
+| `--check <value>`, repeatable | Run only this check (repeat): skills, slots, commands, hooks, agents, links, area-map, stack, system, headers, standards, budgets, language, journal, lessons, decisions, artifacts, conflicts, version, lifecycle, gitignore, personal, issues, labels, titles, protection |
 
 ## env
 
