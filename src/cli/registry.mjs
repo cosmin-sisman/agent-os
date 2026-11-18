@@ -29,6 +29,7 @@ export const COMMANDS = [
   { name: 'env', summary: 'Check MCP servers, CLIs, token scopes and variables', status: 'planned', issue: 9 },
   { name: 'update', summary: 'Plan and apply an agent-os upgrade as a pull or merge request', status: 'planned', issue: 68 },
   { name: 'eject', summary: 'Stop managing a file and hand it to the project', status: 'planned', issue: 6 },
+  { name: 'hook', summary: 'Run the Claude Code hook handlers for an event (called from .claude/settings.json)', status: 'new', issue: 8, load: () => import('../commands/hook.mjs') },
   { name: 'platform', summary: 'Detect, probe or switch the code platform (GitHub, GitLab)', status: 'planned', issue: 90 },
   { name: 'lang', summary: 'Show the language of each area, check ro text for diacritics, print the language rule', status: 'new', issue: 7, load: () => import('../commands/lang.mjs') },
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'planned', issue: 18 },

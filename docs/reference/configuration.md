@@ -83,6 +83,17 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `contextBudgets` | team | object | `{}` | Size budgets per file or glob |
 | `contextBudgets.<name>` | team | string |  | A size such as 8KB |
 | `legacy` | team | array | `[]` | Legacy features this project keeps enabled |
+| `guards` | team | object | `{}` | Guards that refuse risky shell commands before they run (PreToolUse) |
+| `guards.rules` | team | array | `[]` | Project guard rules, added to the built-in ones |
+| `guards.rules[].id` | team | string |  | A short name, shown when the rule refuses something |
+| `guards.rules[].type` | team | string: `forbid-flags`, `forbid-pattern`, `require-env`, `min-free-memory` |  | What the rule checks |
+| `guards.rules[].pattern` | team | string |  | A regular expression matched against each shell command (after splitting on && || ; |) |
+| `guards.rules[].flags` | team | array | `[]` | forbid-flags: flags refused after a matching command |
+| `guards.rules[].env` | team | string |  | require-env: the variable that must be set, e.g. DB_RESET_OK=1 in the command or the environment |
+| `guards.rules[].message` | team | string |  | What to tell the agent when the rule refuses |
+| `guards.disable` | team | array | `[]` | Built-in guards turned off for this project |
+| `adoption` | team | object | `{}` | Adoption mode for projects new to agent-os |
+| `adoption.warnOnlyUntil` | team | string |  | Until this date (YYYY-MM-DD) guards only warn instead of refusing |
 | `machine` | personal | object | `{}` | This laptop's limits |
 | `machine.maxWorkers` | personal | integer | `3` | Most agent sessions to run in parallel on this laptop |
 | `machine.minFreeMb` | personal | integer | `1500` | Refuse heavy commands below this much free memory |
