@@ -191,7 +191,9 @@ function commands({ cwd }) {
   const out = []
   const seen = new Set()
   for (const f of files) {
-    for (const m of read(cwd, f).matchAll(/\bagent-os\s+([a-z][\w-]*)/g)) {
+    // Commands are written as code (fenced blocks and backticks); prose that mentions agent-os is not a call.
+    const code = [...read(cwd, f).matchAll(/```[\s\S]*?```|`[^`\n]+`/g)].map((m) => m[0]).join('\n').replace(/<[^<>\n]*>|"[^"\n]*"/g, ' ')
+    for (const m of code.matchAll(/\bagent-os\s+([a-z][\w-]*)/g)) {
       const name = m[1]
       const key = `${f}:${name}`
       if (seen.has(key) || ['is', 'and', 'or', 'in', 'to', 'the', 'itself'].includes(name)) continue
