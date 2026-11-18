@@ -98,13 +98,16 @@ export function writeCounters(cwd, counters) {
  * Applies the decisions. Every inbox card needs one: { accept: [ids], promote: { id: rule }, reject: { id: reason } }.
  * @returns {{ done: object[], counters: object }}
  */
-export function applyRetro(cwd, { accept = [], promote = {}, reject = {} }, { now = new Date() } = {}) {
+export function applyRetro(cwd, { accept = [], promote = {}, reject = {} }, { now = new Date(), dryRun = false } = {}) {
   const inbox = readLessons(cwd).filter((c) => c.state === 'inbox')
   const decided = new Set([...accept, ...Object.keys(promote), ...Object.keys(reject)])
   const find = (id) => inbox.find((c) => c.id === id || c.id.endsWith(id))
   const undecided = inbox.filter((c) => ![...decided].some((d) => c.id === d || c.id.endsWith(d)))
   if (undecided.length) throw new CliError(`${undecided.length} inbox lesson(s) have no decision: ${undecided.map((c) => c.id).join(', ')}`, { hint: 'every inbox entry ends as a rule (--promote id=rule), a card (--accept id) or rejected with a reason (--reject id=reason)' })
   for (const [id, reason] of Object.entries(reject)) if (!reason) throw new CliError(`rejecting ${id} needs a reason`)
+  for (const id of [...accept, ...Object.keys(promote), ...Object.keys(reject)]) if (!find(id)) throw new CliError(`no inbox lesson "${id}"`)
+  // A dry run checks every decision and lists them, and writes nothing (no moves, no counters).
+  if (dryRun) return { dryRun: true, done: [...accept.map((id) => ({ id, action: 'card' })), ...Object.entries(promote).map(([id, rule]) => ({ id, action: 'rule', promotedTo: rule })), ...Object.entries(reject).map(([id, reason]) => ({ id, action: 'rejected', reason }))], counters: [] }
   const done = []
   for (const id of accept) { if (!find(id)) throw new CliError(`no inbox lesson "${id}"`); done.push({ id, action: 'card', ...acceptLesson(cwd, id) }) }
   for (const [id, rule] of Object.entries(promote)) {

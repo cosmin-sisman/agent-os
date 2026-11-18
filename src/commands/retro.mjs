@@ -40,8 +40,8 @@ export async function run(ctx) {
     return EXIT.OK
   }
   if (action === 'apply') {
-    const r = applyRetro(ctx.cwd, { accept: ctx.values.accept ?? [], promote: pairs(ctx.values.promote), reject: pairs(ctx.values.reject) })
-    ctx.output(r, [...r.done.map((d) => `  ${d.id}: ${d.action}${d.promotedTo ? ` (${d.promotedTo})` : d.reason ? ` (${d.reason})` : ''}`), `counters updated on ${Object.keys(r.counters).length} active card(s)`].join('\n'))
+    const r = applyRetro(ctx.cwd, { accept: ctx.values.accept ?? [], promote: pairs(ctx.values.promote), reject: pairs(ctx.values.reject) }, { dryRun: ctx.dryRun })
+    ctx.output(r, [...r.done.map((d) => `  ${d.id}: ${d.action}${d.promotedTo ? ` (${d.promotedTo})` : d.reason ? ` (${d.reason})` : ''}`), r.dryRun ? 'dry run: nothing was written' : `counters updated on ${Object.keys(r.counters).length} active card(s)`].join('\n'))
     return EXIT.OK
   }
   if (action === 'issue') {
