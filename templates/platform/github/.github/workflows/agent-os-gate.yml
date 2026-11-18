@@ -1,0 +1,31 @@
+# The gate (agent-os): the same suites the diff needs locally (`agent-os gate`), selected from "gate" and "gatePaths"
+# in agent-os.json. On a pull request it compares with the target branch; on a push to a long-lived branch it runs every
+# suite. Managed by agent-os: change the suites in agent-os.json, not here.
+name: agent-os gate
+
+on:
+  pull_request:
+  push:
+    branches: [{{branches.integration}}, {{branches.production}}]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: agent-os/gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # Dependencies for the project's own suites; remove this step if the suites need none.
+      - name: install dependencies
+        run: if [ -f package-lock.json ]; then npm ci; fi
+      # The base branch comes from the event file, never interpolated into the script.
+      - run: npx -y @cosmin-sisman/agent-os{{#if version}}@{{{version}}}{{/if}} gate --from-ci

@@ -86,6 +86,24 @@ jobs:
       # The description, author and base branch are read from the event file, never interpolated into the script.
       - run: node bin/agent-os.mjs check loop --from-ci
 
+  gate:
+    # agent-os/gate: the suites the diff needs, chosen like `agent-os gate` locally. This repository has no
+    # agent-os.json yet (adopting agent-os here is the owner's decision), so it selects no suite; the matrix above runs
+    # the tests. Not in the `ci` aggregator: making it required is a ruleset setting.
+    name: agent-os/gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # The base branch is read from the event file, never interpolated into the script.
+      - run: node bin/agent-os.mjs gate --from-ci
+
   ci:
     if: always()
     needs: [test, actionlint, pr-title]

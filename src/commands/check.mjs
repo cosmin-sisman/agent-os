@@ -9,6 +9,7 @@ import { loadConfig } from '../config/config.mjs'
 import { checkTitle, checkCommit } from '../conventions/conventions.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 import { checkLoop, LOOP_CHECK } from '../workflow/loop.mjs'
+import { fromCi } from '../ci/event.mjs'
 import { systemGit } from '../workflow/start.mjs'
 import { runningVersion } from '../version/pin.mjs'
 
@@ -69,23 +70,4 @@ export function run(ctx) {
     return r.ok ? EXIT.OK : EXIT.CHECK_FAILED
   }
   throw new CliError(what ? `unknown check "${what}"` : 'missing what to check', { hint: `usage: ${usage}` })
-}
-
-/**
- * The change request from the CI environment, read from files and variables rather than interpolated into a script:
- * GitHub Actions' event file, or GitLab's merge request variables.
- */
-export function fromCi(env) {
-  if (env.GITHUB_EVENT_PATH) {
-    let event
-    try { event = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, 'utf8')) } catch { throw new CliError('cannot read the GitHub event file', { hint: 'run this in a pull_request workflow' }) }
-    const pr = event.pull_request
-    if (!pr) throw new CliError('this GitHub event has no pull request', { hint: 'run the loop check on pull_request events' })
-    return { body: pr.body ?? '', author: pr.user?.login ?? null, base: pr.base?.ref ?? null }
-  }
-  if (env.GITLAB_CI) {
-    if (!env.CI_MERGE_REQUEST_IID) throw new CliError('this GitLab pipeline is not a merge request pipeline', { hint: 'run the loop check with rules: if: $CI_PIPELINE_SOURCE == "merge_request_event"' })
-    return { body: env.CI_MERGE_REQUEST_DESCRIPTION ?? '', author: env.GITLAB_USER_LOGIN ?? null, base: env.CI_MERGE_REQUEST_TARGET_BRANCH_NAME ?? null }
-  }
-  throw new CliError('--from-ci found neither GitHub Actions nor GitLab CI', { hint: 'pass --body-file instead' })
 }
