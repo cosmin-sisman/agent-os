@@ -10,6 +10,29 @@
 #       refs: ["#43"]
 #       migration: 0.2.0
 releases:
+  - version: 0.1.4
+    date: 2026-11-18
+    changes:
+      - group: fix
+        text: "fix(platform): read large platform answers and cap error text"
+        refs:
+          - "#271"
+      - group: fix
+        text: "fix(upstream): keep an Area: prefix in draft titles"
+        refs:
+          - "#273"
+      - group: fix
+        text: "fix(distribution): reachable CLI and a first commit after install"
+        refs:
+          - "#276"
+      - group: fix
+        text: "fix(platform): GitHub Free private repos keep the rest of setup"
+        refs:
+          - "#277"
+      - group: chore
+        text: "chore(release): sync v0.1.3 into development"
+        refs:
+          - "#272"
   - version: 0.1.3
     date: 2026-11-18
     changes:
