@@ -3,25 +3,18 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { parse } from '../yaml/yaml.mjs'
 import { closest } from '../util/closest.mjs'
+import { CATALOG, loadCatalog as loadMergedCatalog } from './catalog.mjs'
 
-export const CATALOG = fileURLToPath(new URL('../../catalog/', import.meta.url))
-const cache = new Map()
-const catalogList = (name, dir = CATALOG) => {
-  const key = `${dir}${name}`
-  if (!cache.has(key)) cache.set(key, parse(readFileSync(join(dir, `${name}.yaml`), 'utf8'), { file: `catalog/${name}.yaml` }) ?? [])
-  return cache.get(key)
-}
+export { CATALOG }
 
 /** The layers of stack.yaml that are in use (chosen), with their technology, language, paths and aiFriendly. */
 export function stackLayers(cwd, { catalogDir = CATALOG } = {}) {
   const file = join(cwd, 'stack.yaml')
   if (!existsSync(file)) return []
   const stack = parse(readFileSync(file, 'utf8'), { file: 'stack.yaml' }) ?? {}
-  const tech = new Map(catalogList('technologies', catalogDir).map((t) => [t.id, t]))
-  const langs = new Map(catalogList('languages', catalogDir).map((l) => [l.id, l]))
+  const { technologies: tech, languages: langs } = loadMergedCatalog({ cwd, catalogDir })
   return Object.entries(stack.layers ?? {}).filter(([, l]) => (l.status ?? 'chosen') === 'chosen').map(([id, l]) => {
     const t = tech.get(l.tech) ?? null
     const language = l.language ?? t?.language ?? null
@@ -48,11 +41,8 @@ export const STATUSES = ['chosen', 'evaluating', 'optional', 'rejected']
 const TOP_KEYS = ['project', 'level', 'blueprint', 'compliance', 'layers']
 const LAYER_KEYS = ['tech', 'provider', 'language', 'runtime', 'status', 'paths', 'owners', 'note']
 
-/** The whole catalog, indexed by id. */
-export function loadCatalog(catalogDir = CATALOG) {
-  const index = (name) => new Map(catalogList(name, catalogDir).map((x) => [x.id, x]))
-  return { layers: index('layers'), technologies: index('technologies'), languages: index('languages'), providers: index('providers'), runtimes: index('runtimes'), blueprints: index('blueprints') }
-}
+/** The whole catalog indexed by id, with the project's overlays (.agent-os/catalog/) when a cwd is given. */
+export const loadCatalog = (opts = {}) => loadMergedCatalog(typeof opts === 'string' ? { catalogDir: opts } : opts)
 
 /** Reads stack.yaml, or null when there is none. */
 export function readStack(cwd) {
