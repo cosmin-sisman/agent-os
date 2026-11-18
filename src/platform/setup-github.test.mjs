@@ -43,19 +43,34 @@ test('switching labels to ro renames them in place, so they stay on their issues
   const steps = planGitHubSetup(config({ languages: { labels: 'ro' } }), client, { only: ['labels'] })
   assert.ok(steps.every((s) => s.action === 'rename' || s.action === 'update'), 'renames, plus description updates for names that are the same in both languages')
   assert.ok(steps.filter((s) => s.action === 'rename').length >= 20)
-  assert.match(steps.find((s) => s.description.includes('type:bug')).description, /rename label type:bug → tip:bug \(it stays on its issues\)/)
+  assert.match(steps.find((s) => s.description.includes('type:bug')).description, /rename label type:bug → tip:bug \(it stays on its issues; its color stays\)/)
   apply(steps)
   assert.deepEqual(gh.state.issues[7].labels, ['tip:bug', 'prioritate:p1'])
   assert.equal(gh.state.labels.length, LABELS.length, 'renamed, not duplicated')
   assert.ok(!gh.writes.some((w) => w.startsWith('DELETE')))
 })
 
-test('labels with the right name but another color or description are updated; unrelated labels are left alone', () => {
-  const gh = fakeGitHubRepo({ labels: [{ name: 'type:bug', color: 'ffffff', description: 'old' }, { name: 'area:billing', color: '000000' }] })
+test('existing labels are completed, never replaced: color and own descriptions stay; unrelated labels are left alone', () => {
+  const gh = fakeGitHubRepo({ labels: [
+    { name: 'type:bug', color: 'ffffff', description: 'Our team bug label' },
+    { name: 'type:feature', color: '1f6feb', description: '' },
+    { name: 'priority:p1', color: '123456', description: 'Prioritate mare' },
+    { name: 'area:billing', color: '000000' },
+  ] })
   const steps = planGitHubSetup(config(), ghClient(gh.run), { only: ['labels'] })
-  assert.ok(steps.some((s) => s.action === 'update' && s.description === 'update label type:bug: color or description'))
+  const about = (name) => steps.find((s) => s.description.includes(` ${name} `) || s.description.endsWith(` ${name}`))
+  assert.equal(about('type:bug').action, 'keep')
+  assert.equal(about('type:bug').description, 'keep label type:bug as it is: color #ffffff (the convention uses #d73a4a) and its own description')
+  assert.equal(about('type:feature').action, 'update')
+  assert.match(about('type:feature').description, /set the description of label type:feature \(it had none\); its color stays/)
   apply(steps)
+  const label = (n) => gh.state.labels.find((l) => l.name === n)
+  assert.equal(label('type:bug').color, 'ffffff')
+  assert.equal(label('type:bug').description, 'Our team bug label')
+  assert.equal(label('type:feature').description, 'A new capability')
+  assert.equal(label('priority:p1').color, '123456', 'a custom color is never changed')
   assert.ok(gh.state.labels.some((l) => l.name === 'area:billing'))
+  assert.ok(!gh.writes.some((w) => w.startsWith('DELETE')))
 })
 
 test('an existing ruleset covering both branches is reused and completed, never duplicated', () => {
