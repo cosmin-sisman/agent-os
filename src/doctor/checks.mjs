@@ -12,6 +12,7 @@ import { findDiacritics, languageFor, labelSet, toAscii } from '../i18n/i18n.mjs
 import { readJournal, validate as validateEntry } from '../journal/journal.mjs'
 import { readLessons, validateCard } from '../lessons/lessons.mjs'
 import { checkDecisions } from '../decisions/decisions.mjs'
+import { headerOf } from '../map/map.mjs'
 import { readLock } from '../managed/managed.mjs'
 import { OUTSIDE, readRegistry } from '../registry/registry.mjs'
 import { matches } from '../util/glob.mjs'
@@ -144,6 +145,18 @@ function lifecycle({ cwd, config, templatesRoot = TEMPLATES, exceptions }) {
   const manifest = { items: Object.fromEntries(ex.map((e) => [e.id, e])) }
   for (const d of deprecatedInUse(manifest, { team, local, hookCommands })) out.push({ level: 'warn', message: `this project uses ${noticeFor(d.id, d)}`, fix: d.replacement ? `switch to ${d.replacement.replace(/^(command|flag|config):/, '')}` : 'see the release notes for what replaces it' })
   return out.length ? out : [ok('no legacy feature enabled and no deprecated item in use')]
+}
+
+const CODE_FILE = /\.(m?[jt]sx?|cjs|py|rb|go|rs|java|kt|cs|php|swift|ex|exs|vue|svelte|sql|sh|lua|c|cc|cpp|h|hpp|scala)$/i
+
+/** New code files on this branch open with a 1–3 line header. Only new files: history is never asked to change. */
+function headers({ cwd, config, git }) {
+  const run = git ?? ((args) => { const r = spawnSync('git', args, { cwd, encoding: 'utf8', windowsHide: true }); return { status: r.status, stdout: r.stdout ?? '' } })
+  const r = run(['diff', '--name-only', '--diff-filter=A', `origin/${config.branches.integration}...HEAD`])
+  if (r.status !== 0) return [ok('no branch to compare with: headers are checked on new files only')]
+  const added = r.stdout.split(/\r?\n/).filter((f) => CODE_FILE.test(f) && !/(^|\/)(__fixtures__|fixtures|vendor)\//.test(f))
+  const missing = added.filter((f) => { const text = read(cwd, f); return text !== null && !headerOf(text) })
+  return missing.length ? missing.map((f) => ({ level: 'warn', path: f, message: `${f} is new and has no header`, fix: 'open it with a 1–3 line comment: what the file is and where it fits' })) : [ok(`${added.length} new code file(s), each with a header`)]
 }
 
 /** No unresolved update conflicts. */
@@ -323,6 +336,7 @@ export const CHECKS = [
   { id: 'hooks', area: 'agent system', run: hooks },
   { id: 'links', area: 'agent system', run: links },
   { id: 'area-map', area: 'agent system', run: areaMap },
+  { id: 'headers', area: 'agent system', run: headers },
   { id: 'budgets', area: 'context', run: budgets },
   { id: 'language', area: 'language', run: language },
   { id: 'journal', area: 'history', run: journal },
