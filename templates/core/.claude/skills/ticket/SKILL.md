@@ -10,6 +10,9 @@ Request: $ARGUMENTS
 
 Issues are written in **{{lang.issues}}**{{#if lang.issues == "ro"}} (Romanian without diacritics: plain a, i, s, t){{/if}}. Labels are named in **{{lang.labels}}**.
 
+
+**A vulnerability is never a ticket.** If the work describes something exploitable (an injection, XSS, an authorization bypass, a leaked secret…), report it privately instead: `agent-os security report --title "…" --body-file <f>`. That is a draft security advisory on GitHub and a confidential issue on GitLab. `agent-os issue new` refuses one. Hardening that reveals nothing exploitable is a normal ticket: add `--hardening`, which adds the security label.
+
 ## 1. Agreement
 
 Create the issue only if the person asked for it or agreed to your proposal. Otherwise propose it (a title plus one or two lines on why it matters) and stop.
