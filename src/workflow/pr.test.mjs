@@ -38,7 +38,7 @@ function fakeTracker({ existing = null, labels = ['type:feature', 'area:skills',
     pullRequestFor: () => existing,
     get: (n) => ({ number: n, labels }),
     createPullRequest: (spec) => { calls.push(['create', spec]); return { number: 160, url: 'https://github.com/acme/app/pull/160' } },
-    addLabels: (n, l) => calls.push(['labels', n, l]),
+    labelChangeRequest: (n, l) => calls.push(['labels', n, l]),
     comment: (n, b) => calls.push(['comment', n, b]),
   }
 }

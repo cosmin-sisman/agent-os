@@ -19,8 +19,8 @@ export async function run(ctx) {
   const number = Number(String(ctx.positionals[0] ?? '').replace(/^#/, ''))
   if (!Number.isInteger(number) || number < 1) throw new CliError('which issue?', { hint: `usage: ${usage}` })
   const { merged } = loadConfig(ctx.cwd)
-  const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh })
-  const caps = (await capabilitiesFor(merged, { cwd: ctx.cwd, gh: ctx.io.gh })).capabilities
+  const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
+  const caps = (await capabilitiesFor(merged, { cwd: ctx.cwd, gh: ctx.io.gh, glab: ctx.io.glab })).capabilities
   const r = startIssue({ tracker, caps, config: merged, git: ctx.io.git ?? systemGit(ctx.cwd), cwd: ctx.cwd }, { number, hotfix: ctx.values.hotfix, worktree: ctx.values.worktree, force: ctx.values.force, dryRun: ctx.dryRun })
   for (const w of r.warnings ?? []) ctx.io.stderr(`agent-os: warning: ${w}\n`)
   if (!r.dryRun && r.started === false) { ctx.output(r, r.message); return EXIT.CHECK_FAILED }

@@ -21,7 +21,7 @@ export const options = {
 export async function run(ctx) {
   const { merged } = loadConfig(ctx.cwd)
   const git = ctx.io.git ?? systemGit(ctx.cwd)
-  const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh })
+  const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
   const vocab = vocabularyFor(merged.platform?.type)
   let number = Number(String(ctx.positionals[0] ?? '').replace(/^[#!]/, ''))
   if (!ctx.positionals[0]) {
@@ -30,7 +30,7 @@ export async function run(ctx) {
     if (!number) throw new CliError(`${branch} has no open ${vocab.changeRequest}`, { hint: `usage: ${usage}` })
   }
   if (!Number.isInteger(number) || number < 1) throw new CliError(`"${ctx.positionals[0]}" is not a number`)
-  const caps = (await capabilitiesFor(merged, { cwd: ctx.cwd, gh: ctx.io.gh })).capabilities
+  const caps = (await capabilitiesFor(merged, { cwd: ctx.cwd, gh: ctx.io.gh, glab: ctx.io.glab })).capabilities
   const r = ship({ config: merged, tracker, caps, git, vocab }, { number, issuesLang: languageFor(merged, 'issues'), prsLang: languageFor(merged, 'prs'), notify: !ctx.values['no-notify'], keepBranch: ctx.values['keep-branch'], dryRun: ctx.dryRun })
   for (const w of r.warnings ?? []) ctx.io.stderr(`agent-os: warning: ${w}\n`)
   const cr = `${vocab.cr} ${vocab.crRef}${number}`

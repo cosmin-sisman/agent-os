@@ -112,8 +112,10 @@ test('reads: children, blockers and milestone progress', () => {
   assert.throws(() => t.progress('v9'), /milestone "v9" does not exist/)
 })
 
-test('the factory refuses GitLab until #92 and needs a project', () => {
-  assert.throws(() => createTracker({ platform: { type: 'gitlab', project: 'g/p' } }), (err) => /planned/.test(err.message) && /issues\/92/.test(err.hint))
+test('the factory returns the adapter of the configured platform and needs a project', () => {
+  assert.equal(createTracker({ platform: { type: 'gitlab', project: 'g/p' } }).constructor.name, 'GitLabTracker')
+  assert.equal(createTracker({ platform: { type: 'github', project: 'o/r' } }).constructor.name, 'GitHubTracker')
+  assert.throws(() => createTracker({ platform: { type: 'gitlab' } }), /platform\.project is not set/)
   assert.throws(() => createTracker({ platform: { type: 'github' } }), /platform\.project is not set/)
 })
 
