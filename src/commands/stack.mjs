@@ -10,6 +10,7 @@ import { parse } from '../yaml/yaml.mjs'
 import { closest } from '../util/closest.mjs'
 import { catalogFiles, KINDS, mergeCatalog, problemText, validateCatalog } from '../stack/catalog.mjs'
 import { changeLayer } from '../stack/change.mjs'
+import { compareTech, proposeBlueprints } from '../stack/propose.mjs'
 import { detectStack, stackDrift, stackFromDetections } from '../stack/detect.mjs'
 import { importSheet, readSheets, stackFromImport, writeOverlay } from '../stack/import.mjs'
 import { basename, resolve } from 'node:path'
@@ -17,7 +18,7 @@ import { loadConfig } from '../config/config.mjs'
 import { languageFor } from '../i18n/i18n.mjs'
 import { loadCatalog, readStack, stackFromBlueprint, stackSummary, validateStack } from '../stack/stack.mjs'
 
-export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run] | set <layer> <tech> [--why <text>] | status <layer> <status> [--why <text>] | detect [--write] | drift | import <file.csv|file.xlsx> [--sheet <name>] [--write [--force]] [--overlay]   (render: later)'
+export const usage = 'agent-os stack show | check | catalog [check] | new --from <blueprint> [--project <name>] [--force] [--dry-run] | set <layer> <tech> [--why <text>] | status <layer> <status> [--why <text>] | detect [--write] | drift | import <file.csv|file.xlsx> [--sheet <name>] [--write [--force]] [--overlay] | propose --level <1-5> [--family typescript|polyglot] | compare <tech> <tech>   (render: later)'
 
 export const options = {
   from: { type: 'string', description: 'new: the blueprint id (catalog/blueprints.yaml)' },
@@ -26,6 +27,8 @@ export const options = {
   why: { type: 'string', description: 'set, status: why, for the decision record' },
   write: { type: 'boolean', description: 'detect, import: write stack.yaml (only when there is none, or with --force for import)' },
   sheet: { type: 'string', description: 'import: the sheet to read (default: the first with Layer and Technology columns)' },
+  level: { type: 'string', description: 'propose: the product complexity level, 1 (simple) to 5 (complex)' },
+  family: { type: 'string', description: 'propose: typescript (one language end to end) or polyglot' },
   overlay: { type: 'boolean', description: 'import: add the technologies and layers the catalog lacks to .agent-os/catalog/' },
 }
 
@@ -89,6 +92,22 @@ ${problems.length} problem(s):
       lines.push('', ctx.dryRun ? text : r.detections.length ? 'wrote stack.yaml: check every layer and its paths, then agent-os stack check' : 'nothing to write')
     }
     ctx.output(r, lines.join('\n'))
+    return EXIT.OK
+  }
+  if (action === 'propose') {
+    const level = Number(ctx.values.level)
+    if (!Number.isInteger(level) || level < 1 || level > 5) throw new CliError('--level must be 1 (simple) to 5 (complex)', { hint: 'agent-os stack propose --level 2' })
+    if (ctx.values.family && !['typescript', 'polyglot'].includes(ctx.values.family)) throw new CliError('--family must be typescript or polyglot')
+    const lang = languageFor(loadConfig(ctx.cwd).merged, 'docs')
+    const list = proposeBlueprints(catalog, { level, family: ctx.values.family, lang })
+    ctx.output(list, `${list.some((x) => !x.exact) ? `no blueprint for level ${level}; the nearest:\n` : ''}${list.map((x, i) => `${i + 1}. ${x.id} (${x.name}, level ${x.scores.level}, ${x.scores.family})\n   ${x.why}\n   start from it: agent-os stack new --from ${x.id}`).join('\n')}`)
+    return EXIT.OK
+  }
+  if (action === 'compare') {
+    const [, a, b] = ctx.positionals
+    for (const id of [a, b]) if (!catalog.technologies.has(id ?? '')) { const near = closest(String(id ?? ''), [...catalog.technologies.keys()]); throw new CliError(`unknown technology "${id ?? ''}"${near ? ` (did you mean "${near}"?)` : ''}`, { hint: 'agent-os stack compare <tech> <tech>' }) }
+    const r = compareTech(catalog, a, b)
+    ctx.output(r, `${r.table}${r.reasons.length ? `\n\n${r.reasons.map((x) => `- ${x}`).join('\n')}` : ''}`)
     return EXIT.OK
   }
   if (action === 'import') {

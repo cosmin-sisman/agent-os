@@ -108,5 +108,18 @@ export function stackRules(config, { templatesRoot = TEMPLATES, cwd }) {
     const front = l.paths.length ? `---\npaths:\n${l.paths.map((p) => `  - "${p}"`).join('\n')}\n---\n\n` : ''
     out.push({ key: `.claude/rules/stack/${l.language}.md`, content: `${front}${body.replace(/^\n+/, '')}`, route: 'stack' })
   }
+  // Layers agents know poorly (aiFriendly ≤ 2) in a language with no rule template still get "read the docs first",
+  // scoped to their paths (#80).
+  const covered = new Set(languagesInUse(stackLayers(cwd)).filter((l) => existsSync(join(templatesRoot, 'stack', `${l.language}.${lang}.md`))).map((l) => l.language))
+  const low = stackLayers(cwd).filter((l) => l.aiFriendly <= 2 && !covered.has(l.language))
+  if (low.length) {
+    const paths = [...new Set(low.flatMap((l) => l.paths))]
+    const front = paths.length && low.every((l) => l.paths.length) ? `---\npaths:\n${paths.map((p) => `  - "${p}"`).join('\n')}\n---\n\n` : ''
+    const items = low.map((l) => `- **${l.techName}** (${l.id}${l.paths.length ? `: ${l.paths.map((p) => `\`${p}\``).join(', ')}` : ''})`).join('\n')
+    const body = lang === 'ro'
+      ? `# Citeste documentatia intai\n\nAgentii cunosc slab aceste tehnologii (catalog: aiFriendly 2 sau mai putin). Inainte sa scrii cod, citeste documentatia oficiala pentru versiunea folosita (printr-un MCP de documentatie, daca exista) si citeaz-o in change request:\n\n${items}\n`
+      : `# Read the docs first\n\nAgents know these technologies poorly (catalog: aiFriendly 2 or less). Before writing code, read the official documentation for the version in use (through a docs MCP server when one is configured) and cite it in the change request:\n\n${items}\n`
+    out.push({ key: '.claude/rules/stack/read-the-docs.md', content: `${front}${body}`, route: 'stack' })
+  }
   return out
 }
