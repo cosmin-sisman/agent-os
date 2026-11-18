@@ -97,3 +97,23 @@ The GitLab adapter (`src/tracker/gitlab.mjs`) keeps the shared shapes, so every 
 | Branch link | branches are not linked by the API: `/start` cuts the branch locally and `Closes #N` links it |
 
 Lists are paged by 100 (up to 2000 items), and rate limits (HTTP 429) and temporary server errors are retried with backoff.
+
+## The planning board: `board`
+
+```bash
+agent-os board plan [--issue 42]          # what sync would change (read only)
+agent-os board sync [--issue 42]          # Status, Priority and Size, only where they differ
+agent-os board create --title app --dry-run
+```
+
+The board is optional (GitHub Projects v2, configured as `platform.board`), and it needs the token's `project` scope.
+
+- **Fields:** Status is built into every board. The default set adds **Priority** (P0–P3) and **Size** (XS–XL), mirrored from the `priority:*` and `size:*` labels. Iteration is left to teams that plan in iterations.
+- **Values:**
+  - Status: Done when closed, In Progress when someone is assigned, Todo otherwise.
+  - Issues missing from the board are added.
+  - Closed issues still on the board are set to Done.
+  - A value the board has no option for is reported, never invented.
+- **Without the scope:** the board is skipped with **one** warning (`gh auth refresh -s project`), however many issues a command touches, and every other command works.
+- **`create`** creates a project linked to the repository, with the default fields. It refuses when `platform.board` is already set.
+- On GitLab, the board lists issues by their `status::` label (`agent-os issue status`), so there is nothing to sync.

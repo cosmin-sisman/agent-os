@@ -37,6 +37,7 @@ export const COMMANDS = [
   { name: 'manifest', summary: 'Build and check the lifecycle manifest; list deprecated items this project still uses', status: 'new', issue: 66, load: () => import('../commands/manifest.mjs') },
   { name: 'start', summary: 'Claim an issue: assign, branch from the right base, link, In Progress, check out', status: 'new', issue: 14, load: () => import('../commands/start.mjs') },
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'new', issue: 18, load: () => import('../commands/next.mjs') },
+  { name: 'board', summary: 'Keep the optional planning board in step with the issues (GitHub Projects)', status: 'new', issue: 20, load: () => import('../commands/board.mjs') },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'new', issue: 33, load: () => import('../commands/overlap.mjs') },
   { name: 'gate', summary: 'Run the checks the current diff needs', status: 'new', issue: 43, load: () => import('../commands/gate.mjs') },
   { name: 'pr', summary: 'Open the change request when it is ready; its checks and review threads', status: 'new', issue: 15, load: () => import('../commands/pr.mjs') },

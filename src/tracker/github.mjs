@@ -463,6 +463,38 @@ export class GitHubTracker {
     return this.cache.board
   }
 
+  /** Every item on the board with its issue number, state and single-select values; null without a board. */
+  boardItems() {
+    const board = this.boardInfo()
+    if (!board) return null
+    const q = 'query($id:ID!,$after:String){ node(id:$id){ ... on ProjectV2 { items(first:100, after:$after){ pageInfo{ hasNextPage endCursor } nodes{ id content{ ... on Issue { number state repository{ nameWithOwner } } } fieldValues(first:20){ nodes{ ... on ProjectV2ItemFieldSingleSelectValue { name field{ ... on ProjectV2SingleSelectField { name } } } } } } } } } }'
+    const out = []
+    let after = null
+    for (let page = 0; page < 30; page++) {
+      const items = this.gh.graphql(q, { id: board.id, ...(after ? { after } : {}) })?.node?.items
+      for (const n of items?.nodes ?? []) {
+        if (!n.content?.number || (n.content.repository?.nameWithOwner && n.content.repository.nameWithOwner !== this.repo)) continue
+        out.push({ itemId: n.id, number: n.content.number, state: String(n.content.state).toLowerCase(), fields: Object.fromEntries((n.fieldValues?.nodes ?? []).filter((v) => v?.field?.name).map((v) => [v.field.name, v.name])) })
+      }
+      if (!items?.pageInfo?.hasNextPage) break
+      after = items.pageInfo.endCursor
+    }
+    return out
+  }
+
+  /** Creates a board linked to the repository with the default fields (Status comes with every board). */
+  createBoard({ title, fields }, { dryRun = false } = {}) {
+    const steps = [`create the project "${title}" owned by ${this.repo.split('/')[0]} and link it to ${this.repo}`, ...Object.entries(fields).map(([name, options]) => `add the field ${name}: ${options.join(', ')}`)]
+    if (dryRun) return { dryRun: true, steps }
+    const [owner, name] = this.repo.split('/')
+    const ids = this.gh.graphql('query($o:String!,$n:String!){ repositoryOwner(login:$o){ id } repository(owner:$o,name:$n){ id } }', { o: owner, n: name })
+    const project = this.gh.graphql('mutation($o:ID!,$t:String!,$r:ID!){ createProjectV2(input:{ownerId:$o,title:$t,repositoryId:$r}){ projectV2{ id number url } } }', { o: ids.repositoryOwner.id, t: title, r: ids.repository.id }).createProjectV2.projectV2
+    for (const [fieldName, options] of Object.entries(fields)) {
+      this.gh.graphql('mutation($p:ID!,$n:String!,$o:[ProjectV2SingleSelectFieldOptionInput!]!){ createProjectV2Field(input:{projectId:$p,dataType:SINGLE_SELECT,name:$n,singleSelectOptions:$o}){ clientMutationId } }', { p: project.id, n: fieldName, o: options.map((o) => ({ name: o, color: 'GRAY', description: '' })) })
+    }
+    return { number: project.number, url: project.url, steps }
+  }
+
   /** Places an issue on the board and sets a single-select field (Status by default). Without a board: a warning. */
   setStatus(number, value, { field = 'Status', dryRun = false } = {}) {
     if (dryRun) return { dryRun: true, requests: [{ graphql: 'addProjectV2ItemById + updateProjectV2ItemFieldValue', board: this.board ?? null, field, value }] }
