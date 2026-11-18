@@ -5,7 +5,10 @@
 # journal entry. Managed by agent-os: change it through agent-os.json, not by hand.
 agent-os/loop:
   stage: test
-  image: node:22-alpine
+  image: "{{#if runner.image}}{{{runner.image}}}{{else}}node:22-alpine{{/if}}"
+{{#if runner.tags}}
+  tags: {{{runner.tags}}}
+{{/if}}
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   variables:
@@ -15,4 +18,4 @@ agent-os/loop:
     - git fetch origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
   script:
     # The description, author and target branch come from GitLab's merge request variables.
-    - npx -y @cosmin-sisman/agent-os{{#if version}}@{{{version}}}{{/if}} check loop --from-ci
+    - {{{runner.npx}}} check loop --from-ci

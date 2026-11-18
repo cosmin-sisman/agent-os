@@ -97,7 +97,7 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `requires.env` | team | array | `[]` | Variables that must be set (values are never read) |
 | `requires.plugins` | team | array | `[]` | Plugins the project expects |
 | `upstream` | team | object | `{}` | Feedback to the agent-os project |
-| `upstream.enabled` | team | boolean | `true` | Allow /upstream to file issues on the public agent-os repository |
+| `upstream.enabled` | team | boolean |  | Allow /upstream to file issues on the public agent-os repository (default: on, off on a self-managed host) |
 | `compliance` | team | object | `{}` | Compliance constraints |
 | `compliance.euOnly` | team | boolean | `false` | Flag providers without confirmed EU regions |
 | `contextBudgets` | team | object | `{}` | Size budgets per file or glob |
@@ -112,6 +112,10 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `guards.rules[].env` | team | string |  | require-env: the variable that must be set, e.g. DB_RESET_OK=1 in the command or the environment |
 | `guards.rules[].message` | team | string |  | What to tell the agent when the rule refuses |
 | `guards.disable` | team | array | `[]` | Built-in guards turned off for this project |
+| `npmRegistry` | team | string |  | The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs |
+| `ci` | team | object | `{}` | How generated CI jobs run: image and runners |
+| `ci.image` | team | string |  | The container image generated CI jobs run in, e.g. from the internal registry (default node:22) |
+| `ci.tags` | team | array | `[]` | Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels) |
 | `adoption` | team | object | `{}` | Adoption mode for projects new to agent-os |
 | `adoption.warnOnlyUntil` | team | string |  | Until this date (YYYY-MM-DD) guards only warn instead of refusing |
 | `adoption.cutoff` | team | string |  | Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD) |
@@ -119,5 +123,7 @@ The table below is generated from `src/config/schema.mjs` by `npm run schema`; d
 | `machine.maxWorkers` | personal | integer | `3` | Most agent sessions to run in parallel on this laptop |
 | `machine.minFreeMb` | personal | integer | `1500` | Refuse heavy commands below this much free memory |
 | `machine.devPortStart` | personal | integer | `5174` | First port for dev servers in worktrees |
+| `machine.proxy` | personal | string |  | HTTP(S) proxy every tool agent-os runs goes through (an HTTPS_PROXY already set wins); no credentials here |
+| `machine.noProxy` | personal | array | `[]` | Hosts the proxy is bypassed for |
 | `orchestrator` | personal | boolean | `false` | Run the optional orchestrator role in this laptop's sessions |
 <!-- generated:config-keys:end -->

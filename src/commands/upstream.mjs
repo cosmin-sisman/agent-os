@@ -44,11 +44,12 @@ export async function run(ctx) {
   const removed = Object.entries(draft.removed).map(([k, n]) => `${n} ${k}`).join(', ')
   const upstream = ctx.io.upstreamTracker ?? (() => { try { return createTracker({ platform: { type: 'github', project: UPSTREAM_REPO } }, { gh: ctx.io.gh }) } catch { return null } })()
   let dup = { query: '', matches: [] }
-  if (merged.upstream?.enabled !== false && upstream) { try { dup = upstreamDuplicates(upstream, draft) } catch { dup = { query: '', matches: [], failed: true } } }
+  const enabled = merged.upstream?.enabled ?? !merged.platform?.host
+  if (enabled && upstream) { try { dup = upstreamDuplicates(upstream, draft) } catch { dup = { query: '', matches: [], failed: true } } }
   const shown = [`Title: ${draft.title}`, `Labels: ${draft.labels.join(', ')}`, '', draft.body, '', removed ? `Removed before showing it: ${removed}.` : 'Nothing private was found to remove.', ...(dup.matches.length ? ['', 'Similar upstream issues (react with 👍 or comment there instead of filing a new one):', ...dup.matches.map((m) => `  #${m.number} ${m.title} (${m.state}) ${m.url}`)] : [])]
-  if (merged.upstream?.enabled === false) {
+  if (!enabled) {
     const file = ctx.dryRun ? null : saveDraft(ctx.cwd, draft)
-    ctx.output({ draft, saved: file, removed: draft.removed }, `${shown.join('\n')}\n\nupstream.enabled is false: ${file ? `the draft is in ${file}` : 'the draft would be saved locally'}; nothing is sent.`)
+    ctx.output({ draft, saved: file, removed: draft.removed }, `${shown.join('\n')}\n\n${merged.upstream?.enabled === false ? 'upstream.enabled is false' : 'upstream is off by default on a self-managed host (upstream.enabled: true turns it on)'}: ${file ? `the draft is in ${file}` : 'the draft would be saved locally'}; nothing is sent.`)
     return EXIT.OK
   }
   if (!v.file || ctx.dryRun) {

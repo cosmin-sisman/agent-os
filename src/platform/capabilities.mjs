@@ -14,7 +14,27 @@ export const CAPABILITIES = {
   pages: { means: 'a static site for artifacts', fallback: 'CI job artifacts linked from the change request' },
   branchRules: { means: 'rules beyond protected branches (GitHub rulesets, GitLab push rules)', fallback: 'protected branches only' },
   linkedBranches: { means: 'branches linked to an issue by the platform', fallback: '"Closes #N" in the change request' },
+  ciComponents: { means: 'reusable CI building blocks (GitHub reusable workflows, GitLab CI/CD components)', fallback: 'the generated job files, included locally' },
+  idTokens: { means: 'OIDC tokens in CI jobs instead of stored secrets', fallback: 'masked, protected CI variables' },
 }
+
+/** Versions a self-managed instance needs for a capability; older or unknown versions use the fallback. */
+export const VERSION_GATES = {
+  gitlab: { ciComponents: '17.0', idTokens: '15.7' },
+  github: { idTokens: '3.5' },
+}
+
+/** True when `version` (e.g. "17.5.1-ee", "3.12.0") is at least `min` ("17.0"); false when it is unknown. */
+export function versionAtLeast(version, min) {
+  const a = String(version ?? '').match(/^(\d+)\.(\d+)/)
+  if (!a) return false
+  const [ma, mi] = min.split('.').map(Number)
+  return Number(a[1]) > ma || (Number(a[1]) === ma && Number(a[2]) >= mi)
+}
+
+const gated = (gates, id, version, what) => (version
+  ? v(versionAtLeast(version, gates[id]), 'probed', `${what} ${version}; needs ${gates[id]}`)
+  : v(null, 'unknown', `${what} version unknown; needs ${gates[id]}`))
 
 const v = (value, source, note) => ({ value, source, ...(note ? { note } : {}) })
 
@@ -40,8 +60,10 @@ export async function probeGitHub(platform, client) {
     board: v(Boolean(platform.board?.number), 'config', platform.board?.number ? 'platform.board is set; the token needs the project scope' : 'no platform.board configured'),
   }
   if (!enterprise) {
-    return { ...caps, subItems: v(true, 'known'), dependencies: v(true, 'known'), pages: v(true, 'known'), branchRules: v(true, 'known', 'rulesets') }
+    return { ...caps, subItems: v(true, 'known'), dependencies: v(true, 'known'), pages: v(true, 'known'), branchRules: v(true, 'known', 'rulesets'), ciComponents: v(true, 'known', 'reusable workflows'), idTokens: v(true, 'known', 'OIDC') }
   }
+  const meta = await tryGet(get, 'meta')
+  const ghesVersion = meta.ok ? meta.body?.installed_version ?? null : null
   const issue = await tryGet(get, `repos/${platform.project}/issues?state=all&per_page=1`)
   const n = issue.ok && issue.body?.[0]?.number
   const sub = n ? await tryGet(get, `repos/${platform.project}/issues/${n}/sub_issues?per_page=1`) : null
@@ -55,6 +77,8 @@ export async function probeGitHub(platform, client) {
     dependencies: probed(dep, 'dependencies'),
     branchRules: v(rules.ok, 'probed', rules.ok ? 'rulesets' : `HTTP ${rules.status ?? '?'}`),
     pages: v(pages.ok || pages.status === 404, 'probed', pages.ok ? 'enabled' : pages.status === 404 ? 'available, not enabled' : `HTTP ${pages.status ?? '?'}`),
+    ciComponents: v(true, 'known', 'reusable workflows'),
+    idTokens: gated(VERSION_GATES.github, 'idTokens', ghesVersion, 'GitHub Enterprise Server'),
   }
 }
 
@@ -85,6 +109,8 @@ export async function probeGitLab(platform, client) {
     pages: v(pagesLevel !== undefined && pagesLevel !== 'disabled', project.ok ? 'probed' : 'unknown', pagesLevel ? `pages_access_level: ${pagesLevel}` : 'Pages may be disabled by the administrator'),
     branchRules: v(pushRule.ok, 'probed', pushRule.ok ? 'push rules' : 'protected branches only'),
     linkedBranches: v(false, 'known', 'GitLab links branches by name (<N>-<slug>) and through "Closes #N"'),
+    ciComponents: gated(VERSION_GATES.gitlab, 'ciComponents', version.ok ? version.body?.version : null, 'GitLab'),
+    idTokens: gated(VERSION_GATES.gitlab, 'idTokens', version.ok ? version.body?.version : null, 'GitLab'),
   }
 }
 

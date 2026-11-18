@@ -14,7 +14,14 @@ permissions:
 jobs:
   gate:
     name: agent-os/gate
-    runs-on: ubuntu-latest
+    runs-on: {{{runner.runsOn}}}
+{{#if runner.image}}
+    container: "{{{runner.image}}}"
+{{/if}}
+{{#if runner.npmRegistry}}
+    env:
+      npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -28,4 +35,4 @@ jobs:
       - name: install dependencies
         run: if [ -f package-lock.json ]; then npm ci; fi
       # The base branch comes from the event file, never interpolated into the script.
-      - run: npx -y @cosmin-sisman/agent-os{{#if version}}@{{{version}}}{{/if}} gate --from-ci
+      - run: {{{runner.npx}}} gate --from-ci

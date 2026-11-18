@@ -45,6 +45,20 @@
           "minimum": 1024,
           "maximum": 65535,
           "default": 5174
+        },
+        "proxy": {
+          "type": "string",
+          "description": "HTTP(S) proxy every tool agent-os runs goes through (an HTTPS_PROXY already set wins); no credentials here",
+          "pattern": "^https?://"
+        },
+        "noProxy": {
+          "type": "array",
+          "description": "Hosts the proxy is bypassed for",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A host or domain reached without the proxy"
+          }
         }
       },
       "additionalProperties": false

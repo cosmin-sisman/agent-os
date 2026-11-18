@@ -17,6 +17,24 @@ const AREA_DECL = /^\{\{!\s*area:\s*([\w-]+)\s*\}\}/
  * (the platform's words: vocab.changeRequest, vocab.crRef, …).
  * @param {object} config merged configuration (src/config)
  */
+/**
+ * How generated CI jobs run (#95): the image (ci.image, else the given default), runner tags as a YAML flow list
+ * (GitLab tags, GitHub runs-on labels) and the agent-os command, pinned and from the internal registry when set.
+ */
+export function runnerContext(config) {
+  const tags = config.ci?.tags ?? []
+  const flow = tags.length ? `[${tags.map((t) => JSON.stringify(t)).join(', ')}]` : ''
+  const registry = config.npmRegistry ? ` --registry ${config.npmRegistry}` : ''
+  return {
+    image: config.ci?.image ?? null,
+    gitlabImage: config.ci?.image ?? 'node:22',
+    tags: flow,
+    runsOn: flow || 'ubuntu-latest',
+    npmRegistry: config.npmRegistry ?? null,
+    npx: `npx -y${registry} @cosmin-sisman/agent-os${config.version ? `@${config.version}` : ''}`,
+  }
+}
+
 export function buildContext(config) {
   const labels = {}
   for (const l of labelSet(config)) {
@@ -33,6 +51,7 @@ export function buildContext(config) {
     vocab: vocabularyFor(config.platform?.type),
     // CI expressions such as ${{ secrets.GITHUB_TOKEN }} use the same braces as templates: write {{{expr.open}}} … {{{expr.close}}}.
     expr: { open: '${{', close: '}}' },
+    runner: runnerContext(config),
   }
 }
 

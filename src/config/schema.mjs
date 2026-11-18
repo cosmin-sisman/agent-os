@@ -79,7 +79,7 @@ export const SCHEMA = obj({
     plugins: list(str('A Claude Code plugin'), 'Plugins the project expects', { default: [] }),
   }, 'What a working setup needs, checked by agent-os env', { default: {} }),
   upstream: obj({
-    enabled: bool('Allow /upstream to file issues on the public agent-os repository', { default: true }),
+    enabled: bool('Allow /upstream to file issues on the public agent-os repository (default: on, off on a self-managed host)'),
   }, 'Feedback to the agent-os project', { default: {} }),
   compliance: obj({
     euOnly: bool('Flag providers without confirmed EU regions', { default: false }),
@@ -97,6 +97,11 @@ export const SCHEMA = obj({
     }, 'One guard rule', { required: ['id', 'type', 'pattern'] }), 'Project guard rules, added to the built-in ones', { default: [] }),
     disable: list(str('The id of a built-in guard'), 'Built-in guards turned off for this project', { default: [] }),
   }, 'Guards that refuse risky shell commands before they run (PreToolUse)', { default: {} }),
+  npmRegistry: str('The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs', { pattern: '^https?://' }),
+  ci: obj({
+    image: str('The container image generated CI jobs run in, e.g. from the internal registry (default node:22)'),
+    tags: list(str('A runner tag'), 'Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels)', { default: [] }),
+  }, 'How generated CI jobs run: image and runners', { default: {} }),
   adoption: obj({
     warnOnlyUntil: str('Until this date (YYYY-MM-DD) guards only warn instead of refusing', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
     cutoff: str('Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD)', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
@@ -105,6 +110,8 @@ export const SCHEMA = obj({
     maxWorkers: int('Most agent sessions to run in parallel on this laptop', { minimum: 1, default: 3 }),
     minFreeMb: int('Refuse heavy commands below this much free memory', { minimum: 0, default: 1500 }),
     devPortStart: int('First port for dev servers in worktrees', { minimum: 1024, maximum: 65535, default: 5174 }),
+    proxy: str('HTTP(S) proxy every tool agent-os runs goes through (an HTTPS_PROXY already set wins); no credentials here', { pattern: '^https?://' }),
+    noProxy: list(str('A host or domain reached without the proxy'), 'Hosts the proxy is bypassed for', { default: [] }),
   }, "This laptop's limits", { personal: true, default: {} }),
   orchestrator: bool('Run the optional orchestrator role in this laptop\'s sessions', { personal: true, default: false }),
 }, 'agent-os configuration')

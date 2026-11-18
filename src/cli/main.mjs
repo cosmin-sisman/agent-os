@@ -9,6 +9,8 @@ import { EXIT, CliError } from './errors.mjs'
 import { findCommand, suggestCommand } from './registry.mjs'
 import { GLOBAL_OPTIONS, ISSUES_URL } from './options.mjs'
 import { Context } from './context.mjs'
+import { applyNetwork } from '../platform/network.mjs'
+import { loadConfig } from '../config/config.mjs'
 
 /**
  * Runs agent-os with the given arguments and returns the exit code. It never calls process.exit, so it can be tested.
@@ -34,6 +36,9 @@ export async function run(argv, io) {
     const { values, positionals } = parseStrict(plan.args, { ...GLOBAL_OPTIONS, ...(mod.options ?? {}) }, command)
     const cwd = resolveCwd(io.cwd, values.cwd)
     const ctx = new Context({ command, values, positionals, cwd, io })
+    // Self-managed networks: the private CA, the proxy and the internal registry reach every tool agent-os starts,
+    // through this process's environment only. Names are logged, never values.
+    if (io.env) { try { const applied = applyNetwork(loadConfig(cwd).merged, cwd, io.env); if (applied.length) ctx.debug(`network: set ${applied.join(', ')}`) } catch { /* an invalid config is reported by the command */ } }
     for (const note of runNotices(command, values)) io.stderr(`agent-os: note: ${note}\n`)
     ctx.debug(`command=${command} cwd=${cwd}${ctx.dryRun ? ' dry-run' : ''}`)
     const code = (await mod.run(ctx)) ?? EXIT.OK

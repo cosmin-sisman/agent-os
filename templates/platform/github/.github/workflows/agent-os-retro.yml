@@ -14,7 +14,14 @@ permissions:
 
 jobs:
   retro:
-    runs-on: ubuntu-latest
+    runs-on: {{{runner.runsOn}}}
+{{#if runner.image}}
+    container: "{{{runner.image}}}"
+{{/if}}
+{{#if runner.npmRegistry}}
+    env:
+      npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -24,6 +31,6 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-      - run: npx -y @cosmin-sisman/agent-os{{#if version}}@{{{version}}}{{/if}} retro issue
+      - run: {{{runner.npx}}} retro issue
         env:
           GH_TOKEN: {{{expr.open}}} secrets.GITHUB_TOKEN {{{expr.close}}}
