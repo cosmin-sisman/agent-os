@@ -208,7 +208,7 @@ export function finishRelease(deps, { version, hotfix = false, accept = [], now 
     `publish the ${vocab.platform} release ${plan.tag} with the notes`,
     plan.milestone && !plan.tagged ? `close "${plan.milestone.title}" as "${milestone('closed-release', languageFor(config, 'milestones'), { n: plan.milestone.n, date: now.toISOString().slice(0, 10) }).title}" and open Release ${plan.milestone.n + 1}` : 'make sure the next rolling milestone exists',
     'run the release checks (environment, release:* suites)',
-    `open the sync of ${hotfix ? production : plan.branch} back into ${integration}`,
+    `open the sync of ${production} back into ${integration} (merged with a merge commit; no branch is deleted)`,
   ]
   if (problems.length || dryRun) return { released: false, dryRun, plan, steps, problems, asks: asks.map((a) => a.id) }
 

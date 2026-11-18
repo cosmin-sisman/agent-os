@@ -72,6 +72,16 @@ export function isSync(s, config) {
   if (s.base !== integration) return false
   return String(s.body ?? '').includes('<!-- agent-os:sync -->') || s.branch === production || /^(release|hotfix)\//.test(s.branch ?? '')
 }
+/**
+ * Why a change request's head branch is kept after the merge, or null when ship may delete it: a long-lived branch
+ * (integration, production) is never deleted, and neither is any branch a sync comes from (#243).
+ */
+export function keepReason(s, config) {
+  const { integration = 'development', production = 'main' } = config.branches ?? {}
+  if ([integration, production].includes(s.branch)) return 'it is a long-lived branch'
+  if (isSync(s, config)) return 'it is the source of a sync'
+  return null
+}
 const methodFor = (s, config) => (isSync(s, config) ? 'merge' : config.branches.mergeMethod ?? 'squash')
 /** A synchronous pause: ship is synchronous, and the wait is short and bounded. */
 const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
@@ -102,7 +112,7 @@ export function ship({ config, tracker, caps, git, vocab, sleep = pause }, { num
     `merge ${cr} into ${s.base} (${methodFor(s, config)}${isSync(s, config) ? ': a sync is never squashed' : ''}, head ${String(s.head).slice(0, 7)})`,
     ...closes.map((n) => `close #${n} with a comment${has(caps, 'board') ? ' and set it to Done' : ''}`),
     ...refs.map((n) => `comment on #${n}${before.get(n) === 'closed' ? ' (already closed)' : '; it stays open'}`),
-    ...(keepBranch || s.fork ? [] : [`delete the branch ${s.branch}`]),
+    ...(keepBranch || s.fork ? [] : keepReason(s, config) ? [`keep the branch ${s.branch}: ${keepReason(s, config)}`] : [`delete the branch ${s.branch}`]),
   ]
   if (dryRun) return { shipped: false, dryRun: true, number, steps, closes, refs }
 
@@ -130,7 +140,7 @@ export function ship({ config, tracker, caps, git, vocab, sleep = pause }, { num
     else if (now === 'closed') { tracker.comment(n, t.related(cr)); issues.push({ number: n, action: 'commented, already closed' }) }
     else { tracker.comment(n, t.stays(cr)); issues.push({ number: n, action: 'commented, stays open' }) }
   }
-  const cleanup = keepBranch || s.fork ? [] : cleanBranch({ tracker, git, config }, s.branch)
+  const cleanup = keepBranch || s.fork ? [] : keepReason(s, config) ? [`kept ${s.branch}: ${keepReason(s, config)}`] : cleanBranch({ tracker, git, config }, s.branch)
   return { shipped: true, number, sha: merged.sha, issues, cleanup, warnings: tracker.warnings ?? [] }
 }
 

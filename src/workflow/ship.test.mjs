@@ -96,6 +96,27 @@ test('given a sync pull request and mergeMethod squash, ship merges it with a me
   assert.equal(isSync(status({ branch: 'release/0.2.0', base: 'main' }), CONFIG), false, 'a release into production is not a sync')
 })
 
+test('given a sync pull request with head main, ship deletes nothing: no delete step, no deleteBranch, no local clean-up', () => {
+  const body = '<!-- agent-os:sync -->\nBrings main back.\n\n## Lessons\n\nNone: the release sync.\n'
+  for (const branch of ['main', 'development', 'release/0.2.0']) {
+    const base = branch === 'development' ? 'main' : 'development'
+    const s = status({ branch, base, body })
+    const dry = run(fakeTracker({ s }), { dryRun: true })
+    assert.equal(dry.steps.some((x) => /delete/.test(x)), false, `${branch}: ${dry.steps.join(' | ')}`)
+    assert.ok(dry.steps.some((x) => x.startsWith(`keep the branch ${branch}: `)), branch)
+    const t = fakeTracker({ s })
+    const git = fakeGit({ current: branch })
+    const r = run(t, {}, git)
+    assert.equal(r.shipped, true)
+    assert.equal(t.calls.some((c) => c[0] === 'deleteBranch'), false, `${branch}: deleteBranch is never called`)
+    assert.equal(git.calls.some((c) => c[0] === 'branch' || c[0] === 'worktree' && c[1] === 'remove'), false, `${branch}: no local branch or worktree removed`)
+    assert.match(r.cleanup[0], new RegExp(`^kept ${branch.replace('/', '\\/')}: `))
+  }
+  const t = fakeTracker()
+  run(t)
+  assert.ok(t.calls.some((c) => c[0] === 'deleteBranch' && c[1] === 'feat/4-y'), 'a feature branch is still cleaned up')
+})
+
 test('an issue the platform already closed is not closed twice, but still gets the comment', () => {
   const t = fakeTracker({ states: { 4: 'closed', 5: 'open' } })
   run(t)
