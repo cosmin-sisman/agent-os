@@ -38,6 +38,7 @@ export const COMMANDS = [
   { name: 'start', summary: 'Claim an issue: assign, branch from the right base, link, In Progress, check out', status: 'new', issue: 14, load: () => import('../commands/start.mjs') },
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'new', issue: 18, load: () => import('../commands/next.mjs') },
   { name: 'board', summary: 'Keep the optional planning board in step with the issues (GitHub Projects)', status: 'new', issue: 20, load: () => import('../commands/board.mjs') },
+  { name: 'orchestrate', summary: 'Optional per-laptop orchestrator: claim the role, brief workers, typed messages, a local ledger', status: 'new', issue: 35, load: () => import('../commands/orchestrate.mjs') },
   { name: 'handoff', summary: 'Status comments on the issues you hold and a handoff journal entry', status: 'new', issue: 36, load: () => import('../commands/handoff.mjs') },
   { name: 'thread', summary: 'Read the conversation on an issue or change request: decisions, language, participants', status: 'new', issue: 34, load: () => import('../commands/thread.mjs') },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'new', issue: 33, load: () => import('../commands/overlap.mjs') },

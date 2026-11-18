@@ -81,3 +81,21 @@ A decision is a paragraph that says so: `Decision:`, `Decided:`, `Agreed:`, `Dec
 - **Decisions into the journal:** `agent-os journal add … --thread '#34'` adds a "Decisions from the conversation" section (in ro, "Decizii din discutie"). Each decision is quoted verbatim, with author, date and link. This is how a decision taken in a comment reaches the journal entry of the change request that implements it.
 - **Replies in the comment's language:** `agent-os pr reply` (review threads) and `agent-os issue comment` detect the language of the comment being answered (the last one by someone else). A reply in another language is refused (exit 1, nothing posted). A ro reply has its diacritics replaced with ASCII.
 - **@mentions only for real people:** a handle that is not among the participants (author, assignees, commenters) loses its `@` and goes in backticks, so a typo or an invented name pings no one. Emails and code are left alone.
+
+## Several sessions on one laptop: the orchestrator
+
+This is optional and off by default. Turn it on for your laptop with `agent-os init --me --orchestrator`, which sets `orchestrator` in `.agent-os/local.json`. One session holds the orchestrator role, and the other sessions are workers, each on one issue in its own worktree.
+
+| Command | What |
+|---|---|
+| `agent-os orchestrate claim [--force]` | this session becomes the orchestrator; `--force` takes the role from a session that is gone |
+| `agent-os orchestrate release` | gives the role back |
+| `agent-os orchestrate brief <n>` | a worker for issue `n`, with the brief it starts from: claim with `start --worktree`, the scope, the local checks, how to report |
+| `agent-os orchestrate message <TYPE> <worker> [--text] [--pr]` | records `ACK`, `QUESTION`, `UPDATE`, `DONE`, `REVISE` or `CLOSE`, and moves the worker's state |
+| `agent-os orchestrate reconcile` | follows the worktrees and change requests: merged → done, closed → closed, worktree gone → gone |
+| `agent-os orchestrate status` | the role and the workers; zero workers is a valid state |
+
+- **The orchestrator does not edit.** The `orchestrator-edit` guard refuses Edit, Write, MultiEdit and NotebookEdit from the session whose directory holds the role. Workers run in their own worktrees, so they are never refused. In adoption mode the guard warns instead, like every guard.
+- **The ledger is personal**: `.agent-os/cache/orchestrator.json`, ignored by git and never committed. Coordination between people stays on the platform.
+- **Messages carry no secrets** (token shapes and `password=`-style values are refused) and **grant no permissions**. A message asking to bypass a guard, a check or a permission, to use `--no-verify` or `--dangerously-…`, or to edit the permission settings is refused. A refused action goes back to the person.
+

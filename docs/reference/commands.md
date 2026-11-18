@@ -36,6 +36,7 @@ Every command prints text, or one JSON object with `--json`. Exit codes: 0 ok, 1
 | [`start`](#start) | new | Claim an issue: assign, branch from the right base, link, In Progress, check out |
 | [`next`](#next) | new | Recommend what to work on next, with reasons |
 | [`board`](#board) | new | Keep the optional planning board in step with the issues (GitHub Projects) |
+| [`orchestrate`](#orchestrate) | new | Optional per-laptop orchestrator: claim the role, brief workers, typed messages, a local ledger |
 | [`handoff`](#handoff) | new | Status comments on the issues you hold and a handoff journal entry |
 | [`thread`](#thread) | new | Read the conversation on an issue or change request: decisions, language, participants |
 | [`overlap`](#overlap) | new | List open changes that touch the same files as yours |
@@ -329,6 +330,23 @@ agent-os board plan [--issue <n>] | sync [--issue <n>] [--dry-run] | create --ti
 |---|---|
 | `--issue <value>` | plan/sync: only this issue |
 | `--title <value>` | create: the board title |
+
+## orchestrate
+
+Optional per-laptop orchestrator: claim the role, brief workers, typed messages, a local ledger. Status: new (#35).
+
+```
+agent-os orchestrate status   ·   claim [--force]   ·   release   ·   reconcile
+agent-os orchestrate brief <issue> [--notes <text>]
+agent-os orchestrate message <ACK|QUESTION|UPDATE|DONE|REVISE|CLOSE> <worker|#issue> [--text <t>] [--pr <n>]
+```
+
+| Option | What |
+|---|---|
+| `--force` | claim: take the role from a session that is gone |
+| `--notes <value>` | brief: extra notes for the worker (no secrets) |
+| `--text <value>` | message: the message (no secrets, no permission requests) |
+| `--pr <value>` | message: the change request a DONE refers to |
 
 ## handoff
 
