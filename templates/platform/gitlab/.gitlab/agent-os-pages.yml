@@ -1,0 +1,26 @@
+{{#if artifacts.pages}}
+# Publishes artifacts/ to GitLab Pages (agent-os, design §17): living artifacts are rebuilt, then every artifact and
+# an index by type, date, area and linked item are built into public/ in CI. The index is never committed. Include it
+# from .gitlab-ci.yml (include: - local: .gitlab/agent-os-pages.yml). If the administrator disabled Pages, the site
+# is still kept as the job's artifact, linked from the pipeline.
+pages:
+  stage: deploy
+  image: "{{{runner.gitlabImage}}}"
+{{#if runner.tags}}
+  tags: {{{runner.tags}}}
+{{/if}}
+  timeout: 10m
+  rules:
+    - if: $CI_COMMIT_BRANCH == "{{{branches.integration}}}"
+      changes: ["artifacts/**/*", "stack.yaml", "system.yaml", "**/openapi*.{yaml,json}", "**/asyncapi*.yaml", ".gitlab/agent-os-pages.yml"]
+{{#if runner.npmRegistry}}
+  variables:
+    npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+  script:
+    - {{{runner.npx}}} artifact build --living
+    - {{{runner.npx}}} artifact site public
+  artifacts:
+    paths: [public]
+    expire_in: 30 days
+{{/if}}

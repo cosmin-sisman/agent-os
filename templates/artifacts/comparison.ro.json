@@ -1,0 +1,31 @@
+{
+  "kind": "comparison",
+  "lang": "ro",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Variante",
+      "cards": []
+    },
+    {
+      "heading": "Criterii",
+      "items": []
+    },
+    {
+      "heading": "Comparatie",
+      "table": {
+        "columns": [
+          "Criteriu",
+          "Varianta A",
+          "Varianta B"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Verdict",
+      "items": []
+    }
+  ]
+}

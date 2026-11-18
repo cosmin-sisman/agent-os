@@ -1,0 +1,10 @@
+{
+  "name": "security-review",
+  "origin": "builtin",
+  "source": "claude-code",
+  "provides": [
+    "security-review"
+  ],
+  "managed": true,
+  "description": "Claude Code built-in security review."
+}

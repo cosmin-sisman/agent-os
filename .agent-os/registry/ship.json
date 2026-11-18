@@ -1,0 +1,10 @@
+{
+  "name": "ship",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Merge a green, reviewed pull request into development, close the issues it closes with a comment, keep the ones it only references open, set Done, and remove its branch and worktree."
+}

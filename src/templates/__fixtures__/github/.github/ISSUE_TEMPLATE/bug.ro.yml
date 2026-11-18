@@ -1,0 +1,11 @@
+{{! area: issues }}
+name: Bug
+description: Ceva functioneaza gresit
+labels: [{{labels.type.bug}}]
+body:
+  - type: textarea
+    attributes: { label: Ce se intampla }
+{{#if pack.stack-postgres}}
+  - type: input
+    attributes: { label: Migratie implicata }
+{{/if}}

@@ -1,0 +1,10 @@
+{
+  "name": "kickoff",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Start a new product - interview the person about the product, write the product doc, find the complexity level and the stack from the catalog's blueprints, then create the first milestone and issues from the doc."
+}

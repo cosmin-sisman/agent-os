@@ -1,0 +1,20 @@
+{{! area: issues }}
+name: Bug
+description: Ceva functioneaza gresit.
+labels: [{{labels.type.bug}}]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: Ce se intampla, description: "Output-ul sau eroarea exacta, intr-un bloc de cod." }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: Ce ar trebui sa se intample }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: Cum se reproduce, value: "1. " }
+    validations: { required: true }
+  - type: textarea
+    id: scenarios
+    attributes: { label: Scenarii de test, description: "Testul de regresie care va dovedi fixul." }

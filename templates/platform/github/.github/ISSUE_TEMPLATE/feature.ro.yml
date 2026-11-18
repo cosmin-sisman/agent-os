@@ -1,0 +1,20 @@
+{{! area: issues }}
+name: Functionalitate
+description: O capabilitate pe care proiectul ar trebui sa o aiba.
+labels: [{{labels.type.feature}}]
+body:
+  - type: textarea
+    id: context
+    attributes: { label: Context, description: "Ce exista azi si de ce nu e suficient." }
+    validations: { required: true }
+  - type: textarea
+    id: goal
+    attributes: { label: Scop, description: "Ce e adevarat cand e gata." }
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes: { label: Criterii de acceptare, value: "- [ ] " }
+    validations: { required: true }
+  - type: textarea
+    id: scenarios
+    attributes: { label: Scenarii de test, description: "Dat fiind / Cand / Atunci." }

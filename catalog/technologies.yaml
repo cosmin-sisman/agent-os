@@ -1,0 +1,1526 @@
+# Technologies per layer. complexity: 1 simple .. 5 complex. aiFriendly: 1 agents know it poorly .. 5 very well.
+# layer, language and provider are ids from layers.yaml, languages.yaml and providers.yaml.
+
+- id: astro
+  name: "Astro"
+  layer: public-frontend
+  language: typescript
+  provider: vercel
+  runtime: "Static / Serverless"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Zero JS by default, ideal for SEO and AI agents"
+    ro: "Zero JS implicit, ideal pentru SEO si agenti AI"
+
+- id: next-js
+  name: "Next.js"
+  layer: public-frontend
+  language: typescript
+  provider: vercel
+  runtime: "Serverless"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "SSR/ISR, suited to large multilingual sites"
+    ro: "SSR/ISR, potrivit pentru site-uri mari, multilingve"
+
+- id: sveltekit
+  name: "SvelteKit"
+  layer: public-frontend
+  language: typescript
+  provider: cloudflare
+  runtime: "Edge"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Fast, small bundle"
+    ro: "Rapid, bundle mic"
+
+- id: nuxt
+  name: "Nuxt"
+  layer: public-frontend
+  language: typescript
+  provider: vercel
+  runtime: "Serverless"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "The Vue counterpart of Next"
+    ro: "Echivalentul Next pentru Vue"
+
+- id: hugo
+  name: "Hugo"
+  layer: public-frontend
+  language: go
+  provider: cloudflare
+  runtime: "Static"
+  complexity: 2
+  aiFriendly: 3
+  note:
+    en: "Very fast static generator"
+    ro: "Generator static foarte rapid"
+
+- id: wordpress
+  name: "WordPress"
+  layer: public-frontend
+  language: php
+  provider: digitalocean
+  runtime: "Ubuntu, Nginx"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "The client edits content on their own"
+    ro: "Clientul isi editeaza singur continutul"
+
+- id: laravel-blade
+  name: "Laravel + Blade"
+  layer: public-frontend
+  language: php
+  provider: digitalocean
+  runtime: "Ubuntu, PHP-FPM"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Full-stack PHP monolith"
+    ro: "Monolit PHP full-stack"
+
+- id: rails-hotwire
+  name: "Rails + Hotwire"
+  layer: public-frontend
+  language: ruby
+  provider: render
+  runtime: "Docker"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Full-stack Ruby monolith"
+    ro: "Monolit Ruby full-stack"
+
+- id: webflow
+  name: "Webflow"
+  layer: public-frontend
+  language: "none"
+  provider: webflow
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 2
+  note:
+    en: "No-code, for presentation sites"
+    ro: "No-code, pentru site-uri de prezentare"
+
+- id: vite-react-tanstack-router
+  name: "Vite + React + TanStack Router"
+  layer: internal-frontend
+  language: typescript
+  provider: vercel
+  runtime: "Static"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "Default choice for apps behind login"
+    ro: "Alegerea implicita pentru aplicatii dupa login"
+
+- id: next-js-app
+  name: "Next.js (app)"
+  layer: internal-frontend
+  language: typescript
+  provider: vercel
+  runtime: "Serverless"
+  complexity: 4
+  aiFriendly: 5
+  note:
+    en: "When there is no separate backend"
+    ro: "Cand nu ai backend separat"
+
+- id: vue-vite
+  name: "Vue + Vite"
+  layer: internal-frontend
+  language: typescript
+  provider: netlify
+  runtime: "Static"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Alternative to React"
+    ro: "Alternativa la React"
+
+- id: angular
+  name: "Angular"
+  layer: internal-frontend
+  language: typescript
+  provider: aws
+  runtime: "Static"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Enterprise, large back-office"
+    ro: "Enterprise, back-office mare"
+
+- id: refine-react-admin
+  name: "Refine / React Admin"
+  layer: internal-frontend
+  language: typescript
+  provider: vercel
+  runtime: "Static"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Generated CRUD admin, fast"
+    ro: "Admin CRUD generat rapid"
+
+- id: django-admin
+  name: "Django Admin"
+  layer: internal-frontend
+  language: python
+  provider: digitalocean
+  runtime: "Docker"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Admin generated from the models"
+    ro: "Admin gata facut din modele"
+
+- id: rails-hotwire-admin
+  name: "Rails + Hotwire (admin)"
+  layer: internal-frontend
+  language: ruby
+  provider: render
+  runtime: "Docker"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Admin inside the Rails monolith"
+    ro: "Admin in monolitul Rails"
+
+- id: wp-admin
+  name: "WP Admin"
+  layer: internal-frontend
+  language: php
+  provider: digitalocean
+  runtime: "Ubuntu"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Included in WordPress"
+    ro: "Inclus in WordPress"
+
+- id: expo-react-native
+  name: "Expo (React Native)"
+  layer: mobile
+  language: typescript
+  provider: eas-expo
+  runtime: "iOS / Android"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "Native, shares logic and types with the web"
+    ro: "Nativ, cod comun cu web-ul (logica, tipuri)"
+
+- id: flutter
+  name: "Flutter"
+  layer: mobile
+  language: dart
+  provider: codemagic
+  runtime: "iOS / Android"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Identical UI on iOS and Android"
+    ro: "UI identic pe iOS si Android"
+
+- id: swiftui-native-ios
+  name: "SwiftUI (native iOS)"
+  layer: mobile
+  language: swift
+  provider: app-store-play
+  runtime: "iOS"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Maximum performance and access on iOS"
+    ro: "Performanta si acces maxim la iOS"
+
+- id: jetpack-compose-native-android
+  name: "Jetpack Compose (native Android)"
+  layer: mobile
+  language: kotlin
+  provider: app-store-play
+  runtime: "Android"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Maximum performance and access on Android"
+    ro: "Performanta si acces maxim la Android"
+
+- id: capacitor
+  name: "Capacitor"
+  layer: mobile
+  language: typescript
+  provider: app-store-play
+  runtime: "iOS / Android (WebView)"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "The web app wrapped natively, small budget"
+    ro: "Aplicatia web impachetata nativ, buget mic"
+
+- id: pwa
+  name: "PWA"
+  layer: mobile
+  language: typescript
+  provider: vercel
+  runtime: "Browser"
+  complexity: 1
+  aiFriendly: 5
+  note:
+    en: "No app store, limits on iOS"
+    ro: "Fara App Store, limitari pe iOS"
+
+- id: electron
+  name: "Electron"
+  layer: desktop-tv
+  language: typescript
+  provider: github
+  runtime: "Windows / macOS / Linux"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Desktop with web technologies"
+    ro: "Desktop cu tehnologii web"
+
+- id: tauri
+  name: "Tauri"
+  layer: desktop-tv
+  language: rust
+  provider: github
+  runtime: "Windows / macOS / Linux"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Lightweight desktop, Rust backend"
+    ro: "Desktop usor, backend in Rust"
+
+- id: android-tv-kotlin
+  name: "Android TV (Kotlin)"
+  layer: desktop-tv
+  language: kotlin
+  provider: app-store-play
+  runtime: "Android TV"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "TV apps"
+    ro: "Aplicatii TV"
+
+- id: hono-trpc
+  name: "Hono + tRPC"
+  layer: internal-api
+  language: typescript
+  provider: railway
+  runtime: "Node.js, Docker"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "Type-safe between backend and TS clients"
+    ro: "Type-safe intre backend si clienti TS"
+
+- id: hono-orpc
+  name: "Hono + oRPC"
+  layer: internal-api
+  language: typescript
+  provider: railway
+  runtime: "Node.js, Docker"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Type-safe plus OpenAPI from one definition"
+    ro: "Type-safe + OpenAPI din aceeasi definitie"
+
+- id: nestjs
+  name: "NestJS"
+  layer: internal-api
+  language: typescript
+  provider: railway
+  runtime: "Node.js, Docker"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Enterprise structure on Node"
+    ro: "Structura enterprise in Node"
+
+- id: fastapi
+  name: "FastAPI"
+  layer: internal-api
+  language: python
+  provider: railway
+  runtime: "Docker"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "Fast Python API, automatic docs"
+    ro: "API Python rapid, documentatie automata"
+
+- id: django-rest-framework
+  name: "Django REST Framework"
+  layer: internal-api
+  language: python
+  provider: digitalocean
+  runtime: "Docker"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "API on top of Django models"
+    ro: "API peste modelele Django"
+
+- id: laravel
+  name: "Laravel"
+  layer: internal-api
+  language: php
+  provider: digitalocean
+  runtime: "Ubuntu, PHP-FPM"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Mature PHP API"
+    ro: "API PHP matur"
+
+- id: spring-boot
+  name: "Spring Boot"
+  layer: internal-api
+  language: java
+  provider: aws
+  runtime: "JVM"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Enterprise, fintech"
+    ro: "Enterprise, fintech"
+
+- id: asp-net-core
+  name: "ASP.NET Core"
+  layer: internal-api
+  language: csharp
+  provider: azure
+  runtime: "Linux / Windows"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Microsoft ecosystem"
+    ro: "Ecosistem Microsoft"
+
+- id: graphql-gateway-go
+  name: "GraphQL gateway (Go)"
+  layer: internal-api
+  language: go
+  provider: hetzner
+  runtime: "Kubernetes"
+  complexity: 5
+  aiFriendly: 3
+  note:
+    en: "Federation over many microservices"
+    ro: "Federare peste multe microservicii"
+
+- id: supabase-direct-supabase-js-rls
+  name: "Supabase direct (supabase-js + RLS)"
+  layer: internal-api
+  language: sql
+  provider: supabase
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "No own backend, security through RLS"
+    ro: "Fara backend propriu, securitate prin RLS"
+
+- id: hono-zod-openapi
+  name: "Hono + zod-openapi"
+  layer: public-api-webhooks
+  language: typescript
+  provider: railway
+  runtime: "Node.js"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "Versioned REST with OpenAPI docs"
+    ro: "REST versionat cu documentatie OpenAPI"
+
+- id: go-chi-gin
+  name: "Go (chi / gin)"
+  layer: public-api-webhooks
+  language: go
+  provider: fly-io
+  runtime: "Docker"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Fast API gateway"
+    ro: "API gateway rapid"
+
+- id: kong-api-gateway
+  name: "Kong API Gateway"
+  layer: public-api-webhooks
+  language: lua
+  provider: hetzner
+  runtime: "Docker"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Rate limiting, API keys, routing"
+    ro: "Rate limiting, chei API, routing"
+
+- id: svix-outgoing-webhooks
+  name: "Svix (outgoing webhooks)"
+  layer: public-api-webhooks
+  language: "none"
+  provider: svix
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Outgoing webhooks with retries and signatures"
+    ro: "Livrare webhooks cu retry si semnaturi"
+
+- id: net-connector
+  name: ".NET connector"
+  layer: integration-service
+  language: csharp
+  provider: client-datacenter
+  runtime: "Windows Server"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Legacy ERP integration (SAP, Dynamics)"
+    ro: "Integrare ERP legacy (SAP, Dynamics)"
+
+- id: n8n
+  name: n8n
+  layer: integration-service
+  language: typescript
+  provider: hetzner
+  runtime: "Docker"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Visual automations, self-hosted"
+    ro: "Automatizari vizuale, self-hosted"
+
+- id: spring-integration-camel
+  name: "Spring Integration / Camel"
+  layer: integration-service
+  language: java
+  provider: aws
+  runtime: "JVM"
+  complexity: 5
+  aiFriendly: 3
+  note:
+    en: "Complex enterprise integrations"
+    ro: "Integrari enterprise complexe"
+
+- id: modular-monolith-node
+  name: "Modular monolith (Node)"
+  layer: backend-services
+  language: typescript
+  provider: railway
+  runtime: "Node.js"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "One service layer shared by every API"
+    ro: "Service layer comun pentru toate API-urile"
+
+- id: supabase-edge-functions
+  name: "Supabase Edge Functions"
+  layer: backend-services
+  language: typescript
+  provider: supabase
+  runtime: "Deno"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Small functions, no own server"
+    ro: "Functii mici, fara server propriu"
+
+- id: django-apps
+  name: "Django apps"
+  layer: backend-services
+  language: python
+  provider: digitalocean
+  runtime: "Gunicorn"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Logic in Python"
+    ro: "Logica in Python"
+
+- id: rails-services
+  name: "Rails services"
+  layer: backend-services
+  language: ruby
+  provider: render
+  runtime: "Puma"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Logic in Ruby"
+    ro: "Logica in Ruby"
+
+- id: spring-boot-services
+  name: "Spring Boot services"
+  layer: backend-services
+  language: java
+  provider: aws
+  runtime: "JVM"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Strict transactions, enterprise"
+    ro: "Tranzactii stricte, enterprise"
+
+- id: go-microservices
+  name: "Go microservices"
+  layer: backend-services
+  language: go
+  provider: hetzner
+  runtime: "Kubernetes"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Scaling by separate services"
+    ro: "Scalare pe servicii separate"
+
+- id: elixir-phoenix
+  name: "Elixir Phoenix"
+  layer: backend-services
+  language: elixir
+  provider: fly-io
+  runtime: "BEAM VM"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Massive concurrency, fault tolerance"
+    ro: "Concurenta masiva, toleranta la erori"
+
+- id: pg-boss
+  name: pg-boss
+  layer: background-workers
+  language: typescript
+  provider: railway
+  runtime: "Node.js"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Queues in Postgres, no Redis"
+    ro: "Cozi in Postgres, fara Redis"
+
+- id: trigger-dev
+  name: "Trigger.dev"
+  layer: background-workers
+  language: typescript
+  provider: trigger-dev
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Durable jobs, managed"
+    ro: "Jobs durabile, managed"
+
+- id: inngest
+  name: "Inngest"
+  layer: background-workers
+  language: typescript
+  provider: inngest
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Event-driven workflows"
+    ro: "Workflow-uri pe evenimente"
+
+- id: bullmq
+  name: "BullMQ"
+  layer: background-workers
+  language: typescript
+  provider: hetzner
+  runtime: "Node.js + Redis"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Fast queues on Redis"
+    ro: "Cozi rapide pe Redis"
+
+- id: celery
+  name: "Celery"
+  layer: background-workers
+  language: python
+  provider: digitalocean
+  runtime: "Docker"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "The Python standard"
+    ro: "Standardul Python"
+
+- id: sidekiq
+  name: "Sidekiq"
+  layer: background-workers
+  language: ruby
+  provider: render
+  runtime: "Docker"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "The Rails standard"
+    ro: "Standardul Rails"
+
+- id: kafka-consumers
+  name: "Kafka consumers"
+  layer: background-workers
+  language: java
+  provider: aws
+  runtime: "JVM"
+  complexity: 5
+  aiFriendly: 3
+  note:
+    en: "High event volumes"
+    ro: "Volume mari de evenimente"
+
+- id: pg-cron
+  name: "pg_cron"
+  layer: background-workers
+  language: sql
+  provider: supabase
+  runtime: "Postgres"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Cron inside the database"
+    ro: "Cron direct in baza de date"
+
+- id: supabase-realtime
+  name: "Supabase Realtime"
+  layer: realtime
+  language: "none"
+  provider: supabase
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Postgres Changes plus Broadcast"
+    ro: "Postgres Changes + Broadcast"
+
+- id: socket-io
+  name: "Socket.IO"
+  layer: realtime
+  language: typescript
+  provider: railway
+  runtime: "Node.js"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "Classic WebSockets"
+    ro: "WebSockets clasice"
+
+- id: phoenix-channels
+  name: "Phoenix Channels"
+  layer: realtime
+  language: elixir
+  provider: fly-io
+  runtime: "BEAM VM"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Millions of connections"
+    ro: "Milioane de conexiuni"
+
+- id: django-channels
+  name: "Django Channels"
+  layer: realtime
+  language: python
+  provider: digitalocean
+  runtime: "ASGI"
+  complexity: 3
+  aiFriendly: 3
+  note:
+    en: "WebSockets in Django"
+    ro: "WebSockets in Django"
+
+- id: ably
+  name: "Ably"
+  layer: realtime
+  language: "none"
+  provider: ably
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Managed realtime"
+    ro: "Realtime managed"
+
+- id: claude-api-anthropic-sdk
+  name: "Claude API (Anthropic SDK)"
+  layer: ai-ml
+  language: typescript
+  provider: anthropic
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "LLM for generation, extraction, agents"
+    ro: "LLM pentru generare, extragere, agenti"
+
+- id: vercel-ai-sdk
+  name: "Vercel AI SDK"
+  layer: ai-ml
+  language: typescript
+  provider: vercel
+  runtime: "Serverless"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "AI chat and streaming in TS"
+    ro: "Chat si streaming AI in TS"
+
+- id: pgvector-rag
+  name: "pgvector (RAG)"
+  layer: ai-ml
+  language: sql
+  provider: supabase
+  runtime: "Postgres"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Semantic search in Postgres"
+    ro: "Cautare semantica in Postgres"
+
+- id: fastapi-pytorch
+  name: "FastAPI + PyTorch"
+  layer: ai-ml
+  language: python
+  provider: hetzner
+  runtime: "Ubuntu (GPU)"
+  complexity: 5
+  aiFriendly: 4
+  note:
+    en: "Own models, ML"
+    ro: "Modele proprii, ML"
+
+- id: mux
+  name: "Mux"
+  layer: video-media
+  language: "none"
+  provider: mux
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Video on demand and live, managed"
+    ro: "Video on demand si live, managed"
+
+- id: cloudflare-stream
+  name: "Cloudflare Stream"
+  layer: video-media
+  language: "none"
+  provider: cloudflare
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Simple, cheap video"
+    ro: "Video simplu si ieftin"
+
+- id: rust-ffmpeg
+  name: "Rust + FFmpeg"
+  layer: video-media
+  language: rust
+  provider: hetzner
+  runtime: "Ubuntu (GPU)"
+  complexity: 5
+  aiFriendly: 3
+  note:
+    en: "Own video processing"
+    ro: "Procesare video proprie"
+
+- id: colyseus
+  name: "Colyseus"
+  layer: game-servers
+  language: typescript
+  provider: railway
+  runtime: "Node.js"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Multiplayer in TS"
+    ro: "Multiplayer in TS"
+
+- id: nakama
+  name: "Nakama"
+  layer: game-servers
+  language: go
+  provider: hetzner
+  runtime: "Docker"
+  complexity: 3
+  aiFriendly: 3
+  note:
+    en: "Open-source game server"
+    ro: "Server de joc open-source"
+
+- id: cpp-lua
+  name: "C++ + Lua"
+  layer: game-servers
+  language: cpp
+  provider: hetzner
+  runtime: "Ubuntu"
+  complexity: 5
+  aiFriendly: 2
+  note:
+    en: "Maximum performance"
+    ro: "Performanta maxima"
+
+- id: drizzle-supabase-postgres
+  name: "Drizzle + Supabase Postgres"
+  layer: data-layer
+  language: typescript
+  provider: supabase
+  runtime: "Managed"
+  complexity: 3
+  aiFriendly: 5
+  note:
+    en: "Default data layer in the reference stack"
+    ro: "Alegerea implicita"
+
+- id: prisma-neon-postgres
+  name: "Prisma + Neon Postgres"
+  layer: data-layer
+  language: typescript
+  provider: neon
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Popular ORM, serverless Postgres"
+    ro: "ORM popular, Postgres serverless"
+
+- id: postgresql-self-hosted
+  name: "PostgreSQL self-hosted"
+  layer: data-layer
+  language: sql
+  provider: hetzner
+  runtime: "Ubuntu"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Full control, low cost"
+    ro: "Control total, cost mic"
+
+- id: aurora-postgresql
+  name: "Aurora PostgreSQL"
+  layer: data-layer
+  language: sql
+  provider: aws
+  runtime: "Managed"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Enterprise, high availability"
+    ro: "Enterprise, disponibilitate mare"
+
+- id: mysql
+  name: "MySQL"
+  layer: data-layer
+  language: sql
+  provider: digitalocean
+  runtime: "Ubuntu"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "WordPress, Laravel"
+    ro: "WordPress, Laravel"
+
+- id: mongodb-atlas
+  name: "MongoDB Atlas"
+  layer: data-layer
+  language: javascript
+  provider: mongodb-atlas
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Documents, flexible schema"
+    ro: "Documente, schema flexibila"
+
+- id: firestore
+  name: "Firestore"
+  layer: data-layer
+  language: "none"
+  provider: firebase
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Realtime NoSQL"
+    ro: "NoSQL realtime"
+
+- id: scylladb
+  name: "ScyllaDB"
+  layer: data-layer
+  language: sql
+  provider: hetzner
+  runtime: "Ubuntu"
+  complexity: 5
+  aiFriendly: 2
+  note:
+    en: "Huge volumes (chat, events), CQL"
+    ro: "Volume uriase (chat, evenimente), CQL"
+
+- id: upstash-redis
+  name: "Upstash Redis"
+  layer: cache-queue
+  language: "none"
+  provider: upstash
+  runtime: "Serverless"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Serverless Redis, pay per request"
+    ro: "Redis serverless, plata per request"
+
+- id: redis-self-hosted
+  name: "Redis self-hosted"
+  layer: cache-queue
+  language: "none"
+  provider: hetzner
+  runtime: "Ubuntu"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Cache and queues"
+    ro: "Cache si cozi"
+
+- id: rabbitmq
+  name: "RabbitMQ"
+  layer: cache-queue
+  language: "none"
+  provider: hetzner
+  runtime: "Docker"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Classic message broker"
+    ro: "Broker de mesaje clasic"
+
+- id: kafka
+  name: "Kafka"
+  layer: cache-queue
+  language: java
+  provider: aws
+  runtime: "JVM"
+  complexity: 5
+  aiFriendly: 3
+  note:
+    en: "Event streaming at scale"
+    ro: "Streaming de evenimente la scara mare"
+
+- id: posthog
+  name: "PostHog"
+  layer: analytics
+  language: "none"
+  provider: posthog
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Product analytics, feature flags"
+    ro: "Product analytics, feature flags"
+
+- id: metabase
+  name: "Metabase"
+  layer: analytics
+  language: sql
+  provider: hetzner
+  runtime: "Docker"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "BI dashboards"
+    ro: "Dashboard-uri BI"
+
+- id: clickhouse
+  name: "ClickHouse"
+  layer: analytics
+  language: sql
+  provider: hetzner
+  runtime: "Ubuntu"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Billions of events"
+    ro: "Miliarde de evenimente"
+
+- id: supabase-storage
+  name: "Supabase Storage"
+  layer: storage
+  language: "none"
+  provider: supabase
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 5
+  note:
+    en: "Integrated with Supabase Auth"
+    ro: "Integrat cu Supabase Auth"
+
+- id: cloudflare-r2
+  name: "Cloudflare R2"
+  layer: storage
+  language: "none"
+  provider: cloudflare
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "S3-compatible, no egress fees"
+    ro: "S3-compatibil, fara cost de trafic"
+
+- id: aws-s3
+  name: "AWS S3"
+  layer: storage
+  language: "none"
+  provider: aws
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "The industry standard"
+    ro: "Standardul industriei"
+
+- id: do-spaces
+  name: "DO Spaces"
+  layer: storage
+  language: "none"
+  provider: digitalocean
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "S3-compatible plus CDN"
+    ro: "S3-compatibil + CDN"
+
+- id: hetzner-object-storage
+  name: "Hetzner Object Storage"
+  layer: storage
+  language: "none"
+  provider: hetzner
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 3
+  note:
+    en: "S3-compatible, cheap, EU"
+    ro: "S3-compatibil, ieftin, UE"
+
+- id: supabase-auth
+  name: "Supabase Auth"
+  layer: auth
+  language: "none"
+  provider: supabase
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Email, OAuth, magic link, JWT"
+    ro: "Email, OAuth, magic link, JWT"
+
+- id: clerk
+  name: "Clerk"
+  layer: auth
+  language: typescript
+  provider: clerk
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 5
+  note:
+    en: "Ready-made login UI"
+    ro: "UI de login gata facut"
+
+- id: better-auth
+  name: "Better Auth"
+  layer: auth
+  language: typescript
+  provider: railway
+  runtime: "Node.js"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Self-hosted auth in TS"
+    ro: "Auth self-hosted in TS"
+
+- id: firebase-auth
+  name: "Firebase Auth"
+  layer: auth
+  language: "none"
+  provider: firebase
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Simple auth for mobile"
+    ro: "Auth simplu pentru mobile"
+
+- id: keycloak
+  name: "Keycloak"
+  layer: auth
+  language: java
+  provider: hetzner
+  runtime: "Docker"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Self-hosted enterprise SSO"
+    ro: "SSO enterprise self-hosted"
+
+- id: microsoft-entra-id-sso
+  name: "Microsoft Entra ID (SSO)"
+  layer: auth
+  language: "none"
+  provider: azure
+  runtime: "Managed"
+  complexity: 3
+  aiFriendly: 3
+  note:
+    en: "SSO for corporate clients"
+    ro: "SSO pentru clienti corporate"
+
+- id: sanity
+  name: "Sanity"
+  layer: cms
+  language: typescript
+  provider: sanity
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Flexible headless CMS"
+    ro: "CMS headless flexibil"
+
+- id: payload-cms
+  name: "Payload CMS"
+  layer: cms
+  language: typescript
+  provider: railway
+  runtime: "Node.js"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Self-hosted headless CMS"
+    ro: "CMS headless self-hosted"
+
+- id: keystatic
+  name: "Keystatic"
+  layer: cms
+  language: typescript
+  provider: vercel
+  runtime: "Git-based"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Content in the repo, visual editor"
+    ro: "Continut in repo, editor vizual"
+
+- id: wordpress-headless
+  name: "WordPress (headless)"
+  layer: cms
+  language: php
+  provider: digitalocean
+  runtime: "Ubuntu"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "The editor clients already know"
+    ro: "Editorul cunoscut de clienti"
+
+- id: resend
+  name: "Resend"
+  layer: email-notifications
+  language: "none"
+  provider: resend
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 5
+  note:
+    en: "Transactional email"
+    ro: "Email tranzactional"
+
+- id: expo-push
+  name: "Expo Push"
+  layer: email-notifications
+  language: "none"
+  provider: eas-expo
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 5
+  note:
+    en: "Push for Expo apps"
+    ro: "Push pentru aplicatii Expo"
+
+- id: firebase-cloud-messaging
+  name: "Firebase Cloud Messaging"
+  layer: email-notifications
+  language: "none"
+  provider: firebase
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "iOS/Android push"
+    ro: "Push iOS/Android"
+
+- id: twilio-sms
+  name: "Twilio (SMS)"
+  layer: email-notifications
+  language: "none"
+  provider: twilio
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "SMS, WhatsApp"
+    ro: "SMS, WhatsApp"
+
+- id: stripe
+  name: "Stripe"
+  layer: payments
+  language: "none"
+  provider: stripe
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Payments and subscriptions"
+    ro: "Plati si abonamente"
+
+- id: revenuecat
+  name: "RevenueCat"
+  layer: payments
+  language: "none"
+  provider: revenuecat
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "In-app subscriptions (App Store / Play)"
+    ro: "Abonamente in-app (App Store / Play)"
+
+- id: netopia
+  name: "Netopia"
+  layer: payments
+  language: "none"
+  provider: netopia
+  runtime: "Managed"
+  complexity: 3
+  aiFriendly: 3
+  note:
+    en: "Romanian payment processor"
+    ro: "Procesator de plati din Romania"
+
+- id: github-actions
+  name: "GitHub Actions"
+  layer: ci-cd
+  language: yaml
+  provider: github
+  runtime: "Linux runners"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Lint, tests, deploy"
+    ro: "Lint, teste, deploy"
+
+- id: gitlab-ci
+  name: "GitLab CI/CD"
+  layer: ci-cd
+  language: yaml
+  provider: gitlab
+  runtime: "Linux runners (shared or self-hosted)"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Pipelines and reusable components; works on self-managed"
+    ro: "Pipeline-uri si componente reutilizabile; merge si self-managed"
+
+- id: vercel-auto-deploy
+  name: "Vercel auto-deploy"
+  layer: ci-cd
+  language: "none"
+  provider: vercel
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 5
+  note:
+    en: "Deploy on every push"
+    ro: "Deploy la fiecare push"
+
+- id: eas-build
+  name: "EAS Build"
+  layer: ci-cd
+  language: yaml
+  provider: eas-expo
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Mobile builds plus OTA updates"
+    ro: "Build-uri mobile + update OTA"
+
+- id: codemagic
+  name: "Codemagic"
+  layer: ci-cd
+  language: yaml
+  provider: codemagic
+  runtime: "Managed"
+  complexity: 2
+  aiFriendly: 3
+  note:
+    en: "CI for Flutter"
+    ro: "CI pentru Flutter"
+
+- id: argocd
+  name: "ArgoCD"
+  layer: ci-cd
+  language: yaml
+  provider: aws
+  runtime: "Kubernetes"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "GitOps for Kubernetes"
+    ro: "GitOps pentru Kubernetes"
+
+- id: turborepo-pnpm
+  name: "Turborepo + pnpm"
+  layer: infrastructure
+  language: typescript
+  provider: github
+  runtime: "Node.js"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Monorepo"
+    ro: "Monorepo"
+
+- id: docker
+  name: "Docker"
+  layer: infrastructure
+  language: yaml
+  provider: hetzner
+  runtime: "Ubuntu"
+  complexity: 2
+  aiFriendly: 5
+  note:
+    en: "Containers"
+    ro: "Containere"
+
+- id: coolify
+  name: "Coolify"
+  layer: infrastructure
+  language: "none"
+  provider: hetzner
+  runtime: "Ubuntu, Docker"
+  complexity: 2
+  aiFriendly: 4
+  note:
+    en: "Self-hosted PaaS (Railway alternative)"
+    ro: "PaaS self-hosted (alternativa la Railway)"
+
+- id: kubernetes-k3s
+  name: "Kubernetes (k3s)"
+  layer: infrastructure
+  language: yaml
+  provider: hetzner
+  runtime: "Ubuntu"
+  complexity: 5
+  aiFriendly: 3
+  note:
+    en: "Container orchestration"
+    ro: "Orchestrare containere"
+
+- id: terraform
+  name: "Terraform"
+  layer: infrastructure
+  language: hcl
+  provider: aws
+  runtime: "\u2014"
+  complexity: 4
+  aiFriendly: 4
+  note:
+    en: "Infrastructure as code"
+    ro: "Infrastructura ca cod"
+
+- id: ansible
+  name: "Ansible"
+  layer: infrastructure
+  language: yaml
+  provider: hetzner
+  runtime: "Ubuntu"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Server configuration"
+    ro: "Configurare servere"
+
+- id: sentry
+  name: "Sentry"
+  layer: monitoring
+  language: "none"
+  provider: sentry
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 5
+  note:
+    en: "Frontend and backend errors"
+    ro: "Erori frontend + backend"
+
+- id: better-stack
+  name: "Better Stack"
+  layer: monitoring
+  language: "none"
+  provider: better-stack
+  runtime: "Managed"
+  complexity: 1
+  aiFriendly: 4
+  note:
+    en: "Logs and uptime"
+    ro: "Loguri si uptime"
+
+- id: datadog
+  name: "Datadog"
+  layer: monitoring
+  language: "none"
+  provider: datadog
+  runtime: "Managed"
+  complexity: 3
+  aiFriendly: 4
+  note:
+    en: "Enterprise observability"
+    ro: "Observabilitate enterprise"
+
+- id: grafana-prometheus
+  name: "Grafana + Prometheus"
+  layer: monitoring
+  language: "none"
+  provider: hetzner
+  runtime: "Docker"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Self-hosted metrics"
+    ro: "Metrici self-hosted"
+
+- id: opentelemetry
+  name: "OpenTelemetry"
+  layer: monitoring
+  language: typescript
+  provider: grafana-cloud
+  runtime: "\u2014"
+  complexity: 4
+  aiFriendly: 3
+  note:
+    en: "Standardized tracing"
+    ro: "Tracing standardizat"

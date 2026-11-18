@@ -1,0 +1,10 @@
+{
+  "name": "audit",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Audit an idea, a spec, this project, a release, a problem or a system through separate lenses (product, architecture, stack, code quality, security and privacy, performance and cost, delivery, process, operations), each in its own subagent, and merge the findings into one report where every finding has evidence."
+}

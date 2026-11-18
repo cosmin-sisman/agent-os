@@ -1,0 +1,1482 @@
+{
+  "manifestVersion": 1,
+  "version": "0.0.0",
+  "items": {
+    "catalog:blueprints:b2b-saas": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:booking-app": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:brochure-site": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:cms-site": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:enterprise-platform": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:fintech-wallet": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:live-streaming-platform": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:marketplace": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:membership-monolith": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:blueprints:mobile-first-app": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:assembly": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:cpp": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:csharp": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:dart": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:elixir": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:go": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:hcl": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:java": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:javascript": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:kotlin": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:lua": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:none": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:php": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:python": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:ruby": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:rust": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:sql": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:swift": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:typescript": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:languages:yaml": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:ai-ml": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:analytics": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:auth": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:backend-services": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:background-workers": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:cache-queue": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:ci-cd": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:cms": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:data-layer": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:desktop-tv": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:email-notifications": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:game-servers": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:infrastructure": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:integration-service": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:internal-api": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:internal-frontend": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:mobile": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:monitoring": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:payments": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:public-api-webhooks": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:public-frontend": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:realtime": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:storage": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:layers:video-media": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:ably": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:anthropic": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:app-store-play": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:aws": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:azure": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:better-stack": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:clerk": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:client-datacenter": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:cloudflare": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:codemagic": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:datadog": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:digitalocean": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:eas-expo": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:firebase": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:fly-io": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:github": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:gitlab": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:grafana-cloud": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:hetzner": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:inngest": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:mongodb-atlas": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:mux": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:neon": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:netlify": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:netopia": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:posthog": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:railway": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:render": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:resend": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:revenuecat": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:sanity": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:sentry": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:stripe": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:supabase": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:svix": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:trigger-dev": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:twilio": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:upstash": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:vercel": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:providers:webflow": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:alpine": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:debian": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:edge": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:ios-android": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:jvm-beam-node-js-deno": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:managed": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:serverless": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:static-cdn": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:ubuntu": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:runtimes:windows-server": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:ably": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:android-tv-kotlin": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:angular": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:ansible": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:argocd": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:asp-net-core": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:astro": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:aurora-postgresql": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:aws-s3": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:better-auth": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:better-stack": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:bullmq": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:capacitor": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:celery": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:claude-api-anthropic-sdk": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:clerk": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:clickhouse": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:cloudflare-r2": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:cloudflare-stream": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:codemagic": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:colyseus": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:coolify": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:cpp-lua": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:datadog": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:django-admin": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:django-apps": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:django-channels": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:django-rest-framework": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:do-spaces": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:docker": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:drizzle-supabase-postgres": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:eas-build": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:electron": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:elixir-phoenix": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:expo-push": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:expo-react-native": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:fastapi": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:fastapi-pytorch": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:firebase-auth": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:firebase-cloud-messaging": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:firestore": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:flutter": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:github-actions": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:gitlab-ci": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:go-chi-gin": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:go-microservices": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:grafana-prometheus": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:graphql-gateway-go": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:hetzner-object-storage": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:hono-orpc": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:hono-trpc": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:hono-zod-openapi": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:hugo": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:inngest": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:jetpack-compose-native-android": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:kafka": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:kafka-consumers": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:keycloak": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:keystatic": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:kong-api-gateway": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:kubernetes-k3s": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:laravel": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:laravel-blade": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:metabase": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:microsoft-entra-id-sso": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:modular-monolith-node": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:mongodb-atlas": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:mux": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:mysql": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:n8n": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:nakama": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:nestjs": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:net-connector": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:netopia": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:next-js": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:next-js-app": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:nuxt": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:opentelemetry": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:payload-cms": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:pg-boss": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:pg-cron": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:pgvector-rag": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:phoenix-channels": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:postgresql-self-hosted": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:posthog": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:prisma-neon-postgres": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:pwa": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:rabbitmq": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:rails-hotwire": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:rails-hotwire-admin": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:rails-services": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:redis-self-hosted": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:refine-react-admin": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:resend": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:revenuecat": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:rust-ffmpeg": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:sanity": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:scylladb": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:sentry": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:sidekiq": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:socket-io": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:spring-boot": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:spring-boot-services": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:spring-integration-camel": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:stripe": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:supabase-auth": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:supabase-direct-supabase-js-rls": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:supabase-edge-functions": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:supabase-realtime": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:supabase-storage": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:sveltekit": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:svix-outgoing-webhooks": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:swiftui-native-ios": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:tauri": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:terraform": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:trigger-dev": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:turborepo-pnpm": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:twilio-sms": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:upstash-redis": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:vercel-ai-sdk": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:vercel-auto-deploy": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:vite-react-tanstack-router": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:vue-vite": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:webflow": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:wordpress": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:wordpress-headless": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "catalog:technologies:wp-admin": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:artifact": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:check": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:chronicle": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:config": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:decision": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:doctor": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:eject": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:env": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:gate": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:help": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:hook": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:init": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:issue": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:journal": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:lang": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:lessons": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:manifest": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:map": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:next": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:overlap": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:platform": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:retrofit": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:sbom": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:setup": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:skill": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:stack": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:system": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:update": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "command:version": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:$schema": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:adoption": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:adoption.warnOnlyUntil": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:branches": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:branches.integration": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:branches.production": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:branches.requiredApprovals": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:branches.requiredChecks": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:compliance": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:compliance.euOnly": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:contextBudgets": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:contextBudgets.<name>": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:gate": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:gate.<name>": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:guards": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:guards.disable": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:guards.rules": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.branches": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.chat": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.codeComments": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.commits": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.docs": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.issues": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.journal": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.labels": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.milestones": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.prs": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:languages.releases": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:legacy": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:machine": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:machine.devPortStart": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:machine.maxWorkers": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:machine.minFreeMb": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:orchestrator": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:packs": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:platform": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:platform.board": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:platform.board.number": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:platform.board.owner": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:platform.caFile": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:platform.host": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:platform.project": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:platform.type": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:profile": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:requires": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:requires.cli": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:requires.cli.<name>": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:requires.env": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:requires.mcp": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:requires.platformScopes": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:requires.plugins": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:slots": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:slots.<name>": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:upstream": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:upstream.enabled": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "config:version": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:* --cwd": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:* --dry-run": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:* --help": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:* --json": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:* --verbose": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:* --version": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:env --ci": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:env --fast": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:hook --print-settings": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:init --chat": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:init --dev-port": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:init --me": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:init --min-free-mb": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:init --orchestrator": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:init --sessions": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:init --yes": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --assignee": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --base": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --blocked-by": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --body-file": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --field": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --label": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --milestone": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --name": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --parent": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --remove-label": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --state": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --status": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:issue --title": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:lang --area": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:lang --text": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:manifest --out": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:manifest --previous": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:platform --refresh": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:platform --remote": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:platform --write": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:platform --yes": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:setup --only": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:update --relock": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "flag:version --check": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "hook:env": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "hook:guards": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "hook:version": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:core/.claude/skills/__crSkill__/SKILL.md": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:core/.claude/skills/env/SKILL.md": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:platform/github/.github/ISSUE_TEMPLATE/bug.yml": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:platform/github/.github/ISSUE_TEMPLATE/feature.yml": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:platform/github/.github/pull_request_template.md": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:platform/gitlab/.claude/skills/pr/SKILL.md": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:platform/gitlab/.gitlab/issue_templates/Bug.md": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:platform/gitlab/.gitlab/issue_templates/Feature.md": {
+      "status": "new",
+      "since": "0.0.0"
+    },
+    "template:platform/gitlab/.gitlab/merge_request_templates/Default.md": {
+      "status": "new",
+      "since": "0.0.0"
+    }
+  }
+}

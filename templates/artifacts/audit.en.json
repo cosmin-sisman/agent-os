@@ -1,0 +1,54 @@
+{
+  "kind": "audit",
+  "lang": "en",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Summary",
+      "text": []
+    },
+    {
+      "heading": "Scores per lens",
+      "table": {
+        "columns": [
+          "Lens",
+          "Findings",
+          "Worst",
+          "Score"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Findings",
+      "table": {
+        "columns": [
+          "Severity",
+          "Confidence",
+          "Finding",
+          "Lenses",
+          "Evidence",
+          "Recommendation"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Questions",
+      "items": []
+    },
+    {
+      "heading": "Strengths",
+      "items": []
+    },
+    {
+      "heading": "Roadmap",
+      "items": []
+    },
+    {
+      "heading": "Compared with the previous audit",
+      "items": []
+    }
+  ]
+}

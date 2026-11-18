@@ -1,0 +1,26 @@
+# The stack-postgres pack: rules for schemas and migrations, a database reviewer subagent, a migrations gate suite,
+# and the requirements a Postgres project has. agent-os add stack-postgres installs it; agent-os pack remove undoes
+# exactly what it added.
+id: stack-postgres
+name: "Postgres"
+description:
+  en: "Migration and schema rules, a database reviewer subagent, a migrations check in the gate"
+  ro: "Reguli pentru migrari si schema, un subagent care revizuieste baza de date, o verificare a migrarilor in gate"
+rules: [rules/postgres]
+agents: [agents/postgres-reviewer.md]
+gate:
+  db-migrations: "npm run db:check --if-present"
+gatePaths:
+  "**/migrations/**": [db-migrations]
+  "**/*.sql": [db-migrations]
+requires:
+  cli:
+    psql: ">=14"
+  mcp:
+    - name: postgres
+      scope: project
+      transport: stdio
+      command: "npx -y @modelcontextprotocol/server-postgres ${DATABASE_URL}"
+      optional: true
+      why: "the stack-postgres pack: read the schema and query plans"
+  env: [DATABASE_URL]

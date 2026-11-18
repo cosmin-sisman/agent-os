@@ -4,6 +4,15 @@ One file per decision, named `<YYYY-MM-DD>-<slug>.md`. The id is the date plus a
 
 Each record has: **Status** (proposed · accepted · superseded by …), **Context**, **Decision**, **Consequences**. A record is never rewritten after it is accepted: a change is a new record that supersedes it.
 
+```bash
+agent-os decision new cache-ttl --title "Cache the PR list for 10 minutes"     # docs/decisions/<today>-cache-ttl.md, proposed
+agent-os decision new merge-commits --title "Releases use merge commits" --supersedes squash
+agent-os decision list                                                          # rendered on demand
+agent-os decision check                                                         # also a doctor check
+```
+
+`--supersedes` writes the new record (marked `supersedes [old](…)`) and changes only the old record's status line, to `superseded by [new](…)`. `check` (and `doctor`) fails on a name that is not `<YYYY-MM-DD>-<slug>.md`, a missing title, status or section, or a superseded record that does not link an existing successor. The template follows the `docs` language (in `ro`: Stare, Context, Decizie, Consecinte).
+
 | Record | Decision |
 |---|---|
 | [managed-files-and-lock](2026-11-18-managed-files-and-lock.md) | installed files are tracked by hash; updates merge, never clobber |
@@ -17,3 +26,12 @@ Each record has: **Status** (proposed · accepted · superseded by …), **Conte
 | [init-profiles-and-retrofit](2026-11-18-init-profiles-and-retrofit.md) | four profiles; retrofit or forward-only for existing repos |
 | [lessons-learned-store](2026-11-18-lessons-learned-store.md) | lessons as files with a lifecycle; recalled automatically by area and path |
 | [environment-check](2026-11-18-environment-check.md) | declared MCP servers, CLIs, scopes and variables, checked locally and in the repo |
+| [stack-map](2026-11-18-stack-map.md) | a bilingual catalog and one `stack.yaml`; layers drive labels, gate, env, lessons |
+| [artifacts-in-repo](2026-11-18-artifacts-in-repo.md) | visual artifacts versioned in the repo, published to Pages, verified and indexed |
+| [upstream-feedback](2026-11-18-upstream-feedback.md) | `/upstream` files improvements on the public repo from any project, privacy-filtered |
+| [versions-and-safe-updates](2026-11-18-versions-and-safe-updates.md) | pinned version, lifecycle markers (new, stable, deprecated, legacy, removed), updates through a PR with migrations |
+| [platforms-github-and-gitlab](2026-11-18-platforms-github-and-gitlab.md) | GitHub or GitLab (cloud, self-managed), one adapter interface, capability probing with fallbacks, platform routes |
+| [audit](2026-11-18-audit.md) | `/audit`: subjects from idea to system, separate lenses, evidence-based findings, artifact + issues |
+| [coding-standards](2026-11-18-coding-standards.md) | English code, headers, clarity, a decision procedure between solutions; always on |
+| [security](2026-11-18-security.md) | `/security`: relevant advisories, layer-based checks in every change request, threat models and abuse cases, private reporting |
+| [system-map](2026-11-18-system-map.md) | `system.yaml` + `/system`: repo shape, components, edges, exposure, endpoint inventory, contract drift and breaking-change alerts |

@@ -4,8 +4,41 @@
   "description": "A working agreement between people, coding agents and GitHub, installed into any repository with one command.",
   "type": "module",
   "private": true,
-  "engines": { "node": ">=20" },
+  "bin": {
+    "agent-os": "bin/agent-os.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "catalog/",
+    "schema/",
+    "templates/",
+    "migrations/",
+    "manifest.json",
+    "changelog.yaml",
+    "!**/*.test.mjs",
+    "!**/__fixtures__/**"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "site": "node scripts/site/build.mjs _site --strict",
+    "schema": "node scripts/schema/build.mjs",
+    "docs": "node scripts/docs/build.mjs"
+  },
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/cosmin-sisman/agent-os.git" },
-  "keywords": ["claude-code", "agents", "skills", "github", "workflow", "ai-coding"]
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cosmin-sisman/agent-os.git"
+  },
+  "keywords": [
+    "claude-code",
+    "agents",
+    "skills",
+    "github",
+    "workflow",
+    "ai-coding"
+  ]
 }

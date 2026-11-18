@@ -1,0 +1,784 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cosmin-sisman/agent-os/schema/agent-os.schema.json",
+  "title": "agent-os team configuration (agent-os.json)",
+  "type": "object",
+  "description": "agent-os configuration",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Path or URL of the JSON Schema, for editors"
+    },
+    "version": {
+      "type": "string",
+      "description": "The exact agent-os version this project is pinned to",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+    },
+    "profile": {
+      "type": "string",
+      "enum": [
+        "greenfield",
+        "spec-first",
+        "active",
+        "maintenance"
+      ],
+      "description": "Where the project is in its life",
+      "default": "active"
+    },
+    "platform": {
+      "type": "object",
+      "description": "Which platform and project agent-os talks to",
+      "default": {},
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "github",
+            "gitlab"
+          ],
+          "description": "The code platform",
+          "default": "github"
+        },
+        "host": {
+          "type": "string",
+          "description": "Base URL for GitHub Enterprise Server or GitLab self-managed; omit for github.com and gitlab.com",
+          "pattern": "^https?://"
+        },
+        "project": {
+          "type": "string",
+          "description": "owner/name (GitHub) or group/subgroup/name (GitLab)",
+          "pattern": "^[^/\\s]+(/[^/\\s]+)+$"
+        },
+        "caFile": {
+          "type": "string",
+          "description": "Private CA bundle for a self-managed host, relative to the repository"
+        },
+        "board": {
+          "type": "object",
+          "description": "The planning board (GitHub Projects v2) issues are placed on, when there is one",
+          "properties": {
+            "owner": {
+              "type": "string",
+              "description": "The user or organization that owns the board"
+            },
+            "number": {
+              "type": "integer",
+              "description": "The board (GitHub Project) number",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "branches": {
+      "type": "object",
+      "description": "Branch roles",
+      "default": {},
+      "properties": {
+        "integration": {
+          "type": "string",
+          "description": "Feature PRs and MRs target this branch; it is the default branch",
+          "default": "development"
+        },
+        "production": {
+          "type": "string",
+          "description": "Releases merge into this branch",
+          "default": "main"
+        },
+        "requiredChecks": {
+          "type": "array",
+          "description": "Checks that must pass before merging into either branch",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A check name, such as ci"
+          }
+        },
+        "requiredApprovals": {
+          "type": "integer",
+          "description": "Approving reviews required on pull or merge requests",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 0
+        },
+        "mergeMethod": {
+          "type": "string",
+          "enum": [
+            "squash",
+            "merge",
+            "rebase"
+          ],
+          "description": "How /ship merges change requests into the integration branch",
+          "default": "squash"
+        },
+        "prefixes": {
+          "type": "object",
+          "description": "Branch prefixes by issue type (feature, bug, docs, chore, research), when the team uses its own (feature/, bugfix/); /discover proposes them",
+          "default": {},
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$",
+            "description": "The branch prefix for this issue type"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "languages": {
+      "type": "object",
+      "description": "Language per area",
+      "default": {},
+      "properties": {
+        "issues": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Issue titles, bodies and comments the agent starts (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "prs": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Pull or merge request titles, descriptions and comments (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "commits": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Commit messages (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "branches": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Branch slugs (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "labels": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Label names and descriptions (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "milestones": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Milestone titles and descriptions (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "releases": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Release notes (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "codeComments": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Comments written in code (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "docs": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Human documentation in docs/ (en, or ro written without diacritics)",
+          "default": "en"
+        },
+        "journal": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Journal entries and decision records (en, or ro written without diacritics)",
+          "default": "en"
+        }
+      },
+      "additionalProperties": false
+    },
+    "conventions": {
+      "type": "object",
+      "description": "Title and commit message conventions",
+      "default": {},
+      "properties": {
+        "types": {
+          "type": "array",
+          "description": "Allowed types in change-request titles and commit subjects",
+          "default": [
+            "feat",
+            "fix",
+            "docs",
+            "chore",
+            "refactor",
+            "perf",
+            "test",
+            "ci",
+            "build",
+            "style",
+            "revert"
+          ],
+          "items": {
+            "type": "string",
+            "description": "A change type"
+          }
+        },
+        "maxTitleLength": {
+          "type": "integer",
+          "description": "Longest change-request title or commit subject, issue suffix included",
+          "minimum": 30,
+          "maximum": 200,
+          "default": 72
+        },
+        "exempt": {
+          "type": "array",
+          "description": "Titles exempt from the checks (syncs, bots)",
+          "default": [
+            "^chore: sync \\S+ into \\S+$",
+            "^(chore|build)\\(deps(-dev)?\\): "
+          ],
+          "items": {
+            "type": "string",
+            "description": "A regular expression; matching titles are not checked"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "packs": {
+      "type": "array",
+      "description": "Optional packs installed in this project",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "A pack id"
+      }
+    },
+    "slots": {
+      "type": "object",
+      "description": "Capability slots and the skills bound to them",
+      "default": {},
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "The skill bound to this slot, or null for none"
+      }
+    },
+    "gate": {
+      "type": "object",
+      "description": "Test and check suites by name",
+      "default": {},
+      "additionalProperties": {
+        "type": "string",
+        "description": "The command that runs this suite"
+      }
+    },
+    "standards": {
+      "type": "object",
+      "description": "Mechanical standards checks (on edit and in doctor)",
+      "default": {},
+      "properties": {
+        "maxFileLines": {
+          "type": "integer",
+          "description": "Remind when a code file grows past this many lines",
+          "minimum": 50,
+          "default": 500
+        }
+      },
+      "additionalProperties": false
+    },
+    "testing": {
+      "type": "object",
+      "description": "Test planning and gaps",
+      "default": {},
+      "properties": {
+        "exclude": {
+          "type": "array",
+          "description": "Paths agent-os test gaps leaves out",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A path prefix or glob that needs no tests (generated code, vendored files)"
+          }
+        },
+        "map": {
+          "type": "object",
+          "description": "Source globs and where their tests live (\"src/**/*.ts\": [\"{dir}/{name}.test.ts\"]); files no glob matches use the built-in naming rules",
+          "default": {},
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Where its test lives: a path with {dir}, {name} and {ext}, e.g. \"{dir}/{name}.test.{ext}\""
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "gateAffected": {
+      "type": "object",
+      "description": "Affected components in a monorepo: only the components a change touches, and those that depend on them, are tested",
+      "default": {},
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "The command that tests one component, with {id}, {path} and {name}, e.g. \"pnpm --filter ./{path} test\"; the gate runs it for each affected component"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gateLayers": {
+      "type": "object",
+      "description": "Stack layers and the gate suites a change to them needs (\"data-layer\": [\"migrations\"]), matched through the layer paths in stack.yaml",
+      "default": {},
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "A suite name from \"gate\""
+        }
+      }
+    },
+    "gatePaths": {
+      "type": "object",
+      "description": "Path globs and the gate suites a change to them needs (\"docs/**\": [\"docs\"]); without it every suite runs",
+      "default": {},
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "A suite name from \"gate\""
+        }
+      }
+    },
+    "requires": {
+      "type": "object",
+      "description": "What a working setup needs, checked by agent-os env",
+      "default": {},
+      "properties": {
+        "mcp": {
+          "type": "array",
+          "description": "MCP servers the project needs",
+          "default": [],
+          "items": {
+            "type": "object",
+            "description": "One MCP server",
+            "required": [
+              "name",
+              "scope"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Server name as registered in Claude Code"
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "project",
+                  "user"
+                ],
+                "description": "Where the server is configured"
+              },
+              "transport": {
+                "type": "string",
+                "enum": [
+                  "stdio",
+                  "http",
+                  "sse"
+                ],
+                "description": "How the server is reached"
+              },
+              "url": {
+                "type": "string",
+                "description": "http/sse: the server URL, used in the fix command",
+                "pattern": "^https?://"
+              },
+              "command": {
+                "type": "string",
+                "description": "stdio: the command that starts the server, used in the fix command"
+              },
+              "optional": {
+                "type": "boolean",
+                "description": "A missing optional server is a warning, not a failure",
+                "default": false
+              },
+              "why": {
+                "type": "string",
+                "description": "What needs it"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "cli": {
+          "type": "object",
+          "description": "Command-line tools and their versions",
+          "default": {},
+          "additionalProperties": {
+            "type": "string",
+            "description": "A semver range, or * for any version"
+          }
+        },
+        "platformScopes": {
+          "type": "array",
+          "description": "Token scopes the platform CLI needs",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A token scope"
+          }
+        },
+        "env": {
+          "type": "array",
+          "description": "Variables that must be set (values are never read)",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "An environment variable name",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          }
+        },
+        "plugins": {
+          "type": "array",
+          "description": "Plugins the project expects",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A Claude Code plugin"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "upstream": {
+      "type": "object",
+      "description": "Feedback to the agent-os project",
+      "default": {},
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Allow /upstream to file issues on the public agent-os repository (default: on, off on a self-managed host)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "description": "Security: the advisory watch and accepted risks",
+      "default": {},
+      "properties": {
+        "advisories": {
+          "type": "object",
+          "description": "The advisory watch",
+          "default": {},
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Let the advisory watch ask OSV.dev and CISA KEV about package names and versions (default: on, off on a self-managed host)"
+            },
+            "osvUrl": {
+              "type": "string",
+              "description": "An OSV-compatible querybatch endpoint, e.g. an internal mirror",
+              "pattern": "^https?://"
+            },
+            "kevUrl": {
+              "type": "string",
+              "description": "Where the CISA KEV catalog (JSON) is read from, e.g. an internal mirror",
+              "pattern": "^https?://"
+            }
+          },
+          "additionalProperties": false
+        },
+        "scanners": {
+          "type": "array",
+          "description": "Scanners the team runs; agent-os env reports the missing ones (agent-os never installs or runs them)",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A scanner command, e.g. gitleaks, osv-scanner, semgrep"
+          }
+        },
+        "reports": {
+          "type": "array",
+          "description": "Scanner reports the security pass reads",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A path to a scanner report (SARIF or gitleaks JSON)"
+          }
+        },
+        "acceptedRisks": {
+          "type": "array",
+          "description": "Advisories the owners accepted in writing; the release gate lets them through",
+          "default": [],
+          "items": {
+            "type": "object",
+            "description": "An accepted risk",
+            "required": [
+              "id",
+              "reason",
+              "by"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The advisory id (GHSA-…, CVE-…, OSV id)"
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why the risk is accepted"
+              },
+              "by": {
+                "type": "string",
+                "description": "Who accepted it"
+              },
+              "until": {
+                "type": "string",
+                "description": "Review again by this date (YYYY-MM-DD)",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "compliance": {
+      "type": "object",
+      "description": "Compliance constraints",
+      "default": {},
+      "properties": {
+        "euOnly": {
+          "type": "boolean",
+          "description": "Flag providers without confirmed EU regions",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "contextBudgets": {
+      "type": "object",
+      "description": "Size budgets per file or glob",
+      "default": {},
+      "additionalProperties": {
+        "type": "string",
+        "description": "A size such as 8KB",
+        "pattern": "^\\d+(\\.\\d+)?\\s?(B|KB|MB)$"
+      }
+    },
+    "legacy": {
+      "type": "array",
+      "description": "Legacy features this project keeps enabled",
+      "default": [],
+      "items": {
+        "type": "string",
+        "description": "A legacy feature id"
+      }
+    },
+    "guards": {
+      "type": "object",
+      "description": "Guards that refuse risky shell commands before they run (PreToolUse)",
+      "default": {},
+      "properties": {
+        "rules": {
+          "type": "array",
+          "description": "Project guard rules, added to the built-in ones",
+          "default": [],
+          "items": {
+            "type": "object",
+            "description": "One guard rule",
+            "required": [
+              "id",
+              "type",
+              "pattern"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "A short name, shown when the rule refuses something"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "forbid-flags",
+                  "forbid-pattern",
+                  "require-env",
+                  "min-free-memory"
+                ],
+                "description": "What the rule checks"
+              },
+              "pattern": {
+                "type": "string",
+                "description": "A regular expression matched against each shell command (after splitting on && || ; |)"
+              },
+              "flags": {
+                "type": "array",
+                "description": "forbid-flags: flags refused after a matching command",
+                "default": [],
+                "items": {
+                  "type": "string",
+                  "description": "A flag such as --no-verify"
+                }
+              },
+              "env": {
+                "type": "string",
+                "description": "require-env: the variable that must be set, e.g. DB_RESET_OK=1 in the command or the environment",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+              },
+              "message": {
+                "type": "string",
+                "description": "What to tell the agent when the rule refuses"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "disable": {
+          "type": "array",
+          "description": "Built-in guards turned off for this project",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "The id of a built-in guard"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "npmRegistry": {
+      "type": "string",
+      "description": "The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs",
+      "pattern": "^https?://"
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Artifacts (artifacts/<date>-<slug>/)",
+      "default": {},
+      "properties": {
+        "maxPageKb": {
+          "type": "integer",
+          "description": "doctor warns when an artifact page is larger than this",
+          "minimum": 16,
+          "default": 2048
+        },
+        "siteUrl": {
+          "type": "string",
+          "description": "Where the artifact site is published (e.g. https://acme.github.io/app); artifact link adds it after the repository link",
+          "pattern": "^https?://"
+        },
+        "pages": {
+          "type": "boolean",
+          "description": "Install the workflow that publishes artifacts to GitHub or GitLab Pages (the index is built in CI, never committed)",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "ci": {
+      "type": "object",
+      "description": "How generated CI jobs run: image and runners",
+      "default": {},
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "The container image generated CI jobs run in, e.g. from the internal registry (default node:22)"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels)",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A runner tag"
+          }
+        },
+        "loop": {
+          "type": "boolean",
+          "description": "Install the agent-os/loop job (turn it off only when the project's own CI already runs agent-os check loop)",
+          "default": true
+        },
+        "gate": {
+          "type": "boolean",
+          "description": "Install the agent-os/gate job (turn it off only when the project's own CI already runs agent-os gate)",
+          "default": true
+        },
+        "retro": {
+          "type": "boolean",
+          "description": "Install the weekly scheduled job that keeps the Retro issue current",
+          "default": true
+        },
+        "labels": {
+          "type": "boolean",
+          "description": "Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels)",
+          "default": false
+        },
+        "securityWatch": {
+          "type": "string",
+          "enum": [
+            "off",
+            "daily",
+            "weekly"
+          ],
+          "description": "Install the scheduled job that keeps the Security digest issue current",
+          "default": "off"
+        },
+        "labelsEnvironment": {
+          "type": "string",
+          "description": "GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "adoption": {
+      "type": "object",
+      "description": "Adoption mode for projects new to agent-os",
+      "default": {},
+      "properties": {
+        "warnOnlyUntil": {
+          "type": "string",
+          "description": "Until this date (YYYY-MM-DD) guards only warn instead of refusing",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "cutoff": {
+          "type": "string",
+          "description": "Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD)",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

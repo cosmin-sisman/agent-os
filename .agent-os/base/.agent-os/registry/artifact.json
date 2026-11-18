@@ -1,0 +1,10 @@
+{
+  "name": "artifact",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Make an artifact (a self-contained page in artifacts/ - analysis, comparison, discovery, release report, retro, architecture, dashboard, stack map), build and verify it, and link it to the issues and pull requests it belongs to."
+}

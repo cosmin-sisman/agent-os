@@ -1,0 +1,4 @@
+{
+  "platform": { "type": "github", "project": "acme/shop", "board": { "owner": "acme", "number": 3 } },
+  "branches": { "integration": "development", "production": "main", "requiredChecks": ["ci"] }
+}

@@ -1,0 +1,41 @@
+{{#if ci.loop}}
+# The self-improvement loop, enforced on every pull request (agent-os, design §10). It passes when doctor --ci has no
+# failure, the Lessons section says something, and a lesson or decision has its journal entry. `agent-os setup` makes
+# "agent-os/loop" a required check. Managed by agent-os: change it through agent-os.json, not by hand.
+name: agent-os loop
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request cancels the run in progress.
+concurrency:
+  group: agent-os-loop-{{{expr.open}}} github.event.pull_request.number || github.ref {{{expr.close}}}
+  cancel-in-progress: true
+
+jobs:
+  loop:
+    name: agent-os/loop
+    runs-on: {{{runner.runsOn}}}
+{{#if runner.image}}
+    container: "{{{runner.image}}}"
+{{/if}}
+{{#if runner.npmRegistry}}
+    env:
+      npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # The description, author and base branch are read from the event file, never interpolated into the script.
+      - run: {{{runner.npx}}} check loop --from-ci
+{{/if}}

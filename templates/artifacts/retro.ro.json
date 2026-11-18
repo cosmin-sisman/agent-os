@@ -1,0 +1,24 @@
+{
+  "kind": "retro",
+  "lang": "ro",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Ce a mers bine",
+      "items": []
+    },
+    {
+      "heading": "Ce nu a mers",
+      "items": []
+    },
+    {
+      "heading": "Lectii",
+      "items": []
+    },
+    {
+      "heading": "Actiuni",
+      "items": []
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cosmin-sisman/agent-os/schema/local.schema.json",
+  "title": "agent-os personal settings (.agent-os/local.json)",
+  "type": "object",
+  "description": "agent-os configuration",
+  "properties": {
+    "languages": {
+      "type": "object",
+      "description": "Language per area",
+      "default": {},
+      "properties": {
+        "chat": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ro"
+          ],
+          "description": "Language the agent talks to you in (en, or ro written without diacritics)",
+          "default": "en"
+        }
+      },
+      "additionalProperties": false
+    },
+    "machine": {
+      "type": "object",
+      "description": "This laptop's limits",
+      "default": {},
+      "properties": {
+        "maxWorkers": {
+          "type": "integer",
+          "description": "Most agent sessions to run in parallel on this laptop",
+          "minimum": 1,
+          "default": 3
+        },
+        "minFreeMb": {
+          "type": "integer",
+          "description": "Refuse heavy commands below this much free memory",
+          "minimum": 0,
+          "default": 1500
+        },
+        "devPortStart": {
+          "type": "integer",
+          "description": "First port for dev servers in worktrees",
+          "minimum": 1024,
+          "maximum": 65535,
+          "default": 5174
+        },
+        "proxy": {
+          "type": "string",
+          "description": "HTTP(S) proxy every tool agent-os runs goes through (an HTTPS_PROXY already set wins); no credentials here",
+          "pattern": "^https?://"
+        },
+        "noProxy": {
+          "type": "array",
+          "description": "Hosts the proxy is bypassed for",
+          "default": [],
+          "items": {
+            "type": "string",
+            "description": "A host or domain reached without the proxy"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "orchestrator": {
+      "type": "boolean",
+      "description": "Run the optional orchestrator role in this laptop's sessions",
+      "default": false
+    }
+  },
+  "additionalProperties": false
+}

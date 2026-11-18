@@ -1,0 +1,35 @@
+{
+  "kind": "threat-model",
+  "lang": "en",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Layers",
+      "table": {
+        "columns": [
+          "Layer",
+          "Technology",
+          "Group"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Threats (STRIDE)",
+      "table": {
+        "columns": [
+          "Layer",
+          "Category",
+          "Threat",
+          "Mitigation"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Data flows",
+      "items": []
+    }
+  ]
+}

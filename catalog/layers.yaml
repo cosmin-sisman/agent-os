@@ -1,0 +1,218 @@
+# The layers of a software system. A project maps its stack, its area:* labels and its paths onto these ids.
+# group: experience | interfaces | logic | data | platform | delivery
+
+- id: public-frontend
+  group: experience
+  name:
+    en: "Public Frontend"
+    ro: "Frontend public"
+  description:
+    en: "Public site: marketing, SEO, AI agents"
+    ro: "Site public: marketing, SEO, agenti AI"
+
+- id: internal-frontend
+  group: experience
+  name:
+    en: "Internal Frontend"
+    ro: "Frontend intern"
+  description:
+    en: "The web app behind login, back-office"
+    ro: "Aplicatia web de dupa login / back-office"
+
+- id: mobile
+  group: experience
+  name:
+    en: "Mobile"
+    ro: "Mobil"
+  description:
+    en: "iOS and Android apps"
+    ro: "Aplicatii iOS / Android"
+
+- id: desktop-tv
+  group: experience
+  name:
+    en: "Desktop / TV"
+    ro: "Desktop / TV"
+  description:
+    en: "Desktop or TV apps"
+    ro: "Aplicatii desktop sau TV"
+
+- id: internal-api
+  group: interfaces
+  name:
+    en: "Internal API"
+    ro: "API intern"
+  description:
+    en: "First-party API for your own clients"
+    ro: "API pentru clientii tai (first-party)"
+
+- id: public-api-webhooks
+  group: interfaces
+  name:
+    en: "Public API + Webhooks"
+    ro: "API public + webhooks"
+  description:
+    en: "API for partners; incoming and outgoing webhooks"
+    ro: "API pentru parteneri; webhooks primite si trimise"
+
+- id: integration-service
+  group: interfaces
+  name:
+    en: "Integration Service"
+    ro: "Serviciu de integrare"
+  description:
+    en: "Connectors to external or legacy systems"
+    ro: "Conectori catre sisteme externe sau legacy"
+
+- id: backend-services
+  group: logic
+  name:
+    en: "Backend Services"
+    ro: "Servicii backend"
+  description:
+    en: "Business logic (service layer)"
+    ro: "Logica de business (service layer)"
+
+- id: background-workers
+  group: logic
+  name:
+    en: "Background Workers"
+    ro: "Workeri in fundal"
+  description:
+    en: "Jobs, queues, cron"
+    ro: "Jobs, cozi, cron"
+
+- id: realtime
+  group: logic
+  name:
+    en: "Realtime"
+    ro: "Realtime"
+  description:
+    en: "Live events, chat, presence"
+    ro: "Evenimente live, chat, prezenta"
+
+- id: ai-ml
+  group: logic
+  name:
+    en: "AI / ML"
+    ro: "AI / ML"
+  description:
+    en: "LLMs, models, intelligent processing"
+    ro: "LLM-uri, modele, procesare inteligenta"
+
+- id: video-media
+  group: logic
+  name:
+    en: "Video / Media"
+    ro: "Video / media"
+  description:
+    en: "Streaming, video and audio processing"
+    ro: "Streaming, procesare video si audio"
+
+- id: game-servers
+  group: logic
+  name:
+    en: "Game Servers"
+    ro: "Servere de joc"
+  description:
+    en: "Real-time multiplayer logic"
+    ro: "Logica multiplayer in timp real"
+
+- id: data-layer
+  group: data
+  name:
+    en: "Data Layer"
+    ro: "Strat de date"
+  description:
+    en: "Main database and ORM"
+    ro: "Baza de date principala + ORM"
+
+- id: cache-queue
+  group: data
+  name:
+    en: "Cache / Queue"
+    ro: "Cache / cozi"
+  description:
+    en: "Cache, rate limiting, message queues"
+    ro: "Cache, rate limiting, cozi de mesaje"
+
+- id: analytics
+  group: data
+  name:
+    en: "Analytics"
+    ro: "Analytics"
+  description:
+    en: "Events, reports, BI"
+    ro: "Evenimente, rapoarte, BI"
+
+- id: storage
+  group: data
+  name:
+    en: "Storage"
+    ro: "Stocare"
+  description:
+    en: "Files, images, video"
+    ro: "Fisiere, imagini, video"
+
+- id: auth
+  group: platform
+  name:
+    en: "Auth"
+    ro: "Autentificare"
+  description:
+    en: "Authentication and authorization"
+    ro: "Autentificare si autorizare"
+
+- id: cms
+  group: platform
+  name:
+    en: "CMS"
+    ro: "CMS"
+  description:
+    en: "Content the client edits"
+    ro: "Continut editabil de client"
+
+- id: email-notifications
+  group: platform
+  name:
+    en: "Email / Notifications"
+    ro: "Email / notificari"
+  description:
+    en: "Transactional email, push, SMS"
+    ro: "Email tranzactional, push, SMS"
+
+- id: payments
+  group: platform
+  name:
+    en: "Payments"
+    ro: "Plati"
+  description:
+    en: "Payments, subscriptions, billing"
+    ro: "Plati, abonamente, facturare"
+
+- id: ci-cd
+  group: delivery
+  name:
+    en: "CI/CD"
+    ro: "CI/CD"
+  description:
+    en: "Build, tests, automatic deploy"
+    ro: "Build, teste, deploy automat"
+
+- id: infrastructure
+  group: delivery
+  name:
+    en: "Infrastructure"
+    ro: "Infrastructura"
+  description:
+    en: "Containers, orchestration, IaC, monorepo"
+    ro: "Containere, orchestrare, IaC, monorepo"
+
+- id: monitoring
+  group: delivery
+  name:
+    en: "Monitoring"
+    ro: "Monitorizare"
+  description:
+    en: "Errors, logs, metrics, uptime"
+    ro: "Erori, loguri, metrici, uptime"

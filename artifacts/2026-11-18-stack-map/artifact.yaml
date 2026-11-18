@@ -1,0 +1,26 @@
+# Artifact metadata. Read by `agent-os artifact` (list, verify, link) and by the Pages build.
+id: 2026-11-18-stack-map
+title: "Stack Map"
+type: stack-map
+kind: living
+status: current
+summary: "Interactive map of the agent-os catalog: 24 layers, 127 technologies, languages, providers and 10 blueprints by level, with computed stack summaries and a stack.yaml generator."
+languages: [en, ro]
+authors: [cosmin-sisman]
+refs: ["#72", "#81"]
+build: "scripts/bootstrap/build_artifact.py, until agent-os artifact build exists"
+sources:
+  - path: catalog/layers.yaml
+    sha256: a4b0079d3dfc500d9e6a0c52e2c7e43ec534f3872db18d59c040744a09b8cf2c
+  - path: catalog/technologies.yaml
+    sha256: d8f0ade0019808bc2205ebea0b3ffd3b34cf77ca3fe536f62a79775f71eddb85
+  - path: catalog/languages.yaml
+    sha256: aa3cffbd99b33f0b18d40c08dbd90f20f29a9696c2ad6608d844dd0dd7ec86be
+  - path: catalog/providers.yaml
+    sha256: 111c0f36f99182dc3e7d5e23c3e4694e4946843aeaacc8d4f59ef78495b4279f
+  - path: catalog/runtimes.yaml
+    sha256: dd2011c803c679fd944def4a90ea060671e953ee0f0b8f42384ea870f6bd7704
+  - path: catalog/blueprints.yaml
+    sha256: a00f54f75c26b7940d0f041e12e5dc16ee14321efad03968a1310c8ed77976fe
+  - path: artifacts/2026-11-18-stack-map/template.html
+    sha256: c8df78856b567e4cee1776660712d5daaa64e56be98038740316aac75d8016b3

@@ -1,0 +1,44 @@
+{{#if ci.securityWatch != "off"}}
+# The advisory watch (agent-os, design §23): {{{ci.securityWatch}}}, it asks OSV.dev (GitHub and GitLab advisories
+# included) and CISA KEV about the lockfiles' packages and keeps the one "Security digest" issue current. Only package
+# names and versions leave the repository. Installed because agent-os.json sets ci.securityWatch.
+name: agent-os security
+
+on:
+  schedule:
+{{#if ci.securityWatch == "daily"}}
+    - cron: "17 5 * * *"
+{{else}}
+    - cron: "17 5 * * 1"
+{{/if}}
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    name: agent-os/security
+    runs-on: {{{runner.runsOn}}}
+{{#if runner.image}}
+    container: "{{{runner.image}}}"
+{{/if}}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GH_TOKEN: {{{expr.open}}} github.token {{{expr.close}}}
+{{#if runner.npmRegistry}}
+      npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # Exit 1 means a known-exploited advisory is open: the run is red until it is fixed or accepted.
+      - run: {{{runner.npx}}} security watch --issue
+{{/if}}

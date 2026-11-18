@@ -1,0 +1,10 @@
+{
+  "name": "stack",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Explain, compare and change the project's stack map (stack.yaml) with the catalog's scores behind every recommendation - show it, compare two technologies, change a layer as a decision, detect or import it, keep it in step with the code."
+}

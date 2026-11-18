@@ -1,0 +1,157 @@
+# Configuration reference
+
+agent-os reads two files at the root of a repository:
+
+| File | Holds | In git |
+|---|---|---|
+| `agent-os.json` | the team's agreement: platform, branches, shared languages, packs, slots, gate, requirements | committed |
+| `.agent-os/local.json` | one person's settings: chat language, machine limits, orchestrator | gitignored |
+
+Every key belongs to exactly one file. A personal key in `agent-os.json`, or a team key in `.agent-os/local.json`, is an error that names the right file. Missing keys take their defaults, and the personal file overrides only its own keys.
+
+```bash
+agent-os config                          # the merged configuration, with defaults
+agent-os config get languages.issues     # one value
+agent-os config set languages.issues ro  # team key → agent-os.json
+agent-os config set languages.chat en    # personal key → .agent-os/local.json
+agent-os config unset gate.unit
+agent-os config validate                 # exit 0 valid, 1 problems, 2 could not read
+agent-os config path
+```
+
+Neither `config set` nor `init --me` edits a committed file. When the personal files are not ignored yet, they are added to `.git/info/exclude`, which is local to your clone, and the output asks the team to add them to `.gitignore`. Editing `.gitignore` is a team change, made by the full `init`.
+
+Someone joining a project runs `agent-os init --me`. It asks first which language the agent should talk to you in, then how many agent sessions you run in parallel (and, if more than one, whether one of them coordinates the others and the first dev-server port), then the free-memory floor for heavy commands. It writes only `.agent-os/local.json`. Flags answer the same questions (`--chat`, `--sessions`, `--orchestrator`, `--dev-port`, `--min-free-mb`), and `--yes` takes the defaults for the rest.
+
+Values are read as JSON when they parse (`true`, `3`, `["a","b"]`, `{"x":1}`), and as plain strings otherwise. `--dry-run` shows what would change.
+
+Editors validate both files with the published schemas: [`schema/agent-os.schema.json`](../../schema/agent-os.schema.json) and [`schema/local.schema.json`](../../schema/local.schema.json). New `agent-os.json` files reference the first through `$schema`.
+
+The `ro` language means Romanian **without diacritics** (ASCII only), so it reads the same in every terminal, branch name and search box.
+
+## Keys
+
+The table below is generated from `src/config/schema.mjs` by `npm run schema`; don't edit it by hand.
+
+<!-- generated:config-keys:start -->
+| Key | File | Type | Default | Description |
+|---|---|---|---|---|
+| `$schema` | team | string |  | Path or URL of the JSON Schema, for editors |
+| `version` | team | string |  | The exact agent-os version this project is pinned to |
+| `profile` | team | string: `greenfield`, `spec-first`, `active`, `maintenance` | `"active"` | Where the project is in its life |
+| `platform` | team | object | `{}` | Which platform and project agent-os talks to |
+| `platform.type` | team | string: `github`, `gitlab` | `"github"` | The code platform |
+| `platform.host` | team | string |  | Base URL for GitHub Enterprise Server or GitLab self-managed; omit for github.com and gitlab.com |
+| `platform.project` | team | string |  | owner/name (GitHub) or group/subgroup/name (GitLab) |
+| `platform.caFile` | team | string |  | Private CA bundle for a self-managed host, relative to the repository |
+| `platform.board` | team | object |  | The planning board (GitHub Projects v2) issues are placed on, when there is one |
+| `platform.board.owner` | team | string |  | The user or organization that owns the board |
+| `platform.board.number` | team | integer |  | The board (GitHub Project) number |
+| `branches` | team | object | `{}` | Branch roles |
+| `branches.integration` | team | string | `"development"` | Feature PRs and MRs target this branch; it is the default branch |
+| `branches.production` | team | string | `"main"` | Releases merge into this branch |
+| `branches.requiredChecks` | team | array | `[]` | Checks that must pass before merging into either branch |
+| `branches.requiredApprovals` | team | integer | `0` | Approving reviews required on pull or merge requests |
+| `branches.mergeMethod` | team | string: `squash`, `merge`, `rebase` | `"squash"` | How /ship merges change requests into the integration branch |
+| `branches.prefixes` | team | object | `{}` | Branch prefixes by issue type (feature, bug, docs, chore, research), when the team uses its own (feature/, bugfix/); /discover proposes them |
+| `branches.prefixes.<name>` | team | string |  | The branch prefix for this issue type |
+| `languages` | team | object | `{}` | Language per area |
+| `languages.chat` | personal | string: `en`, `ro` | `"en"` | Language the agent talks to you in (en, or ro written without diacritics) |
+| `languages.issues` | team | string: `en`, `ro` | `"en"` | Issue titles, bodies and comments the agent starts (en, or ro written without diacritics) |
+| `languages.prs` | team | string: `en`, `ro` | `"en"` | Pull or merge request titles, descriptions and comments (en, or ro written without diacritics) |
+| `languages.commits` | team | string: `en`, `ro` | `"en"` | Commit messages (en, or ro written without diacritics) |
+| `languages.branches` | team | string: `en`, `ro` | `"en"` | Branch slugs (en, or ro written without diacritics) |
+| `languages.labels` | team | string: `en`, `ro` | `"en"` | Label names and descriptions (en, or ro written without diacritics) |
+| `languages.milestones` | team | string: `en`, `ro` | `"en"` | Milestone titles and descriptions (en, or ro written without diacritics) |
+| `languages.releases` | team | string: `en`, `ro` | `"en"` | Release notes (en, or ro written without diacritics) |
+| `languages.codeComments` | team | string: `en`, `ro` | `"en"` | Comments written in code (en, or ro written without diacritics) |
+| `languages.docs` | team | string: `en`, `ro` | `"en"` | Human documentation in docs/ (en, or ro written without diacritics) |
+| `languages.journal` | team | string: `en`, `ro` | `"en"` | Journal entries and decision records (en, or ro written without diacritics) |
+| `conventions` | team | object | `{}` | Title and commit message conventions |
+| `conventions.types` | team | array | `["feat","fix","docs","chore","refactor","perf","test","ci","build","style","revert"]` | Allowed types in change-request titles and commit subjects |
+| `conventions.maxTitleLength` | team | integer | `72` | Longest change-request title or commit subject, issue suffix included |
+| `conventions.exempt` | team | array | `["^chore: sync \\S+ into \\S+$","^(chore|build)\\(deps(-dev)?\\): "]` | Titles exempt from the checks (syncs, bots) |
+| `packs` | team | array | `[]` | Optional packs installed in this project |
+| `slots` | team | object | `{}` | Capability slots and the skills bound to them |
+| `slots.<name>` | team | string or null |  | The skill bound to this slot, or null for none |
+| `gate` | team | object | `{}` | Test and check suites by name |
+| `gate.<name>` | team | string |  | The command that runs this suite |
+| `standards` | team | object | `{}` | Mechanical standards checks (on edit and in doctor) |
+| `standards.maxFileLines` | team | integer | `500` | Remind when a code file grows past this many lines |
+| `testing` | team | object | `{}` | Test planning and gaps |
+| `testing.exclude` | team | array | `[]` | Paths agent-os test gaps leaves out |
+| `testing.map` | team | object | `{}` | Source globs and where their tests live ("src/**/*.ts": ["{dir}/{name}.test.ts"]); files no glob matches use the built-in naming rules |
+| `testing.map.<name>` | team | array |  |  |
+| `gateAffected` | team | object | `{}` | Affected components in a monorepo: only the components a change touches, and those that depend on them, are tested |
+| `gateAffected.command` | team | string |  | The command that tests one component, with {id}, {path} and {name}, e.g. "pnpm --filter ./{path} test"; the gate runs it for each affected component |
+| `gateLayers` | team | object | `{}` | Stack layers and the gate suites a change to them needs ("data-layer": ["migrations"]), matched through the layer paths in stack.yaml |
+| `gateLayers.<name>` | team | array |  |  |
+| `gatePaths` | team | object | `{}` | Path globs and the gate suites a change to them needs ("docs/**": ["docs"]); without it every suite runs |
+| `gatePaths.<name>` | team | array |  |  |
+| `requires` | team | object | `{}` | What a working setup needs, checked by agent-os env |
+| `requires.mcp` | team | array | `[]` | MCP servers the project needs |
+| `requires.mcp[].name` | team | string |  | Server name as registered in Claude Code |
+| `requires.mcp[].scope` | team | string: `project`, `user` |  | Where the server is configured |
+| `requires.mcp[].transport` | team | string: `stdio`, `http`, `sse` |  | How the server is reached |
+| `requires.mcp[].url` | team | string |  | http/sse: the server URL, used in the fix command |
+| `requires.mcp[].command` | team | string |  | stdio: the command that starts the server, used in the fix command |
+| `requires.mcp[].optional` | team | boolean | `false` | A missing optional server is a warning, not a failure |
+| `requires.mcp[].why` | team | string |  | What needs it |
+| `requires.cli` | team | object | `{}` | Command-line tools and their versions |
+| `requires.cli.<name>` | team | string |  | A semver range, or * for any version |
+| `requires.platformScopes` | team | array | `[]` | Token scopes the platform CLI needs |
+| `requires.env` | team | array | `[]` | Variables that must be set (values are never read) |
+| `requires.plugins` | team | array | `[]` | Plugins the project expects |
+| `upstream` | team | object | `{}` | Feedback to the agent-os project |
+| `upstream.enabled` | team | boolean |  | Allow /upstream to file issues on the public agent-os repository (default: on, off on a self-managed host) |
+| `security` | team | object | `{}` | Security: the advisory watch and accepted risks |
+| `security.advisories` | team | object | `{}` | The advisory watch |
+| `security.advisories.enabled` | team | boolean |  | Let the advisory watch ask OSV.dev and CISA KEV about package names and versions (default: on, off on a self-managed host) |
+| `security.advisories.osvUrl` | team | string |  | An OSV-compatible querybatch endpoint, e.g. an internal mirror |
+| `security.advisories.kevUrl` | team | string |  | Where the CISA KEV catalog (JSON) is read from, e.g. an internal mirror |
+| `security.scanners` | team | array | `[]` | Scanners the team runs; agent-os env reports the missing ones (agent-os never installs or runs them) |
+| `security.reports` | team | array | `[]` | Scanner reports the security pass reads |
+| `security.acceptedRisks` | team | array | `[]` | Advisories the owners accepted in writing; the release gate lets them through |
+| `security.acceptedRisks[].id` | team | string |  | The advisory id (GHSA-…, CVE-…, OSV id) |
+| `security.acceptedRisks[].reason` | team | string |  | Why the risk is accepted |
+| `security.acceptedRisks[].by` | team | string |  | Who accepted it |
+| `security.acceptedRisks[].until` | team | string |  | Review again by this date (YYYY-MM-DD) |
+| `compliance` | team | object | `{}` | Compliance constraints |
+| `compliance.euOnly` | team | boolean | `false` | Flag providers without confirmed EU regions |
+| `contextBudgets` | team | object | `{}` | Size budgets per file or glob |
+| `contextBudgets.<name>` | team | string |  | A size such as 8KB |
+| `legacy` | team | array | `[]` | Legacy features this project keeps enabled |
+| `guards` | team | object | `{}` | Guards that refuse risky shell commands before they run (PreToolUse) |
+| `guards.rules` | team | array | `[]` | Project guard rules, added to the built-in ones |
+| `guards.rules[].id` | team | string |  | A short name, shown when the rule refuses something |
+| `guards.rules[].type` | team | string: `forbid-flags`, `forbid-pattern`, `require-env`, `min-free-memory` |  | What the rule checks |
+| `guards.rules[].pattern` | team | string |  | A regular expression matched against each shell command (after splitting on && || ; |) |
+| `guards.rules[].flags` | team | array | `[]` | forbid-flags: flags refused after a matching command |
+| `guards.rules[].env` | team | string |  | require-env: the variable that must be set, e.g. DB_RESET_OK=1 in the command or the environment |
+| `guards.rules[].message` | team | string |  | What to tell the agent when the rule refuses |
+| `guards.disable` | team | array | `[]` | Built-in guards turned off for this project |
+| `npmRegistry` | team | string |  | The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs |
+| `artifacts` | team | object | `{}` | Artifacts (artifacts/<date>-<slug>/) |
+| `artifacts.maxPageKb` | team | integer | `2048` | doctor warns when an artifact page is larger than this |
+| `artifacts.siteUrl` | team | string |  | Where the artifact site is published (e.g. https://acme.github.io/app); artifact link adds it after the repository link |
+| `artifacts.pages` | team | boolean | `false` | Install the workflow that publishes artifacts to GitHub or GitLab Pages (the index is built in CI, never committed) |
+| `ci` | team | object | `{}` | How generated CI jobs run: image and runners |
+| `ci.image` | team | string |  | The container image generated CI jobs run in, e.g. from the internal registry (default node:22) |
+| `ci.tags` | team | array | `[]` | Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels) |
+| `ci.loop` | team | boolean | `true` | Install the agent-os/loop job (turn it off only when the project's own CI already runs agent-os check loop) |
+| `ci.gate` | team | boolean | `true` | Install the agent-os/gate job (turn it off only when the project's own CI already runs agent-os gate) |
+| `ci.retro` | team | boolean | `true` | Install the weekly scheduled job that keeps the Retro issue current |
+| `ci.labels` | team | boolean | `false` | Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels) |
+| `ci.securityWatch` | team | string: `off`, `daily`, `weekly` | `"off"` | Install the scheduled job that keeps the Security digest issue current |
+| `ci.labelsEnvironment` | team | string |  | GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret) |
+| `adoption` | team | object | `{}` | Adoption mode for projects new to agent-os |
+| `adoption.warnOnlyUntil` | team | string |  | Until this date (YYYY-MM-DD) guards only warn instead of refusing |
+| `adoption.cutoff` | team | string |  | Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD) |
+| `machine` | personal | object | `{}` | This laptop's limits |
+| `machine.maxWorkers` | personal | integer | `3` | Most agent sessions to run in parallel on this laptop |
+| `machine.minFreeMb` | personal | integer | `1500` | Refuse heavy commands below this much free memory |
+| `machine.devPortStart` | personal | integer | `5174` | First port for dev servers in worktrees |
+| `machine.proxy` | personal | string |  | HTTP(S) proxy every tool agent-os runs goes through (an HTTPS_PROXY already set wins); no credentials here |
+| `machine.noProxy` | personal | array | `[]` | Hosts the proxy is bypassed for |
+| `orchestrator` | personal | boolean | `false` | Run the optional orchestrator role in this laptop's sessions |
+<!-- generated:config-keys:end -->

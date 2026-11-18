@@ -1,0 +1,7 @@
+# The team's own CI: agent-os does not manage it, so a switch lists it for porting by hand.
+on: [pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm test

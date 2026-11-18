@@ -1,0 +1,120 @@
+# Tests on Linux, macOS and Windows with every supported Node LTS, plus actionlint.
+# The `ci` job is the single required check; it passes only when every other job passed (pr-title runs on PRs only).
+name: ci
+
+on:
+  pull_request:
+    # edited: a corrected PR title or body is checked again without a new commit
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [development, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22, 24, 26]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+      # The catalog: unique ids, references that resolve, both languages, ASCII-only ro; problems name file and id.
+      - run: node bin/agent-os.mjs stack catalog check
+      - run: npm run site
+
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: actionlint 1.7.12
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
+
+  pr-title:
+    # The title becomes the squash commit: it must follow the conventions and list every issue the description
+    # closes or references. Title and body reach the shell through env, never interpolated into the script.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: agent-os check title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          printf '%s' "$BODY" > "$RUNNER_TEMP/body.md"
+          node bin/agent-os.mjs check title "$TITLE" --body-file "$RUNNER_TEMP/body.md"
+
+  loop:
+    # The self-improvement loop (agent-os/loop): doctor --ci, a non-empty Lessons section, and a journal entry for a
+    # lesson or decision. Not in the `ci` aggregator: making it required is a ruleset setting (agent-os setup).
+    if: github.event_name == 'pull_request'
+    name: agent-os/loop
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # The description, author and base branch are read from the event file, never interpolated into the script.
+      - run: node bin/agent-os.mjs check loop --from-ci
+
+  gate:
+    # agent-os/gate: the suites the diff needs, chosen like `agent-os gate` locally. This repository has no
+    # agent-os.json yet (adopting agent-os here is the owner's decision), so it selects no suite; the matrix above runs
+    # the tests. Not in the `ci` aggregator: making it required is a ruleset setting.
+    name: agent-os/gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      # The base branch is read from the event file, never interpolated into the script.
+      - run: node bin/agent-os.mjs gate --from-ci
+
+  ci:
+    if: always()
+    needs: [test, actionlint, pr-title]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for r in $RESULTS; do [ "$r" = "success" ] || [ "$r" = "skipped" ] || exit 1; done

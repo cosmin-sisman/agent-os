@@ -1,6 +1,6 @@
 # GitHub is the coordination layer
 
-Status: accepted
+Status: accepted · amended by [platforms](2026-11-18-platforms-github-and-gitlab.md)
 
 ## Context
 The design target is five or more people, each on their own laptop with their own agent sessions, on one repository. They comment on issues and PRs. A coordination file in the repository (a ledger, a shared memory) conflicts constantly. A local mechanism (a shared database, a session registry) does not reach the other laptops. Local hooks may not be installed on everyone's machine.

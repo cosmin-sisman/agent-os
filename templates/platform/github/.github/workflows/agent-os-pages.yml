@@ -1,0 +1,58 @@
+{{#if artifacts.pages}}
+# Publishes artifacts/ to GitHub Pages (agent-os, design §17): living artifacts are rebuilt, then every artifact and
+# an index by type, date, area and linked item are built into _site in CI. The index is never committed. Installed
+# because agent-os.json sets artifacts.pages; Pages must be enabled (Settings → Pages → Source: GitHub Actions).
+name: agent-os pages
+
+on:
+  push:
+    branches: ["{{{branches.integration}}}"]
+    paths: ["artifacts/**", "stack.yaml", "system.yaml", "**/openapi*.yaml", "**/openapi*.json", "**/asyncapi*.yaml", ".github/workflows/agent-os-pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-os-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: {{{runner.runsOn}}}
+{{#if runner.image}}
+    container: "{{{runner.image}}}"
+{{/if}}
+{{#if runner.npmRegistry}}
+    env:
+      npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: {{{runner.npx}}} artifact build --living
+      - run: {{{runner.npx}}} artifact site _site
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: {{{runner.runsOn}}}
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: {{{expr.open}}} steps.deployment.outputs.page_url {{{expr.close}}}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+{{/if}}

@@ -1,0 +1,11 @@
+# Lifecycle exceptions. Every shipped item (command, flag, config key, template, catalog entry, hook handler) is listed
+# in manifest.json automatically; it is "new" when it first appears and keeps its state until this file changes it.
+# Allowed paths: new → stable → deprecated → legacy | removed. A deprecation needs deprecatedIn, removeIn and a
+# replacement; a removal needs the migration (migrations/<version>.mjs) that handles projects still using it.
+#
+# - id: "flag:hook --print-settings"
+#   status: deprecated
+#   deprecatedIn: "0.5.0"
+#   removeIn: "0.7.0"
+#   replacement: "agent-os setup --only files"
+[]

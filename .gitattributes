@@ -1,0 +1,5 @@
+# Normalize text to LF everywhere, on every OS. Artifacts record sha256 hashes of their sources,
+# so a CRLF checkout on Windows would make them look stale.
+* text=auto eol=lf
+*.png binary
+*.xlsx binary

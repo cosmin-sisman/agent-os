@@ -1,0 +1,188 @@
+// The configuration schema: one definition that drives validation, defaults and the published JSON Schemas.
+// Keys marked `personal` live only in .agent-os/local.json; every other key lives only in agent-os.json.
+
+const LANG = ['en', 'ro']
+
+const str = (description, extra = {}) => ({ type: 'string', description, ...extra })
+const oneOf = (values, description, extra = {}) => ({ type: 'string', enum: values, description, ...extra })
+const bool = (description, extra = {}) => ({ type: 'boolean', description, ...extra })
+const int = (description, extra = {}) => ({ type: 'integer', description, ...extra })
+const list = (items, description, extra = {}) => ({ type: 'array', items, description, ...extra })
+const obj = (properties, description, extra = {}) => ({ type: 'object', properties, description, ...extra })
+const map = (values, description, extra = {}) => ({ type: 'object', additionalProperties: values, description, ...extra })
+const lang = (description) => oneOf(LANG, `${description} (en, or ro written without diacritics)`, { default: 'en' })
+
+/** The whole configuration, team and personal keys together. */
+export const SCHEMA = obj({
+  $schema: str('Path or URL of the JSON Schema, for editors'),
+  version: str('The exact agent-os version this project is pinned to', { pattern: '^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$' }),
+  profile: oneOf(['greenfield', 'spec-first', 'active', 'maintenance'], 'Where the project is in its life', { default: 'active' }),
+  platform: obj({
+    type: oneOf(['github', 'gitlab'], 'The code platform', { default: 'github' }),
+    host: str('Base URL for GitHub Enterprise Server or GitLab self-managed; omit for github.com and gitlab.com', { pattern: '^https?://' }),
+    project: str('owner/name (GitHub) or group/subgroup/name (GitLab)', { pattern: '^[^/\\s]+(/[^/\\s]+)+$' }),
+    caFile: str('Private CA bundle for a self-managed host, relative to the repository'),
+    board: obj({
+      owner: str('The user or organization that owns the board'),
+      number: int('The board (GitHub Project) number', { minimum: 1 }),
+    }, 'The planning board (GitHub Projects v2) issues are placed on, when there is one'),
+  }, 'Which platform and project agent-os talks to', { default: {} }),
+  branches: obj({
+    integration: str('Feature PRs and MRs target this branch; it is the default branch', { default: 'development' }),
+    production: str('Releases merge into this branch', { default: 'main' }),
+    requiredChecks: list(str('A check name, such as ci'), 'Checks that must pass before merging into either branch', { default: [] }),
+    requiredApprovals: int('Approving reviews required on pull or merge requests', { minimum: 0, maximum: 10, default: 0 }),
+    mergeMethod: oneOf(['squash', 'merge', 'rebase'], 'How /ship merges change requests into the integration branch', { default: 'squash' }),
+    prefixes: map({ type: 'string', pattern: '^[a-z0-9][a-z0-9._-]*$', description: 'The branch prefix for this issue type' }, 'Branch prefixes by issue type (feature, bug, docs, chore, research), when the team uses its own (feature/, bugfix/); /discover proposes them', { default: {} }),
+  }, 'Branch roles', { default: {} }),
+  languages: obj({
+    chat: lang('Language the agent talks to you in'),
+    issues: lang('Issue titles, bodies and comments the agent starts'),
+    prs: lang('Pull or merge request titles, descriptions and comments'),
+    commits: lang('Commit messages'),
+    branches: lang('Branch slugs'),
+    labels: lang('Label names and descriptions'),
+    milestones: lang('Milestone titles and descriptions'),
+    releases: lang('Release notes'),
+    codeComments: lang('Comments written in code'),
+    docs: lang('Human documentation in docs/'),
+    journal: lang('Journal entries and decision records'),
+  }, 'Language per area', { default: {} }),
+  conventions: obj({
+    types: list(str('A change type'), 'Allowed types in change-request titles and commit subjects', { default: ['feat', 'fix', 'docs', 'chore', 'refactor', 'perf', 'test', 'ci', 'build', 'style', 'revert'] }),
+    maxTitleLength: int('Longest change-request title or commit subject, issue suffix included', { minimum: 30, maximum: 200, default: 72 }),
+    exempt: list(str('A regular expression; matching titles are not checked'), 'Titles exempt from the checks (syncs, bots)', { default: ['^chore: sync \\S+ into \\S+$', '^(chore|build)\\(deps(-dev)?\\): '] }),
+  }, 'Title and commit message conventions', { default: {} }),
+  packs: list(str('A pack id'), 'Optional packs installed in this project', { default: [] }),
+  slots: map({ type: ['string', 'null'], description: 'The skill bound to this slot, or null for none' }, 'Capability slots and the skills bound to them', { default: {} }),
+  gate: map(str('The command that runs this suite'), 'Test and check suites by name', { default: {} }),
+  standards: obj({
+    maxFileLines: int('Remind when a code file grows past this many lines', { minimum: 50, default: 500 }),
+  }, 'Mechanical standards checks (on edit and in doctor)', { default: {} }),
+  testing: obj({
+    exclude: list(str('A path prefix or glob that needs no tests (generated code, vendored files)'), 'Paths agent-os test gaps leaves out', { default: [] }),
+    map: map(list(str('Where its test lives: a path with {dir}, {name} and {ext}, e.g. "{dir}/{name}.test.{ext}"')), 'Source globs and where their tests live ("src/**/*.ts": ["{dir}/{name}.test.ts"]); files no glob matches use the built-in naming rules', { default: {} }),
+  }, 'Test planning and gaps', { default: {} }),
+  gateAffected: obj({
+    command: str('The command that tests one component, with {id}, {path} and {name}, e.g. "pnpm --filter ./{path} test"; the gate runs it for each affected component'),
+  }, 'Affected components in a monorepo: only the components a change touches, and those that depend on them, are tested', { default: {} }),
+  gateLayers: map(list(str('A suite name from "gate"')), 'Stack layers and the gate suites a change to them needs ("data-layer": ["migrations"]), matched through the layer paths in stack.yaml', { default: {} }),
+  gatePaths: map(list(str('A suite name from "gate"')), 'Path globs and the gate suites a change to them needs ("docs/**": ["docs"]); without it every suite runs', { default: {} }),
+  requires: obj({
+    mcp: list(obj({
+      name: str('Server name as registered in Claude Code'),
+      scope: oneOf(['project', 'user'], 'Where the server is configured'),
+      transport: oneOf(['stdio', 'http', 'sse'], 'How the server is reached'),
+      url: str('http/sse: the server URL, used in the fix command', { pattern: '^https?://' }),
+      command: str('stdio: the command that starts the server, used in the fix command'),
+      optional: bool('A missing optional server is a warning, not a failure', { default: false }),
+      why: str('What needs it'),
+    }, 'One MCP server', { required: ['name', 'scope'] }), 'MCP servers the project needs', { default: [] }),
+    cli: map(str('A semver range, or * for any version'), 'Command-line tools and their versions', { default: {} }),
+    platformScopes: list(str('A token scope'), 'Token scopes the platform CLI needs', { default: [] }),
+    env: list(str('An environment variable name', { pattern: '^[A-Za-z_][A-Za-z0-9_]*$' }), 'Variables that must be set (values are never read)', { default: [] }),
+    plugins: list(str('A Claude Code plugin'), 'Plugins the project expects', { default: [] }),
+  }, 'What a working setup needs, checked by agent-os env', { default: {} }),
+  upstream: obj({
+    enabled: bool('Allow /upstream to file issues on the public agent-os repository (default: on, off on a self-managed host)'),
+  }, 'Feedback to the agent-os project', { default: {} }),
+  security: obj({
+    advisories: obj({
+      enabled: bool('Let the advisory watch ask OSV.dev and CISA KEV about package names and versions (default: on, off on a self-managed host)'),
+      osvUrl: str('An OSV-compatible querybatch endpoint, e.g. an internal mirror', { pattern: '^https?://' }),
+      kevUrl: str('Where the CISA KEV catalog (JSON) is read from, e.g. an internal mirror', { pattern: '^https?://' }),
+    }, 'The advisory watch', { default: {} }),
+    scanners: list(str('A scanner command, e.g. gitleaks, osv-scanner, semgrep'), 'Scanners the team runs; agent-os env reports the missing ones (agent-os never installs or runs them)', { default: [] }),
+    reports: list(str('A path to a scanner report (SARIF or gitleaks JSON)'), 'Scanner reports the security pass reads', { default: [] }),
+    acceptedRisks: list(obj({
+      id: str('The advisory id (GHSA-…, CVE-…, OSV id)'),
+      reason: str('Why the risk is accepted'),
+      by: str('Who accepted it'),
+      until: str('Review again by this date (YYYY-MM-DD)', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
+    }, 'An accepted risk', { required: ['id', 'reason', 'by'] }), 'Advisories the owners accepted in writing; the release gate lets them through', { default: [] }),
+  }, 'Security: the advisory watch and accepted risks', { default: {} }),
+  compliance: obj({
+    euOnly: bool('Flag providers without confirmed EU regions', { default: false }),
+  }, 'Compliance constraints', { default: {} }),
+  contextBudgets: map(str('A size such as 8KB', { pattern: '^\\d+(\\.\\d+)?\\s?(B|KB|MB)$' }), 'Size budgets per file or glob', { default: {} }),
+  legacy: list(str('A legacy feature id'), 'Legacy features this project keeps enabled', { default: [] }),
+  guards: obj({
+    rules: list(obj({
+      id: str('A short name, shown when the rule refuses something'),
+      type: oneOf(['forbid-flags', 'forbid-pattern', 'require-env', 'min-free-memory'], 'What the rule checks'),
+      pattern: str('A regular expression matched against each shell command (after splitting on && || ; |)'),
+      flags: list(str('A flag such as --no-verify'), 'forbid-flags: flags refused after a matching command', { default: [] }),
+      env: str('require-env: the variable that must be set, e.g. DB_RESET_OK=1 in the command or the environment', { pattern: '^[A-Za-z_][A-Za-z0-9_]*$' }),
+      message: str('What to tell the agent when the rule refuses'),
+    }, 'One guard rule', { required: ['id', 'type', 'pattern'] }), 'Project guard rules, added to the built-in ones', { default: [] }),
+    disable: list(str('The id of a built-in guard'), 'Built-in guards turned off for this project', { default: [] }),
+  }, 'Guards that refuse risky shell commands before they run (PreToolUse)', { default: {} }),
+  npmRegistry: str('The npm registry (an internal mirror) agent-os is installed from; passed to npx and to the generated CI jobs', { pattern: '^https?://' }),
+  artifacts: obj({
+    maxPageKb: int('doctor warns when an artifact page is larger than this', { minimum: 16, default: 2048 }),
+    siteUrl: str('Where the artifact site is published (e.g. https://acme.github.io/app); artifact link adds it after the repository link', { pattern: '^https?://' }),
+    pages: bool('Install the workflow that publishes artifacts to GitHub or GitLab Pages (the index is built in CI, never committed)', { default: false }),
+  }, 'Artifacts (artifacts/<date>-<slug>/)', { default: {} }),
+  ci: obj({
+    image: str('The container image generated CI jobs run in, e.g. from the internal registry (default node:22)'),
+    tags: list(str('A runner tag'), 'Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels)', { default: [] }),
+    loop: bool('Install the agent-os/loop job (turn it off only when the project\'s own CI already runs agent-os check loop)', { default: true }),
+    gate: bool('Install the agent-os/gate job (turn it off only when the project\'s own CI already runs agent-os gate)', { default: true }),
+    retro: bool('Install the weekly scheduled job that keeps the Retro issue current', { default: true }),
+    labels: bool('Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels)', { default: false }),
+    securityWatch: oneOf(['off', 'daily', 'weekly'], 'Install the scheduled job that keeps the Security digest issue current', { default: 'off' }),
+    labelsEnvironment: str('GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret)'),
+  }, 'How generated CI jobs run: image and runners', { default: {} }),
+  adoption: obj({
+    warnOnlyUntil: str('Until this date (YYYY-MM-DD) guards only warn instead of refusing', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
+    cutoff: str('Forward-only: doctor ignores issues and journal entries older than this date (YYYY-MM-DD)', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
+  }, 'Adoption mode for projects new to agent-os', { default: {} }),
+  machine: obj({
+    maxWorkers: int('Most agent sessions to run in parallel on this laptop', { minimum: 1, default: 3 }),
+    minFreeMb: int('Refuse heavy commands below this much free memory', { minimum: 0, default: 1500 }),
+    devPortStart: int('First port for dev servers in worktrees', { minimum: 1024, maximum: 65535, default: 5174 }),
+    proxy: str('HTTP(S) proxy every tool agent-os runs goes through (an HTTPS_PROXY already set wins); no credentials here', { pattern: '^https?://' }),
+    noProxy: list(str('A host or domain reached without the proxy'), 'Hosts the proxy is bypassed for', { default: [] }),
+  }, "This laptop's limits", { personal: true, default: {} }),
+  orchestrator: bool('Run the optional orchestrator role in this laptop\'s sessions', { personal: true, default: false }),
+}, 'agent-os configuration')
+
+// chat is the one personal key inside an otherwise team object.
+SCHEMA.properties.languages.properties.chat.personal = true
+
+/**
+ * Returns the part of the schema that belongs in one file: `personal: true` keeps only personal keys,
+ * `false` keeps only team keys. Objects without a flag of their own are kept when any child is kept.
+ */
+export function pick(node, personal) {
+  if (node.personal !== undefined) return node.personal === personal ? node : null
+  if (node.type !== 'object' || !node.properties) return personal ? null : node
+  const properties = {}
+  for (const [key, child] of Object.entries(node.properties)) {
+    const kept = pick(child, personal)
+    if (kept) properties[key] = kept
+  }
+  return Object.keys(properties).length ? { ...node, properties } : null
+}
+
+/** Converts the internal schema to a JSON Schema (draft 2020-12) document for editors and other tools. */
+export function toJsonSchema(personal) {
+  const strip = (node) => {
+    const { personal: _p, properties, items, additionalProperties, ...rest } = node
+    const out = { ...rest }
+    if (properties) {
+      out.properties = Object.fromEntries(Object.entries(properties).map(([k, v]) => [k, strip(v)]))
+      out.additionalProperties = false
+    }
+    if (items) out.items = strip(items)
+    if (additionalProperties) out.additionalProperties = strip(additionalProperties)
+    return out
+  }
+  const root = strip(pick(SCHEMA, personal))
+  return {
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $id: `https://github.com/cosmin-sisman/agent-os/schema/${personal ? 'local' : 'agent-os'}.schema.json`,
+    title: personal ? 'agent-os personal settings (.agent-os/local.json)' : 'agent-os team configuration (agent-os.json)',
+    ...root,
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "runbook",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Keep a finished product safe to maintain and easy to take over - write the deploy, rollback and restore runbooks and the takeover dossier from the release flow, and run the upkeep audit (vulnerable dependencies, secrets, licenses) whose prioritized issues are filed only on confirmation."
+}

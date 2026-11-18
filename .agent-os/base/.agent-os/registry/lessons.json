@@ -1,0 +1,10 @@
+{
+  "name": "lessons",
+  "origin": "core",
+  "source": "agent-os",
+  "version": "0.0.0",
+  "license": "MIT",
+  "provides": [],
+  "managed": true,
+  "description": "Capture, recall, search and triage lessons learned."
+}
