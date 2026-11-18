@@ -49,3 +49,21 @@ agent-os journal check                     # every entry against the schema; exi
 ```
 
 `add` takes the author from your platform login (`--author` to set it). Lists are rendered from the files every time: nothing generated is committed. `doctor` (#27) runs `journal check`; until then this repository runs it in `npm test`.
+
+## The chronicle: `agent-os chronicle`
+
+```bash
+agent-os chronicle --since 2026-11-01              # everything since that date
+agent-os chronicle --since 2026-11-01 --issue 28    # one issue's story, with the change requests that close or reference it
+agent-os chronicle --since 2026-11-01 --area ci
+```
+
+One timeline combines the platform and the journal:
+- issues and change requests opened, closed and merged;
+- comments and reviews;
+- milestones and releases;
+- the journal entries.
+
+Every line links its source. `--issue` follows the conversation: an issue's comments, plus each change request whose description says `Closes #N` or `Refs #N`, plus the journal entries that reference any of them. So a decision made in a comment shows up next to the change request that implemented it.
+
+The render goes to `.agent-os/cache/chronicle.md` and `.json` and is never committed. On GitLab the project events API supplies the same events.

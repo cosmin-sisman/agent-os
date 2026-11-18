@@ -105,6 +105,29 @@ export class GitLabTracker {
 
   openIssues() { return this.pages(this.p('issues?state=opened'), 20).map(issueOf) }
 
+  /** What happened since a time, from the project events API (one list for issues, merge requests and notes). */
+  activity(since) {
+    const KIND = { opened: 'opened', closed: 'closed', merged: 'merged', 'commented on': 'comment', accepted: 'merged' }
+    const events = []
+    for (const e of this.pages(this.p(`events?after=${String(since).slice(0, 10)}&sort=asc`), 20)) {
+      if (e.created_at < since) continue
+      const action = KIND[e.action_name]
+      if (!action) continue
+      const cr = e.target_type === 'MergeRequest' || e.note?.noteable_type === 'MergeRequest'
+      const number = e.target_iid ?? e.note?.noteable_iid ?? null
+      const kind = action === 'comment' ? 'comment' : `${cr ? 'cr' : 'issue'}-${action}`
+      const ref = cr ? `merge_requests/${number}` : `issues/${number}`
+      events.push({ at: e.created_at, kind, number, title: e.target_title ?? null, actor: e.author?.username ?? null, url: number ? `${this.host ? `https://${this.host}` : 'https://gitlab.com'}/${this.project}/-/${ref}` : null, labels: [], body: e.note?.body ?? '', cr })
+    }
+    for (const m of this.pages(this.p('milestones'), 5)) {
+      if (m.created_at >= since) events.push({ at: m.created_at, kind: 'milestone-opened', number: null, title: m.title, actor: null, url: m.web_url, labels: [], body: '' })
+    }
+    for (const r of this.pages(this.p('releases'), 3)) {
+      if ((r.released_at ?? r.created_at) >= since) events.push({ at: r.released_at ?? r.created_at, kind: 'release', number: null, title: r.name ?? r.tag_name, actor: r.author?.username ?? null, url: r._links?.self ?? null, labels: [], body: '' })
+    }
+    return events
+  }
+
   assignedIssues(login, { limit = 10 } = {}) {
     return (this.api.rest('GET', this.p(`issues?state=opened&assignee_username=${encodeURIComponent(login)}&order_by=updated_at&sort=desc&per_page=${limit}`)) ?? []).map(issueOf)
   }

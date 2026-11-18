@@ -92,6 +92,51 @@ export class GitHubTracker {
     return (this.gh.rest('GET', `repos/${this.repo}/issues?state=open&assignee=${encodeURIComponent(login)}&sort=updated&direction=desc&per_page=${limit}`) ?? []).filter((i) => !i.pull_request).map(issueOf)
   }
 
+  /**
+   * What happened since a time: issues and change requests opened, closed and merged, comments, reviews, milestones
+   * and releases, as events { at, kind, number, title, actor, url, labels, body }.
+   */
+  activity(since, { maxReviews = 30 } = {}) {
+    const after = (t) => t && t >= since
+    const pages = (path, max = 20) => {
+      const out = []
+      for (let page = 1; page <= max; page++) {
+        const batch = this.gh.rest('GET', `${path}${path.includes('?') ? '&' : '?'}per_page=100&page=${page}`) ?? []
+        out.push(...batch)
+        if (batch.length < 100) break
+      }
+      return out
+    }
+    const events = []
+    const items = pages(`repos/${this.repo}/issues?state=all&sort=updated&direction=desc&since=${encodeURIComponent(since)}`)
+    for (const i of items) {
+      const cr = Boolean(i.pull_request)
+      const base = { number: i.number, title: i.title, labels: (i.labels ?? []).map((l) => l.name), body: i.body ?? '', url: i.html_url, cr }
+      if (after(i.created_at)) events.push({ ...base, at: i.created_at, kind: cr ? 'cr-opened' : 'issue-opened', actor: i.user?.login ?? null })
+      if (cr && after(i.pull_request?.merged_at)) events.push({ ...base, at: i.pull_request.merged_at, kind: 'cr-merged', actor: i.closed_by?.login ?? null })
+      else if (after(i.closed_at)) events.push({ ...base, at: i.closed_at, kind: cr ? 'cr-closed' : 'issue-closed', actor: i.closed_by?.login ?? null })
+    }
+    for (const c of pages(`repos/${this.repo}/issues/comments?sort=created&direction=asc&since=${encodeURIComponent(since)}`)) {
+      if (!after(c.created_at)) continue
+      const number = Number(String(c.issue_url).split('/').pop())
+      const item = items.find((i) => i.number === number)
+      events.push({ at: c.created_at, kind: 'comment', number, title: item?.title ?? null, actor: c.user?.login ?? null, url: c.html_url, labels: (item?.labels ?? []).map((l) => l.name), body: c.body ?? '', cr: Boolean(item?.pull_request) })
+    }
+    for (const pr of items.filter((i) => i.pull_request).slice(0, maxReviews)) {
+      for (const r of this.gh.rest('GET', `repos/${this.repo}/pulls/${pr.number}/reviews?per_page=100`) ?? []) {
+        if (after(r.submitted_at) && r.state !== 'PENDING') events.push({ at: r.submitted_at, kind: 'review', number: pr.number, title: pr.title, actor: r.user?.login ?? null, url: r.html_url, labels: (pr.labels ?? []).map((l) => l.name), body: r.state.toLowerCase().replace(/_/g, ' '), cr: true })
+      }
+    }
+    for (const m of pages(`repos/${this.repo}/milestones?state=all`, 5)) {
+      if (after(m.created_at)) events.push({ at: m.created_at, kind: 'milestone-opened', number: null, title: m.title, actor: m.creator?.login ?? null, url: m.html_url, labels: [], body: '' })
+      if (after(m.closed_at)) events.push({ at: m.closed_at, kind: 'milestone-closed', number: null, title: m.title, actor: null, url: m.html_url, labels: [], body: '' })
+    }
+    for (const r of pages(`repos/${this.repo}/releases`, 3)) {
+      if (after(r.published_at)) events.push({ at: r.published_at, kind: 'release', number: null, title: r.name || r.tag_name, actor: r.author?.login ?? null, url: r.html_url, labels: [], body: '' })
+    }
+    return events
+  }
+
   /** Issues closed recently with this person assigned, newest first. */
   recentlyClosed(login, { limit = 20 } = {}) {
     return (this.gh.rest('GET', `repos/${this.repo}/issues?state=closed&assignee=${encodeURIComponent(login)}&sort=updated&direction=desc&per_page=${limit}`) ?? []).filter((i) => !i.pull_request).map(issueOf)
