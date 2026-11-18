@@ -54,7 +54,7 @@ export const COMMANDS = [
   { name: 'decision', summary: 'Create, list and check decision records with date-based ids', status: 'new', issue: 23, load: () => import('../commands/decision.mjs') },
   { name: 'chronicle', summary: 'One timeline from the platform and the journal, rendered into the cache', status: 'new', issue: 25, load: () => import('../commands/chronicle.mjs') },
   { name: 'upstream', summary: 'Draft an improvement for the public agent-os repository, filtered for privacy', status: 'new', issue: 71, load: () => import('../commands/upstream.mjs') },
-  { name: 'stack', summary: 'Show, change, detect or import the stack map', status: 'planned', issue: 74 },
+  { name: 'stack', summary: 'Show and check the stack map against the catalog; write one from a blueprint', status: 'new', issue: 74, load: () => import('../commands/stack.mjs') },
   { name: 'system', summary: 'Map components, interfaces, exposure and contracts', status: 'planned', issue: 113 },
   { name: 'artifact', summary: 'Create, build, verify and link artifacts', status: 'planned', issue: 82 },
   { name: 'skills', summary: 'The skill index: core, external and local skills, with what each does', status: 'new', issue: 41, load: () => import('../commands/skills.mjs') },
