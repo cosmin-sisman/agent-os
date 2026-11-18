@@ -5,7 +5,7 @@
 // at the same indentation), inline `[a, b]` and `{k: v}`, "double" (JSON escapes) and 'single' quoted strings,
 // plain scalars typed as null (null, ~, empty), booleans (true, false), integers, floats or strings, `#` comments.
 // Refused: tabs in indentation, anchors (&), aliases (*), tags (!), multiple documents (---, ...),
-// block scalars (| and >), merge keys (<<) and duplicate keys.
+// merge keys (<<) and duplicate keys. Block scalars (| and >, with - or + chomping) are read as strings.
 
 /** A parse error that points at the file, line and column. */
 export class YamlError extends Error {
@@ -47,20 +47,59 @@ export function parse(text, { file = '<input>' } = {}) {
 
 function tokenize(text, file) {
   const out = []
-  const raw = text.replace(/^﻿/, '').split(/\r?\n/)
-  raw.forEach((source, n) => {
+  const raw = text.replace(/^\uFEFF/, '').split(/\r?\n/)
+  for (let n = 0; n < raw.length; n++) {
+    const source = raw[n]
     const line = n + 1
     const lead = source.match(/^[ \t]*/)[0]
     const tab = lead.indexOf('\t')
     if (tab >= 0 && lead.length < source.length) throw new YamlError('tabs are not allowed for indentation; use spaces', { file, line, col: tab + 1 })
     const body = stripComment(source, { file, line }).trimEnd()
-    if (!body.trim()) return
+    if (!body.trim()) continue
     const indent = body.length - body.trimStart().length
-    const content = body.slice(indent)
+    let content = body.slice(indent)
     if (/^(---|\.\.\.)(\s|$)/.test(content) && indent === 0) throw new YamlError('multiple documents (--- or ...) are not supported; use one document per file', { file, line, col: 1 })
     if (/^%/.test(content) && indent === 0) throw new YamlError('directives (%) are not supported', { file, line, col: 1 })
+    // A block scalar (| literal, > folded, with - or + chomping): its more-indented lines are taken verbatim
+    // (comments and blank lines included) and become one double-quoted string, so the rest of the parser is unchanged.
+    const bs = content.match(/^((?:- )*(?:[^\s#'"[{][^#]*?:\s+)?)([|>])([+-]?)([1-9]?)([+-]?)$/)
+    if (bs && bs[1] !== '') {
+      const chomp = bs[3] || bs[5]
+      let end = n + 1
+      let blockIndent = bs[4] ? indent + Number(bs[4]) : null
+      const parts = []
+      for (; end < raw.length; end++) {
+        const r = raw[end]
+        if (!r.trim()) { parts.push(''); continue }
+        const ind = r.match(/^ */)[0].length
+        if (ind <= indent) break
+        blockIndent ??= ind
+        if (ind < blockIndent) break
+        parts.push(r.slice(blockIndent))
+      }
+      // Trailing blank lines belong to the chomping, not to the next key.
+      let trailing = 0
+      while (parts.length && parts.at(-1) === '') { parts.pop(); trailing++ }
+      let value
+      if (bs[2] === '|') value = parts.join('\n')
+      else {
+        value = ''
+        parts.forEach((p, i) => {
+          if (i === 0) { value = p; return }
+          const prev = parts[i - 1]
+          const literalish = /^\s/.test(p) || /^\s/.test(prev)
+          value += p === '' ? '\n' : prev === '' || literalish ? (prev === '' && !literalish ? p : `\n${p}`) : ` ${p}`
+        })
+      }
+      if (chomp === '+') value += '\n'.repeat(trailing + (parts.length ? 1 : 0))
+      else if (chomp !== '-' && parts.length) value += '\n'
+      content = `${bs[1]}${JSON.stringify(value)}`
+      out.push({ indent, text: content, line, col: indent + 1, source })
+      n = end - 1
+      continue
+    }
     out.push({ indent, text: content, line, col: indent + 1, source })
-  })
+  }
   return out
 }
 

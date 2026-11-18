@@ -9,6 +9,8 @@ agent-os/gate:
 {{#if runner.tags}}
   tags: {{{runner.tags}}}
 {{/if}}
+  timeout: 30m
+  interruptible: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "{{{branches.integration}}}" || $CI_COMMIT_BRANCH == "{{{branches.production}}}"

@@ -106,15 +106,24 @@ test('a tab-indented file is refused, saying tabs are not allowed and where', ()
   refuses('a:\n  \tb: 1', /tabs are not allowed/, 2, 3)
 })
 
-test('anchors, aliases, tags, documents, block scalars and merge keys are refused with their position', () => {
+test('anchors, aliases, tags, documents and merge keys are refused with their position', () => {
   refuses('a: &x 1', /anchors/, 1, 4)
   refuses('a: *x', /aliases/, 1, 4)
   refuses('a: !str 1', /tags/, 1, 4)
   refuses('---\na: 1', /multiple documents/, 1, 1)
   refuses('a: 1\n...', /multiple documents/, 2, 1)
-  refuses('a: |\n  text', /block scalars/, 1, 4)
-  refuses('a: >', /block scalars/, 1, 4)
   refuses('<<: {a: 1}', /merge keys/, 1, 1)
+})
+
+test('block scalars: literal and folded, chomping, verbatim content, in maps and lists, with positions after them', () => {
+  assert.deepEqual(parse('run: |\n  echo "a" # kept\n\n  echo b\nnext: 1\n'), { run: 'echo "a" # kept\n\necho b\n', next: 1 })
+  assert.deepEqual(parse('a: |-\n  x\n  y\n'), { a: 'x\ny' })
+  assert.deepEqual(parse('a: |+\n  x\n\nb: 2\n'), { a: 'x\n\n', b: 2 })
+  assert.deepEqual(parse('a: >\n  one\n  two\n\n  three\n'), { a: 'one two\nthree\n' })
+  assert.deepEqual(parse('a: >-\n  one\n    indented\n  two\n'), { a: 'one\n  indented\ntwo' })
+  assert.deepEqual(parse('steps:\n  - run: |\n      npm ci\n      npm test\n  - |\n    plain item\n'), { steps: [{ run: 'npm ci\nnpm test\n' }, 'plain item\n'] })
+  assert.deepEqual(parse('a: |\nb: 1\n'), { a: '', b: 1 }, 'an empty block scalar')
+  refuses('a: |\n  x\nb: [\n', /unclosed/, 3, 5)
 })
 
 test('structural errors point at the offending line', () => {

@@ -26,6 +26,9 @@ steps:                          # a list of maps
 owners:                         # a list may also sit directly under its key
 - alice
 - bob
+script: |                       # block scalars: | keeps line breaks, > folds them into spaces;
+  echo "one"                    #   |- and >- drop the final line break, |+ and >+ keep trailing blank lines.
+  echo "two"                    #   The content is taken verbatim: a # inside it is text, not a comment.
 ```
 
 ## What is refused
@@ -36,7 +39,6 @@ owners:                         # a list may also sit directly under its key
 | anchors and aliases | `&base`, `*base` | anchors (&) / aliases (*) are not supported |
 | tags | `!str 1` | tags (!) are not supported |
 | several documents | `---`, `...` | multiple documents are not supported |
-| block scalars | `\|`, `>` | block scalars are not supported; use a quoted string with \n |
 | merge keys | `<<: *base` | merge keys (<<) are not supported |
 | duplicate keys | `a: 1` twice | duplicate key "a" |
 | multi-line inline lists or maps | `[1,` then `2]` on the next line | unclosed "[" (inline lists must fit on one line) |
