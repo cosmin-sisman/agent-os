@@ -3,6 +3,7 @@
 // id for unknown ones; `new --from <blueprint>` writes stack.yaml from a reference stack.
 
 import { existsSync, writeFileSync } from 'node:fs'
+import { refreshThreatModel, threatModelStale } from '../security/threats.mjs'
 import { join } from 'node:path'
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { ask } from '../cli/prompt.mjs'
@@ -146,6 +147,12 @@ ${problems.length} problem(s):
       `${r.dryRun ? 'would write' : 'wrote'} the decision record ${r.decision} (proposed): ${r.after.name} vs ${r.before.name}, complexity ${r.before.complexity ?? '-'} → ${r.after.complexity ?? '-'}, AI-friendliness ${r.before.aiFriendly ?? '-'} → ${r.after.aiFriendly ?? '-'}, provider cost ${r.before.cost ?? '-'} → ${r.after.cost ?? '-'}`,
       ...(r.proposed.length ? ['', 'proposed follow-up issues (create them with /ticket or agent-os issue new):', ...r.proposed.map((p) => `  - ${p.title}`)] : []),
     ]
+    // The stack changed: a threat model built from it is refreshed in the same step (#110).
+    if (!r.dryRun && threatModelStale(ctx.cwd)?.stale.length) {
+      const t = refreshThreatModel(ctx.cwd, { lang: languageFor(loadConfig(ctx.cwd).merged, 'docs'), now: ctx.io.now ?? new Date() })
+      lines.push(`refreshed the threat model ${t.id}: ${t.model.threats.length} threat(s) over ${t.model.layers.length} layer(s)`)
+      r.threatModel = t.id
+    }
     ctx.output(r, lines.join('\n'))
     return EXIT.OK
   }

@@ -1,0 +1,35 @@
+{
+  "kind": "threat-model",
+  "lang": "ro",
+  "title": "",
+  "subtitle": "",
+  "sections": [
+    {
+      "heading": "Straturi",
+      "table": {
+        "columns": [
+          "Strat",
+          "Tehnologie",
+          "Grup"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Amenintari (STRIDE)",
+      "table": {
+        "columns": [
+          "Strat",
+          "Categorie",
+          "Amenintare",
+          "Masura"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "heading": "Fluxuri de date",
+      "items": []
+    }
+  ]
+}

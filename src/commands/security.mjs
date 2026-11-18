@@ -1,6 +1,8 @@
 // `agent-os security`: `watch` keeps track of the advisories that touch the dependencies (only package names and
 // versions leave the project; off by default on a self-managed host); `pass` is the security pass on a change: the
-// checklists of the layers it touches, the problems its files show, and the scanner reports the project produced.
+// checklists of the layers it touches, the problems its files show, and the scanner reports the project produced;
+// `threat-model` creates or refreshes the living STRIDE threat model from stack.yaml; `exercise` walks a tabletop
+// incident against the runbooks. Exercises are text only: nothing is run, nothing is filed.
 
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { loadConfig } from '../config/config.mjs'
@@ -12,13 +14,15 @@ import { MARKER, TITLE, digestBody, prioritize, saveCache } from '../security/di
 import { securityPass } from '../security/pass.mjs'
 import { changedFiles } from '../gate/gate.mjs'
 import { systemGit } from '../workflow/start.mjs'
+import { EXERCISES, exercise, refreshThreatModel } from '../security/threats.mjs'
 
-export const usage = 'agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--report <sarif|gitleaks.json>…]'
+export const usage = 'agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--report <sarif|gitleaks.json>…]   ·   threat-model [--force] [--dry-run]   ·   exercise [<name>]'
 
 export const options = {
   issue: { type: 'boolean', description: 'watch: create or update the one Security digest issue' },
   base: { type: 'string', description: 'pass: the branch to compare with (default branches.integration)' },
   report: { type: 'string', multiple: true, description: 'pass: a scanner report to read (SARIF, gitleaks JSON); adds to security.reports' },
+  force: { type: 'boolean', description: 'threat-model: regenerate even when it is current' },
 }
 
 /** @param {import('../cli/context.mjs').Context} ctx */
@@ -26,6 +30,19 @@ export async function run(ctx) {
   const [action] = ctx.positionals
   const { merged } = loadConfig(ctx.cwd)
   if (action === 'pass') return pass(ctx, merged)
+  if (action === 'threat-model') {
+    const r = refreshThreatModel(ctx.cwd, { lang: languageFor(merged, 'docs'), now: ctx.io.now ?? new Date(), dryRun: ctx.dryRun, force: ctx.values.force })
+    const verb = { current: 'is current', create: 'would be created', refresh: 'would be refreshed', created: 'created', refreshed: 'refreshed from stack.yaml' }[r.action]
+    ctx.output(r, [`threat model ${r.id} ${verb}: ${r.model.threats.length} threat(s) over ${r.model.layers.length} layer(s), ${r.model.flows.length} data flow(s)`, ...(r.model.uncovered.length ? [`not modelled (no layer group): ${r.model.uncovered.join(', ')}`] : [])].join('\n'))
+    return EXIT.OK
+  }
+  if (action === 'exercise') {
+    const [, name] = ctx.positionals
+    if (!name) { ctx.output({ exercises: Object.entries(EXERCISES).map(([id, e]) => ({ id, title: e.title })) }, ['tabletop exercises (agent-os security exercise <name>):', ...Object.entries(EXERCISES).map(([id, e]) => `  ${id}: ${e.title}`)].join('\n')); return EXIT.OK }
+    const r = exercise(ctx.cwd, name)
+    ctx.output(r, [r.title, `runbooks: ${r.runbooks.length ? r.runbooks.join(', ') : 'none found (docs/runbooks/, runbooks/, RUNBOOK*.md)'}`, ...r.steps.map((s) => `  ${s.covered ? 'ok  ' : 'GAP '} ${s.step}${s.runbook ? ` (${s.runbook})` : ''}`), ...(r.proposed ? ['', `proposed: ${r.proposed.title} [${r.proposed.labels.join(', ')}]`] : []), '', r.note].join('\n'))
+    return r.proposed ? EXIT.CHECK_FAILED : EXIT.OK
+  }
   if (action !== 'watch') throw new CliError(action ? `unknown action "${action}"` : 'which action?', { hint: `usage: ${usage}` })
   const settings = watchSettings(merged)
   const packages = inventory(ctx.cwd)

@@ -41,7 +41,7 @@ export const CHECKLISTS = {
     { id: 'V14.1.3', text: 'infrastructure defaults are closed (no 0.0.0.0/0, no public buckets)' },
   ],
 }
-const GROUP_OF_LAYER = {
+export const GROUP_OF_LAYER = {
   auth: 'auth', 'internal-api': 'api', 'public-api-webhooks': 'api', 'backend-services': 'api', 'integration-service': 'api', realtime: 'api',
   'data-layer': 'data', storage: 'data', 'cache-queue': 'data',
   'public-frontend': 'frontend', 'internal-frontend': 'frontend', mobile: 'frontend', cms: 'frontend',
