@@ -43,15 +43,29 @@ test('pr threads lists open review threads; reply --resolve answers and resolves
     { id: 'T1', isResolved: false, isOutdated: false, path: 'src/a.mjs', line: 4, comments: { nodes: [{ author: { login: 'dan' }, body: 'De ce nu folosim map?\nmai mult', url: 'c1' }] } },
     { id: 'T2', isResolved: true, isOutdated: false, path: 'b', line: 1, comments: { nodes: [] } },
   ] } } } }
-  const gh = fakeGh({ 'graphql:repository': threads, 'graphql:addPullRequestReviewThreadReply': { addPullRequestReviewThreadReply: { comment: { url: 'c2' } } }, 'graphql:resolveReviewThread': { resolveReviewThread: { thread: { isResolved: true } } } })
+  const gh = fakeGh({ 'graphql:repository': (b) => (/reviewThreads/.test(b.query) ? threads : status({ state: 'SUCCESS', contexts: { nodes: [] } })), 'GET user': { login: 'me' }, 'graphql:addPullRequestReviewThreadReply': { addPullRequestReviewThreadReply: { comment: { url: 'c2' } } }, 'graphql:resolveReviewThread': { resolveReviewThread: { thread: { isResolved: true } } } })
   const list = await cli(['pr', 'threads', '160'], { gh })
   assert.equal(list.stdout, "T1  src/a.mjs:4\n  @dan: De ce nu folosim map?\n")
-  const dry = await cli(['pr', 'reply', 'T1', '--body-file', 'r.md', '--resolve', '--dry-run'], { gh, files: { 'r.md': 'Am schimbat in map.' } })
+  const dry = await cli(['pr', 'reply', 'T1', '--pr', '160', '--body-file', 'r.md', '--resolve', '--dry-run'], { gh, files: { 'r.md': 'Am schimbat in map.' } })
   assert.match(dry.stdout, /would reply to T1 and resolve it/)
   assert.equal(gh.calls.filter((c) => c.key.startsWith('graphql:add') || c.key.startsWith('graphql:resolve')).length, 0)
-  const r = await cli(['pr', 'reply', 'T1', '--body-file', 'r.md', '--resolve'], { gh, files: { 'r.md': 'Am schimbat in map.' } })
+  const r = await cli(['pr', 'reply', 'T1', '--pr', '160', '--body-file', 'r.md', '--resolve'], { gh, files: { 'r.md': 'Am schimbat in map.' } })
   assert.match(r.stdout, /replied and resolved: c2/)
   assert.deepEqual(gh.calls.find((c) => c.key === 'graphql:addPullRequestReviewThreadReply').body.variables, { t: 'T1', b: 'Am schimbat in map.' })
+})
+
+test('given a ro review comment, the reply is ro (ASCII): diacritics dropped, an English reply refused, unknown @handles defused', async () => {
+  const threads = { repository: { pullRequest: { reviewThreads: { nodes: [
+    { id: 'T1', isResolved: false, isOutdated: false, path: 'src/a.mjs', line: 4, comments: { nodes: [{ author: { login: 'dan' }, body: 'De ce nu folosim map aici? Este mai clar.', url: 'c1' }] } },
+  ] } } } }
+  const gh = fakeGh({ 'graphql:repository': (b) => (/reviewThreads/.test(b.query) ? threads : status({ state: 'SUCCESS', contexts: { nodes: [] } })), 'GET user': { login: 'me' }, 'graphql:addPullRequestReviewThreadReply': { addPullRequestReviewThreadReply: { comment: { url: 'c2' } } } })
+  const en = await cli(['pr', 'reply', 'T1', '--pr', '160', '--body-file', 'r.md'], { gh, files: { 'r.md': 'Good point, I switched it to a map and it is clearer now.' } })
+  assert.equal(en.code, 1)
+  assert.match(en.stdout, /not posted: the comment is in ro but the reply is in en: answer in ro \(ASCII, no diacritics\)/)
+  assert.equal(gh.calls.filter((c) => c.key.startsWith('graphql:add')).length, 0)
+  const ro = await cli(['pr', 'reply', 'T1', '--pr', '160', '--body-file', 'r.md'], { gh, files: { 'r.md': 'Ai dreptate @dan, am trecut pe map și e mai clar. Mulțumesc, @copilot-x.' } })
+  assert.equal(ro.code, 0, ro.stdout)
+  assert.equal(gh.calls.find((c) => c.key === 'graphql:addPullRequestReviewThreadReply').body.variables.b, 'Ai dreptate @dan, am trecut pe map si e mai clar. Multumesc, `copilot-x`.')
 })
 
 test('gate from the command line runs only what the diff needs and exits 1 on a failure', async () => {

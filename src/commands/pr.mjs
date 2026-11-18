@@ -2,6 +2,7 @@
 // when nothing is, `status` reports its checks and review, `threads` lists review threads and `reply` answers one.
 
 import { readFileSync } from 'node:fs'
+import { prepareReply } from '../collab/thread.mjs'
 import { resolve } from 'node:path'
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { loadConfig } from '../config/config.mjs'
@@ -18,7 +19,7 @@ export const usage = [
   'agent-os pr create --title "<title>" --body-file <file> [--draft] [--dry-run]',
   'agent-os pr status [<n>] [--watch]',
   'agent-os pr threads [<n>] [--all]',
-  'agent-os pr reply <thread-id> --body-file <file> [--resolve] [--dry-run]',
+  'agent-os pr reply <thread-id> --body-file <file> [--pr <n>] [--resolve] [--dry-run]   (in the comment\'s language; @mentions only for participants)',
 ].join('\n       ')
 
 export const options = {
@@ -29,6 +30,7 @@ export const options = {
   watch: { type: 'boolean', description: 'status: wait until no check is pending (at most 30 minutes)' },
   all: { type: 'boolean', description: 'threads: include resolved threads' },
   resolve: { type: 'boolean', description: 'reply: resolve the thread after replying' },
+  pr: { type: 'string', description: 'reply: the change request the thread is on (default: the one for this branch)' },
 }
 
 const read = (cwd, file) => {
@@ -95,7 +97,20 @@ export async function run(ctx) {
 
   if (action === 'reply') {
     if (!arg) throw new CliError('which thread?', { hint: 'agent-os pr threads' })
-    const r = tracker().replyToThread(arg, read(ctx.cwd, ctx.values['body-file']), { resolve: ctx.values.resolve, dryRun: ctx.dryRun })
+    const t = tracker()
+    let n = ctx.values.pr ? Number(String(ctx.values.pr).replace(/^[#!]/, '')) : null
+    if (!n) { const pr = t.pullRequestFor(git(['rev-parse', '--abbrev-ref', 'HEAD']).stdout.trim()); n = pr?.number ?? null }
+    const thread = n ? t.reviewThreads(n).find((x) => x.id === arg) : null
+    if (!thread) throw new CliError(`no review thread ${arg}${n ? ` on ${vocab.crRef}${n}` : ''}`, { hint: 'agent-os pr threads [<n>], and --pr <n> when the branch is not the change request\'s' })
+    let me = null
+    try { me = t.whoami?.() ?? null } catch { me = null }
+    let author = null
+    try { author = t.pullRequestStatus(n).author } catch { author = null }
+    const to = [...thread.comments].reverse().find((c) => c.author !== me) ?? thread.comments.at(-1)
+    const people = [...new Set([author, ...thread.comments.map((c) => c.author)].filter(Boolean))]
+    const reply = prepareReply(read(ctx.cwd, ctx.values['body-file']), { to, people, fallback: lang })
+    if (reply.problems.length) { ctx.output({ posted: false, ...reply }, `not posted: ${reply.problems.join('; ')}`); return EXIT.CHECK_FAILED }
+    const r = tracker().replyToThread(arg, reply.body, { resolve: ctx.values.resolve, dryRun: ctx.dryRun })
     ctx.output(r, r.dryRun ? `would reply to ${arg}${ctx.values.resolve ? ' and resolve it' : ''}` : `replied${r.resolved ? ' and resolved' : ''}: ${r.url ?? arg}`)
     return EXIT.OK
   }

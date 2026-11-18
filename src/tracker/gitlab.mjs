@@ -54,6 +54,13 @@ export class GitLabTracker {
     return this.cache.issues.get(number)
   }
 
+  /** The conversation on an issue or merge request: user notes, oldest first ({ author, bot, body, at, url }). */
+  comments(number, { changeRequest = false } = {}) {
+    return this.pages(this.p(`${changeRequest ? 'merge_requests' : 'issues'}/${number}/notes?sort=asc&order_by=created_at`), 10)
+      .filter((n) => !n.system)
+      .map((n) => ({ author: n.author?.username ?? null, bot: Boolean(n.author?.bot), body: n.body ?? '', at: n.created_at, url: null }))
+  }
+
   get(number) {
     this.cache.issues.delete(number)
     const i = this.raw(number)

@@ -21,10 +21,10 @@ Issue: $ARGUMENTS
 ## 2. Journal entry and commit
 
 ```
-agent-os journal add --type decision --title "<what was decided>" --area <area> --ref "{{vocab.issueRef}}<n>" --body-file <file>
+agent-os journal add --type decision --title "<what was decided>" --area <area> --ref "{{vocab.issueRef}}<n>" --body-file <file> --thread "{{vocab.issueRef}}<n>"
 ```
 
-The entry says what was decided and why, and what was left out. Commit it with the work. Commit messages follow the convention (`agent-os check commit`).
+The entry says what was decided and why, and what was left out. `--thread` quotes, verbatim, the decisions made in the issue's comments. Commit it with the work. Commit messages follow the convention (`agent-os check commit`).
 
 ## 3. Gate
 
@@ -63,7 +63,7 @@ agent-os pr reply <thread-id> --body-file <file> [--resolve]
 ```
 
 - A failing check: read its log, fix it in a new commit, run the gate again and push. Never re-run a red check hoping it turns green without understanding it.
-- Review threads: answer **in the language of the comment**, briefly, with what you changed or why not. Resolve a thread only when the change is pushed or the reviewer agreed.
+- Review threads: answer **in the language of the comment** (`pr reply` refuses another language and drops ro diacritics), briefly, with what you changed or why not. Resolve a thread only when the change is pushed or the reviewer agreed.
 - A decision made in a thread goes, quoted, into the journal entry.
 
 ## 7. Learn
