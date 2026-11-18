@@ -55,6 +55,9 @@ export const SCHEMA = obj({
   packs: list(str('A pack id'), 'Optional packs installed in this project', { default: [] }),
   slots: map({ type: ['string', 'null'], description: 'The skill bound to this slot, or null for none' }, 'Capability slots and the skills bound to them', { default: {} }),
   gate: map(str('The command that runs this suite'), 'Test and check suites by name', { default: {} }),
+  testing: obj({
+    exclude: list(str('A path prefix that needs no tests (generated code, vendored files)'), 'Paths agent-os test gaps leaves out', { default: [] }),
+  }, 'Test planning and gaps', { default: {} }),
   gatePaths: map(list(str('A suite name from "gate"')), 'Path globs and the gate suites a change to them needs ("docs/**": ["docs"]); without it every suite runs', { default: {} }),
   requires: obj({
     mcp: list(obj({

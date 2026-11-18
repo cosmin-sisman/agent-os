@@ -2,7 +2,7 @@
 // local skill showing up at once, and the SessionStart line.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { indexLine, indexMarkdown, skillIndex } from './skill-index.mjs'
@@ -51,6 +51,8 @@ test('given a new local skill, it appears under Local immediately, with no edit 
 test('the SessionStart line lists the groups in one line', () => {
   const cwd = project()
   try {
-    assert.match(indexLine(skillIndex(cwd)), /^Skills: core \/doctor \/env \/lessons \/next \/pr \/release \/retro \/ship \/start \/ticket \(agent-os skills for what each does\)\.$/)
+    const line = indexLine(skillIndex(cwd))
+    const core = readdirSync(join(cwd, '.claude/skills')).sort().map((n) => `/${n}`).join(' ')
+    assert.equal(line, `Skills: core ${core} (agent-os skills for what each does).`, 'every installed core skill, in one line')
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })

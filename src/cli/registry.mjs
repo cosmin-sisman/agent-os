@@ -39,6 +39,7 @@ export const COMMANDS = [
   { name: 'next', summary: 'Recommend what to work on next, with reasons', status: 'new', issue: 18, load: () => import('../commands/next.mjs') },
   { name: 'board', summary: 'Keep the optional planning board in step with the issues (GitHub Projects)', status: 'new', issue: 20, load: () => import('../commands/board.mjs') },
   { name: 'overlap', summary: 'List open changes that touch the same files as yours', status: 'new', issue: 33, load: () => import('../commands/overlap.mjs') },
+  { name: 'test', summary: 'Plan scenarios into issues, write results into change requests, run suites, find test gaps', status: 'new', issue: 44, load: () => import('../commands/test.mjs') },
   { name: 'gate', summary: 'Run the checks the current diff needs', status: 'new', issue: 43, load: () => import('../commands/gate.mjs') },
   { name: 'pr', summary: 'Open the change request when it is ready; its checks and review threads', status: 'new', issue: 15, load: () => import('../commands/pr.mjs') },
   { name: 'ship', summary: 'Merge a green, reviewed change request; close or comment on its issues; clean up the branch', status: 'new', issue: 16, load: () => import('../commands/ship.mjs') },

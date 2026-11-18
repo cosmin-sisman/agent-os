@@ -31,7 +31,7 @@ The entry says what was decided and why, and what was left out. Commit it with t
 agent-os gate
 ```
 
-It runs the suites the diff needs (`gate` and `gatePaths` in agent-os.json) on a clean tree. If a suite fails, fix it and run the gate again. Put its results table in **How it was tested**, with any extra checks you ran by hand.
+It runs the suites the diff needs (`gate` and `gatePaths` in agent-os.json) on a clean tree. Run `agent-os test gaps` too: every changed source file needs a test, or a line saying why not. After opening, `agent-os test pr` writes the results table into the description. If a suite fails, fix it and run the gate again. Put its results table in **How it was tested**, with any extra checks you ran by hand.
 
 ## 4. Title and body
 

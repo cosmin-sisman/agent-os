@@ -25,6 +25,7 @@ It lists the merge ({{branches.mergeMethod}}, pinned to the head commit that was
 - changes requested or approvals missing: it goes back to review;
 - behind or conflicting: it goes back to its author with a comment (`--no-notify` to skip the comment). Never merge the base into someone else's branch without asking;
 - an unchecked item under **Before merge**: do it, or ask the author.
+- an unticked test scenario in an issue it closes: tick the ones the tests cover, and move the rest to a follow-up issue.
 
 Do not work around a refusal.
 
