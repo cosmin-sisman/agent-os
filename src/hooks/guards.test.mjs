@@ -43,10 +43,23 @@ test('min-free-memory refuses heavy commands below the floor and names the numbe
 
 test('projects add rules and can disable built-in ones', () => {
   const rules = rulesFor({ guards: { disable: ['commit-n'], rules: [{ id: 'no-rm-rf', type: 'forbid-pattern', pattern: '^rm\\s+-rf\\s+/' }] } })
-  assert.deepEqual(rules.map((r) => r.id), ['no-verify', 'hooks-path', 'no-rm-rf'])
+  assert.deepEqual(rules.map((r) => r.id), ['no-verify', 'hooks-path', 'push-protected', 'no-rm-rf'])
   assert.deepEqual(checkCommand('git commit -n -m x && rm -rf /', { rules }).map((b) => b.id), ['no-rm-rf'])
 })
 
 test('a rule broken twice in one line is reported once', () => {
   assert.equal(checkCommand('git commit --no-verify && git push --no-verify', { rules: BUILT_IN }).length, 1)
+})
+
+test('a push to the integration or production branch is refused, explicit or from the branch itself; feature pushes are fine', async () => {
+  const { pushTargets } = await import('./guards.mjs')
+  const rules = rulesFor({ branches: { integration: 'development', production: 'main' } })
+  const push = (line, currentBranch) => checkCommand(line, { rules, currentBranch }).map((b) => b.id)
+  for (const line of ['git push origin development', 'git push origin HEAD:main', 'git push -u origin +feat/x:refs/heads/development', 'git push origin :main', 'git push --all origin', 'cd repo && git push origin main']) assert.deepEqual(push(line, 'feat/1-x'), ['push-protected'], line)
+  assert.deepEqual(push('git push origin HEAD', 'development'), ['push-protected'], 'HEAD on development')
+  assert.deepEqual(push('git push', 'main'), ['push-protected'], 'no refspec on main')
+  for (const line of ['git push -u origin feat/50-retrofit', 'git push origin HEAD', 'git push', 'git push origin v1.2.0', 'git push --tags origin']) assert.deepEqual(push(line, 'feat/50-retrofit'), [], line)
+  assert.match(checkCommand('git push origin development', { rules }).at(0).message, /^this pushes to development: [\s\S]*agent-os start <n>/)
+  assert.deepEqual(pushTargets('git push origin a:b c', 'x'), ['b', 'c'])
+  assert.deepEqual(rulesFor({ branches: { integration: 'development' }, guards: { disable: ['push-protected'] } }).some((r) => r.id === 'push-protected'), false, 'a project can turn it off')
 })

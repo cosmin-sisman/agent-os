@@ -27,6 +27,7 @@ Built in, on unless listed in `guards.disable`:
 | `no-verify` | `--no-verify` on `git commit`, `merge`, `push`, `pull`, `rebase`, `am`, `cherry-pick`, `revert` |
 | `commit-n` | `git commit -n` |
 | `hooks-path` | changing `core.hooksPath`, which turns git hooks off |
+| `push-protected` | a `git push` that would update the integration or production branch: named (`origin development`, `HEAD:main`, `:main`), `--all` or `--mirror`, or implied (`git push` and `git push origin HEAD` while that branch is checked out). Work reaches those branches through change requests: `agent-os start <n>` first. Feature branches and tags push as usual |
 
 Projects add rules in `agent-os.json`:
 

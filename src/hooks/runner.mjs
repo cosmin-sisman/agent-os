@@ -39,10 +39,13 @@ export const CORE_HANDLERS = [
     events: ['PreToolUse'],
     kind: 'guard',
     timeoutMs: 3000,
-    run(input, { config, env }) {
+    run(input, { config, env, cwd }) {
       const command = input.tool_input?.command
       if (typeof command !== 'string' || !/^(Bash|PowerShell)$/.test(input.tool_name ?? '')) return
-      const broken = checkCommand(command, { rules: rulesFor(config), env, minFreeMb: config.machine?.minFreeMb ?? 0 })
+      // The current branch matters only to a push that names no branch (git push, git push origin HEAD).
+      let currentBranch = null
+      if (/\bgit\s+push\b/.test(command)) { const r = systemGit(cwd)(['rev-parse', '--abbrev-ref', 'HEAD']); currentBranch = r.status === 0 ? r.stdout.trim() : null }
+      const broken = checkCommand(command, { rules: rulesFor(config), env, minFreeMb: config.machine?.minFreeMb ?? 0, currentBranch })
       if (broken.length) return { decision: 'deny', message: broken.map((b) => `agent-os guard "${b.id}": ${b.message}`).join('\n') }
     },
   },
