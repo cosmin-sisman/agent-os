@@ -59,7 +59,8 @@ export const SCHEMA = obj({
     maxFileLines: int('Remind when a code file grows past this many lines', { minimum: 50, default: 500 }),
   }, 'Mechanical standards checks (on edit and in doctor)', { default: {} }),
   testing: obj({
-    exclude: list(str('A path prefix that needs no tests (generated code, vendored files)'), 'Paths agent-os test gaps leaves out', { default: [] }),
+    exclude: list(str('A path prefix or glob that needs no tests (generated code, vendored files)'), 'Paths agent-os test gaps leaves out', { default: [] }),
+    map: map(list(str('Where its test lives: a path with {dir}, {name} and {ext}, e.g. "{dir}/{name}.test.{ext}"')), 'Source globs and where their tests live ("src/**/*.ts": ["{dir}/{name}.test.ts"]); files no glob matches use the built-in naming rules', { default: {} }),
   }, 'Test planning and gaps', { default: {} }),
   gatePaths: map(list(str('A suite name from "gate"')), 'Path globs and the gate suites a change to them needs ("docs/**": ["docs"]); without it every suite runs', { default: {} }),
   requires: obj({

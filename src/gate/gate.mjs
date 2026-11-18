@@ -6,6 +6,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
 import { matches } from '../util/glob.mjs'
+import { testGaps } from '../testing/test.mjs'
 
 export const RESULT_FILE = '.agent-os/cache/gate.json'
 
@@ -89,9 +90,11 @@ export function runGate({ config, git, cwd, exec }, { base = config.branches.int
   const warnings = []
   if (!Object.keys(config.gate ?? {}).length) warnings.push('no gate suites are configured: add them under "gate" (and "gatePaths") in agent-os.json')
   if (sel.unmatched.length) warnings.push(`no suite covers ${sel.unmatched.length} changed file(s): ${sel.unmatched.slice(0, 5).join(', ')}${sel.unmatched.length > 5 ? ', …' : ''}`)
-  if (dryRun) return { dryRun: true, base, head, clean, files, ...sel, warnings }
+  const gaps = files.length ? testGaps(files, { exclude: config.testing?.exclude ?? [], map: config.testing?.map ?? {} }) : []
+  if (gaps.length) warnings.push(`${gaps.length} changed file(s) with no changed test: ${gaps.slice(0, 5).join(', ')}${gaps.length > 5 ? ', …' : ''} (agent-os test gaps)`)
+  if (dryRun) return { dryRun: true, base, head, clean, files, ...sel, gaps, warnings }
   const suites = runSuites(config, sel.suites, { cwd, exec })
-  const result = { base, head, clean, at: new Date().toISOString(), files, mode: sel.mode, reasons: sel.reasons, unmatched: sel.unmatched, suites, ok: suites.every((s) => s.passed), warnings }
+  const result = { base, head, clean, at: new Date().toISOString(), files, mode: sel.mode, reasons: sel.reasons, unmatched: sel.unmatched, gaps, suites, ok: suites.every((s) => s.passed), warnings }
   saveResult(cwd, result)
   return result
 }

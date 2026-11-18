@@ -317,7 +317,19 @@
           "default": [],
           "items": {
             "type": "string",
-            "description": "A path prefix that needs no tests (generated code, vendored files)"
+            "description": "A path prefix or glob that needs no tests (generated code, vendored files)"
+          }
+        },
+        "map": {
+          "type": "object",
+          "description": "Source globs and where their tests live (\"src/**/*.ts\": [\"{dir}/{name}.test.ts\"]); files no glob matches use the built-in naming rules",
+          "default": {},
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Where its test lives: a path with {dir}, {name} and {ext}, e.g. \"{dir}/{name}.test.{ext}\""
+            }
           }
         }
       },

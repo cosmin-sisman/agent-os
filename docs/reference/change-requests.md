@@ -93,7 +93,13 @@ agent-os test pr [<n>]              # the gate's results table into the change r
 ```
 
 - **plan:** reads the issue's form sections (What happens, What should happen, How to reproduce, Acceptance criteria) and proposes `- [ ] Given …, when …, then …` lines it does not have yet. A bug gets its regression scenario first, the one that must fail before the fix. `--write` adds them to the issue's Test scenarios section.
-- **gaps:** test files are recognised as `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.go` and `tests/` folders. Docs and fixtures are left out, and so is anything under `testing.exclude`.
+- **gaps:** test files are recognised as `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.go` and `tests/` folders. Docs and fixtures are left out, and so is anything under `testing.exclude` (path prefixes or globs). `testing.map` sets where tests live for files the built-in names don't fit: each source glob lists test paths with `{dir}`, `{name}` and `{ext}`, and a changed file it matches needs one of them changed:
+
+  ```json
+  "testing": { "exclude": ["src/gen/**"], "map": { "lib/**/*.rb": ["spec/{name}_spec.rb"], "src/**/*.ts": ["{dir}/{name}.test.ts"] } }
+  ```
+
+  The same list is a gate input (a warning) and a Stop reminder (see [hooks](hooks.md)).
 - **pr:** writes the results between `<!-- agent-os:test-results -->` markers under How it was tested, and replaces them on every run.
 - **`/ship`** refuses while a scenario of an issue it closes is unticked.
 

@@ -45,7 +45,7 @@ export async function run(ctx) {
     return r.ok ? EXIT.OK : EXIT.CHECK_FAILED
   }
   if (action === 'gaps') {
-    const gaps = testGaps(changedFiles(git, merged.branches.integration), { exclude: merged.testing?.exclude ?? [] })
+    const gaps = testGaps(changedFiles(git, merged.branches.integration), { exclude: merged.testing?.exclude ?? [], map: merged.testing?.map ?? {} })
     ctx.output({ gaps }, gaps.length ? `${gaps.length} changed file(s) with no changed test:\n${gaps.map((g) => `  ${g}`).join('\n')}\nAdd the tests the issue's scenarios describe, or say in the change request why none is needed.` : 'every changed source file has a changed test')
     return EXIT.OK
   }

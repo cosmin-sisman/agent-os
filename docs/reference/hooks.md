@@ -75,3 +75,7 @@ The `standards` handler runs on PostToolUse for Edit, Write and MultiEdit (the m
 - for a new file (Write), a missing header.
 
 It answers with `additionalContext` for the agent and never blocks the edit. It has an 800 ms timeout and reminds each finding once per session. `doctor` runs the same checks, as warnings, on the files the branch changes (`standards`), and checks headers on new files (`headers`).
+
+## The Stop reminder on test gaps
+
+The `test-gaps` handler runs on Stop, when the agent finishes a turn. It names the changed source files with no changed test (the same list as `agent-os test gaps`, against `origin/<branches.integration>`) as a `systemMessage`. It never blocks the stop: it returns no decision, says nothing when `stop_hook_active` is set, and names a given set of gaps once per session, so it cannot loop. With no gaps, or no base to diff against, it stays silent. The gate also lists the gaps in its result and as a warning (never a failure).

@@ -10,6 +10,7 @@ import { systemProbe } from '../env/probe.mjs'
 import { versionStatus } from '../version/pin.mjs'
 import { budgetBytes, fitBudget, localContext, remoteContext } from './session.mjs'
 import { editReminders } from './edit.mjs'
+import { gapsReminder } from './gaps.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 import { systemGit } from '../workflow/start.mjs'
 
@@ -76,6 +77,16 @@ export const CORE_HANDLERS = [
     run(input, { config, cwd }) {
       const text = editReminders(input, { config, cwd })
       return text ? { context: text } : null
+    },
+  },
+  {
+    name: 'test-gaps',
+    events: ['Stop'],
+    kind: 'reminder',
+    timeoutMs: 3000,
+    run(input, { config, cwd }) {
+      const text = gapsReminder(input, { config, cwd, git: systemGit(cwd) })
+      return text ? { message: text } : null
     },
   },
   {
