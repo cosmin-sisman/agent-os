@@ -70,7 +70,7 @@ docs/decisions/<date>-<slug>.md   # decision records, date-based ids
 
 ## 4. Configuration and languages
 
-Two files:
+Two files (full reference: [docs/reference/configuration.md](../reference/configuration.md)):
 
 - `agent-os.json`, committed: the team's agreement. It holds the repository, branches, tracker, the language of every shared area, labels, packs, slot bindings, the gate and context budgets.
 - `.agent-os/local.json`, gitignored: one person's setup. It holds their chat language, machine limits (RAM, dev ports), and whether they run several sessions on one laptop.

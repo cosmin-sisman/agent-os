@@ -11,6 +11,7 @@
     "bin/",
     "src/",
     "catalog/",
+    "schema/",
     "!**/*.test.mjs"
   ],
   "engines": {
@@ -18,7 +19,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "site": "node scripts/site/build.mjs _site --strict"
+    "site": "node scripts/site/build.mjs _site --strict",
+    "schema": "node scripts/schema/build.mjs"
   },
   "license": "MIT",
   "repository": {
