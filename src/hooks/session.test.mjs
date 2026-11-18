@@ -41,7 +41,7 @@ test('given no network, it injects local information only, and never blocks', as
       'agent-os: you are on feat/30-session-context (issue #30).',
       'Lessons for the files you changed: down: Write a down migration for every up migration.',
       '1 lesson(s) wait in the inbox (/lessons review).',
-      'Skills here: /next /start.',
+      'Skills: local /next /start (agent-os skills for what each does).',
     ].join('\n'))
     assert.equal(out.systemMessage, undefined, 'an unreachable platform is not an error')
   } finally { rmSync(cwd, { recursive: true, force: true }) }

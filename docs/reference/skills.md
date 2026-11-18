@@ -26,3 +26,12 @@ agent-os skill check
 ```
 
 `doctor` fails when a folder in `.claude/skills/` has no entry, when an entry (other than plugin or builtin) has no folder, and when an entry is invalid. Adding, updating and removing vendored skills is #39.
+
+## The index: `agent-os skills`
+
+```bash
+agent-os skills          # three tables: Core, External (with plugin and builtin), Local
+agent-os skills --json
+```
+
+It is rendered every time from the registry and `.claude/skills/`, with each skill's first sentence from its front matter, and it is never committed. Adding a skill needs no edit to `AGENTS.md` or any other index. A new folder shows up under Local at once, marked *unregistered* until `agent-os skill register` records it. The SessionStart context carries one line from it: `Skills: core /next /start …; external …; local …`.
