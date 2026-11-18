@@ -57,3 +57,15 @@ agent-os platform probe --refresh   # ask the platform again
 - Each entry says whether it is *known*, *probed*, *inferred*, from *config* or *unknown*. Unknown counts as missing, so the fallback is used until the platform answers.
 
 Commands and skills decide by capability (`has(caps, 'dependencies')`, `planBlockedBy(caps, …)` in `src/platform/capabilities.mjs`), never by the platform's name. A test fails the build when they do.
+
+## Platform routes
+
+The package keeps what every project gets in `templates/core/`, and what only one platform gets in `templates/platform/github/` and `templates/platform/gitlab/`. An install or update renders core plus the active route, so a GitLab project never receives a `.github/` folder and a GitHub project never receives `.gitlab/`. The lock records the platform. An update for a different platform is refused, because switching is its own step (#98).
+
+| | GitHub | GitLab |
+|---|---|---|
+| change request | pull request, `#N`, skill `/pr` | merge request, `!N`, skill `/mr` (`/pr` is an alias that points to it) |
+| issue templates | `.github/ISSUE_TEMPLATE/*.yml` (issue forms) | `.gitlab/issue_templates/*.md` (with a `/label` quick action) |
+| change-request template | `.github/pull_request_template.md` | `.gitlab/merge_request_templates/Default.md` |
+
+Templates use the platform vocabulary (`{{vocab.changeRequest}}`, `{{vocab.crRef}}`, `{{vocab.cli}}`, …) and path placeholders such as `.claude/skills/__crSkill__/`, so a core template never asks which platform it is on. A route may add files but never override a core file.
