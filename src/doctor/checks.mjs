@@ -422,6 +422,19 @@ function titles({ tracker, config, me }) {
   return out.length ? out : [ok(`${prs.length} open change request(s) of yours, titles in convention`)]
 }
 
+/**
+ * The long-lived branches are protected on the platform (#274). Protection that the plan does not offer, or that is
+ * not set up yet, is a warning with its reason and its fix, never a failure: CI still runs every required check.
+ */
+function protection({ platformPlan }) {
+  if (!platformPlan) return [ok('branch protection was not checked (no platform client)')]
+  const steps = platformPlan()
+  const note = steps.find((x) => x.unavailable)
+  if (note) return [{ level: 'warn', message: note.description, fix: 'a plan with branch protection (GitHub Pro or Team) or a public repository, then agent-os setup --only ruleset; until then, review every change request before it is merged' }]
+  const todo = steps.filter((x) => x.area === 'ruleset' && x.action !== 'keep')
+  return todo.length ? [{ level: 'warn', message: `the long-lived branches are not protected as agreed: ${todo.map((x) => x.description).join('; ')}`, fix: 'agent-os setup --only ruleset --dry-run, then agent-os setup --only ruleset' }] : [ok('the long-lived branches are protected')]
+}
+
 /** The registry of checks, in the order they are reported. */
 export const CHECKS = [
   { id: 'skills', area: 'agent system', run: skills },
@@ -449,4 +462,5 @@ export const CHECKS = [
   { id: 'issues', area: 'platform', platform: true, run: issues },
   { id: 'labels', area: 'platform', platform: true, run: labels },
   { id: 'titles', area: 'platform', platform: true, run: titles },
+  { id: 'protection', area: 'platform', platform: true, run: protection },
 ]

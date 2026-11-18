@@ -1,6 +1,7 @@
 // `agent-os doctor`: check the agent system, the repository and the platform hygiene; --fix for mechanical repairs.
 // Exit 1 when a check fails.
 
+import { planPlatformSetup } from '../platform/setup.mjs'
 import { CliError, EXIT } from '../cli/errors.mjs'
 import { loadConfig } from '../config/config.mjs'
 import { runDoctor, report } from '../doctor/doctor.mjs'
@@ -38,7 +39,8 @@ export async function run(ctx) {
     caps = (await capabilitiesFor(config, { cwd: ctx.cwd, gh: ctx.io.gh, glab: ctx.io.glab, refresh: true })).capabilities
     try { me = tracker.whoami() } catch { me = null }
   }
-  const r = runDoctor({ cwd: ctx.cwd, config, tracker, caps, me, running: ctx.io.running ?? runningVersion() }, { offline: ctx.values.offline || !config.platform?.project, ci: ctx.values.ci, fix: ctx.values.fix && !ctx.dryRun, only })
+  const platformPlan = () => planPlatformSetup(config, { gh: ctx.io.gh, glab: ctx.io.glab, only: ['ruleset'] })
+  const r = runDoctor({ cwd: ctx.cwd, config, tracker, caps, me, platformPlan, running: ctx.io.running ?? runningVersion() }, { offline: ctx.values.offline || !config.platform?.project, ci: ctx.values.ci, fix: ctx.values.fix && !ctx.dryRun, only })
   if (!loaded.initialized) r.checks.unshift({ id: 'config', findings: [{ level: 'warn', message: 'there is no agent-os.json: this repository is not set up yet', fix: 'agent-os init' }] })
   ctx.output(r, report(r))
   return r.summary.fail ? EXIT.CHECK_FAILED : EXIT.OK
