@@ -52,7 +52,8 @@ export function label(id, lang, { scoped = false } = {}) {
   const entry = LABELS.find((l) => l.id === id)
   if (!entry) throw new CliError(`unknown core label "${id}"`)
   const name = entry.name[lang]
-  return { id, color: entry.color, name: scoped ? name.replace(':', '::') : name, description: entry.description[lang] }
+  // Colors are quoted in labels.yaml; String/padStart also guards against an unquoted 000000 read as the number 0.
+  return { id, color: String(entry.color).padStart(6, '0'), name: scoped ? name.replace(':', '::') : name, description: entry.description[lang] }
 }
 
 /** Every core label for the configured `labels` language. */

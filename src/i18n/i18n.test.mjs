@@ -84,3 +84,8 @@ test('the language rule lists every area with its language and contains no diacr
   assert.deepEqual(findDiacritics(rule), [])
   assert.doesNotMatch(renderLanguageRule(configWith({})), /lang check/)
 })
+
+test('every label color is a six-digit hex string, including all-digit ones like 000000', () => {
+  for (const l of LABELS) assert.match(label(l.id, 'en').color, /^[0-9a-f]{6}$/, l.id)
+  assert.equal(label('blocked', 'en').color, '000000')
+})
