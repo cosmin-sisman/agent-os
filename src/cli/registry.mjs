@@ -45,6 +45,7 @@ export const COMMANDS = [
   { name: 'pr', summary: 'Open the change request when it is ready; its checks and review threads', status: 'new', issue: 15, load: () => import('../commands/pr.mjs') },
   { name: 'ship', summary: 'Merge a green, reviewed change request; close or comment on its issues; clean up the branch', status: 'new', issue: 16, load: () => import('../commands/ship.mjs') },
   { name: 'release', summary: 'Plan, open and finish a release (merge commit, tag, notes, milestone roll, sync back); release notes', status: 'new', issue: 17, load: () => import('../commands/release.mjs') },
+  { name: 'standards', summary: 'Record a choice between solutions the way the standards ask', status: 'new', issue: 102, load: () => import('../commands/standards.mjs') },
   { name: 'check', summary: 'Check a pull or merge request title against its description, or a commit message', status: 'new', issue: 19, load: () => import('../commands/check.mjs') },
   { name: 'map', summary: 'Render a map of one area of the code, on demand', status: 'new', issue: 26, load: () => import('../commands/map.mjs') },
   { name: 'journal', summary: 'Add to or read the project journal', status: 'new', issue: 22, load: () => import('../commands/journal.mjs') },

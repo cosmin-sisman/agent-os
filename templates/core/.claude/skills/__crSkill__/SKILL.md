@@ -13,7 +13,7 @@ Issue: $ARGUMENTS
 ## 1. Review before the reviewers
 
 - Read the whole diff against `origin/{{branches.integration}}`. Remove debugging leftovers, unrelated changes and commented-out code.
-- {{#if slots.standards}}Run the standards pass with the `{{slots.standards}}` skill on the diff; fix what it finds or say in the body why not.{{else}}Check the diff against the coding standards rule.{{/if}}
+- {{#if slots.standards}}Run the standards pass with the `{{slots.standards}}` skill on the diff; fix what it finds or say in the body why not.{{else}}Run /standards review on the diff, and record any choice between solutions with `agent-os standards choice`.{{/if}}
 - {{#if slots.review}}Run the `{{slots.review}}` skill on the diff and address its findings.{{else}}No review skill is bound (`slots.review`); review the diff yourself for correctness first.{{/if}}
 - Check the issue's test scenarios: each one has a test in this branch, or the body says why not.
 
