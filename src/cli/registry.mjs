@@ -51,6 +51,7 @@ export const COMMANDS = [
   { name: 'retro', summary: 'Triage the lessons inbox and repeated review findings; keep the Retro issue up to date', status: 'new', issue: 29, load: () => import('../commands/retro.mjs') },
   { name: 'decision', summary: 'Create, list and check decision records with date-based ids', status: 'new', issue: 23, load: () => import('../commands/decision.mjs') },
   { name: 'chronicle', summary: 'One timeline from the platform and the journal, rendered into the cache', status: 'new', issue: 25, load: () => import('../commands/chronicle.mjs') },
+  { name: 'upstream', summary: 'Draft an improvement for the public agent-os repository, filtered for privacy', status: 'new', issue: 71, load: () => import('../commands/upstream.mjs') },
   { name: 'stack', summary: 'Show, change, detect or import the stack map', status: 'planned', issue: 74 },
   { name: 'system', summary: 'Map components, interfaces, exposure and contracts', status: 'planned', issue: 113 },
   { name: 'artifact', summary: 'Create, build, verify and link artifacts', status: 'planned', issue: 82 },

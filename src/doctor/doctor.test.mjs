@@ -51,7 +51,7 @@ test('every finding names its fix', () => {
   const cwd = freshInstall({ slots: { review: 'missing-skill' }, contextBudgets: { 'big.md': '1KB' } })
   try {
     write(cwd, {
-      'AGENTS.md': '# A\n\nSee [the guide](docs/nope.md) and run `x`. Use agent-os frobnicate and agent-os stack.\n',
+      'AGENTS.md': '# A\n\nSee [the guide](docs/nope.md) and run `x`. Use `agent-os frobnicate` and `agent-os stack`.\n',
       'big.md': 'x'.repeat(2000),
       '.claude/skills/broken/SKILL.md': 'no front matter',
       'x.md.rej': 'conflict',
