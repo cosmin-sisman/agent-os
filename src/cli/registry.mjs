@@ -27,7 +27,7 @@ export const COMMANDS = [
   { name: 'config', summary: 'Read, change or validate agent-os.json and your personal settings', status: 'new', issue: 4, load: () => import('../commands/config.mjs') },
   { name: 'doctor', summary: 'Check the agent system and platform hygiene', status: 'planned', issue: 27 },
   { name: 'env', summary: 'Check MCP servers, CLIs, token scopes and variables, on this laptop and in the repo', status: 'new', issue: 9, load: () => import('../commands/env.mjs') },
-  { name: 'update', summary: 'Upgrade agent-os in this project (--relock today; the full flow is #68)', status: 'new', issue: 6, load: () => import('../commands/update.mjs') },
+  { name: 'update', summary: 'Plan and run an upgrade of agent-os, on its own branch, as a change request', status: 'new', issue: 68, load: () => import('../commands/update.mjs') },
   { name: 'eject', summary: 'Stop managing a file, block or hooks entry; the content stays as it is', status: 'new', issue: 6, load: () => import('../commands/eject.mjs') },
   { name: 'hook', summary: 'Run the Claude Code hook handlers for an event (called from .claude/settings.json)', status: 'new', issue: 8, load: () => import('../commands/hook.mjs') },
   { name: 'platform', summary: 'Show the code platform and its login, or detect it from the git remote (GitHub, GitLab)', status: 'new', issue: 90, load: () => import('../commands/platform.mjs') },

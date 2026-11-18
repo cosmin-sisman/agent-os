@@ -1,0 +1,12 @@
+# What each release changes, for `agent-os update --plan` and the release notes (#17). One entry per version, newest
+# first. Groups: breaking, new, deprecated, legacy, removed, fix, chore. Lifecycle changes (new, deprecated, legacy,
+# removed items) also come from manifest.json; list here what a person should read about them.
+#
+# - version: 0.2.0
+#   date: 2026-12-01
+#   changes:
+#     - group: breaking
+#       text: "gate suites moved under gatePaths"
+#       refs: ["#43"]
+#       migration: 0.2.0
+releases: []

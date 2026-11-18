@@ -21,7 +21,7 @@ agent-os version --check              # compare with the pin; exit 1 with the fi
 | `node_modules` holds another version | `npm ci` |
 | nothing is pinned | `agent-os config set version <running>` |
 
-Upgrading the pin is a team decision made in a pull or merge request (`agent-os update`, #68).
+Upgrading the pin is a team decision made in a pull or merge request (`agent-os update`, below).
 
 ## Lifecycle: nothing disappears without warning
 
@@ -57,6 +57,32 @@ agent-os update --migrate             # run them
 - Every migration is **idempotent**. A test runs each one twice against its fixture project (`migrations/__fixtures__/<version>/`), and the second run must change nothing.
 - The applied versions are recorded in `.agent-os/lock.json`, so a rerun skips them.
 - A failing migration stops the chain with its name. The ones before it stay applied, and a rerun continues from the failed one.
-- The full `agent-os update` (#68) runs migrations as one of its steps, on its own branch.
+- `agent-os update` runs them as one of its steps, on its own branch.
 
 How to write one: [migrations/README.md](../../migrations/README.md).
+
+## Updating: `update --plan` and `update`
+
+Run the version you want to move to; the project's pin is the starting point:
+
+```bash
+npx -y @cosmin-sisman/agent-os@0.5.0 update --plan     # read-only
+npx -y @cosmin-sisman/agent-os@0.5.0 update            # branch + change request
+npx -y @cosmin-sisman/agent-os@0.6.0-next.1 update --channel next   # try a pre-release; the pin is not changed
+agent-os update --no-pr                                # do it on the branch, push and open it yourself
+```
+
+**The plan** groups the changes between the pinned version and the target as Breaking, New, Deprecated, Legacy, Removed, Fixes and Chore. They come from `changelog.yaml` and from the lifecycle states in `manifest.json`. It also lists the managed files that would change (replaced, merged with your local edits, or in conflict), the migrations that will run and the deprecated items this project still uses. It changes nothing.
+
+**The update**:
+
+1. **Preflight.** Requires a clean working tree, a target that is not older than the pin (and not a pre-release, unless `--channel next`), and the target's minimum Node version. `doctor` joins the preflight with #27.
+2. **Branch.** It creates `chore/agent-os-<version>` from `origin/<branches.integration>`. Nothing is written to the integration or default branch.
+3. **Migrate.** Runs the migrations after the pin up to the target, in order.
+4. **Pin.** Sets `version` in `agent-os.json`, except with `--channel next`.
+5. **Apply.** Writes the managed files through the lock rules. A local edit that conflicts leaves the local file as it is and writes `<file>.rej`, which is committed so the reviewers see it.
+6. **Record.** Adds a `release` journal entry and makes one commit, `chore(agent-os): update to <version>`.
+7. **Verify.** Runs the gate on that commit.
+8. **Open.** Pushes the branch and opens the change request. Its body carries the plan, the migration log, the conflicts as a checklist, the gate results, and a **Before merge** item for each `.rej`. It opens as a draft when there are conflicts or the gate failed (exit 1).
+
+Afterwards you are back on the branch you started from. **To roll back, close the change request** (or revert it after merging): the update exists only on its branch until then.
