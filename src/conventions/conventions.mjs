@@ -59,7 +59,8 @@ export function checkTitle(title, body, conventions, { lang = 'en' } = {}) {
   if (!release && !m) problems.push(`the title must look like "type(scope): summary" (types: ${conventions.types.join(', ')}); got "${head}"`)
   if (m && !conventions.types.includes(m[1])) problems.push(`"${m[1]}" is not an allowed type; use one of ${conventions.types.join(', ')}`)
   if (/[.!?]$/.test(summary)) { problems.push('remove the final punctuation from the summary'); summary = summary.replace(/[.!?]+$/, '') }
-  if (/^[A-Z][a-z]/.test(summary)) { problems.push(`start the summary in lower case: "${summary[0].toLowerCase()}${summary.slice(1)}"`); summary = summary[0].toLowerCase() + summary.slice(1) }
+  // Lower case, except names written with inner capitals (GitLab, GitHub, JavaScript) or in capitals (API, CI).
+  if (/^[A-Z][a-z]/.test(summary) && !/^[A-Z][a-z]*[A-Z]/.test(summary.split(/\s/)[0])) { problems.push(`start the summary in lower case: "${summary[0].toLowerCase()}${summary.slice(1)}"`); summary = summary[0].toLowerCase() + summary.slice(1) }
   const wanted = referencedIssues(body)
   const missing = wanted.filter((n) => !suffix.issues.includes(n))
   const extra = suffix.issues.filter((n) => !wanted.includes(n))
