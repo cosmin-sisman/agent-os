@@ -251,6 +251,7 @@ agent-os issue new --title "<Area>: <problem>" --body-file <f> --label <type> --
 | `--title <value>` | Issue title |
 | `--body-file <value>` | Read the issue body from this file |
 | `--label <value>`, repeatable | A label (repeat for several) |
+| `--hardening` | new/create: security work that reveals nothing exploitable; filed with the security label (a vulnerability goes to agent-os security report) |
 | `--remove-label <value>`, repeatable | A label to remove (repeat for several) |
 | `--milestone <value>` | Milestone title |
 | `--assignee <value>`, repeatable | An assignee login (repeat for several) |
@@ -826,7 +827,7 @@ agent-os sbom [--out <file>] [--json]
 Watch the advisories that touch the dependencies (OSV, GHSA, KEV); keep the Security digest. Status: new (#108).
 
 ```
-agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--report <sarif|gitleaks.json>…]   ·   threat-model [--force] [--dry-run]   ·   exercise [<name>]
+agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--report <sarif|gitleaks.json>…]   ·   threat-model [--force] [--dry-run]   ·   exercise [<name>]   ·   report --title <t> --body-file <f> [--severity low|medium|high|critical] [--dry-run]
 ```
 
 | Option | What |
@@ -835,3 +836,6 @@ agent-os security watch [--issue] [--dry-run]   ·   pass [--base <branch>] [--r
 | `--base <value>` | pass: the branch to compare with (default branches.integration) |
 | `--report <value>`, repeatable | pass: a scanner report to read (SARIF, gitleaks JSON); adds to security.reports |
 | `--force` | threat-model: regenerate even when it is current |
+| `--title <value>` | report: the vulnerability in a few words |
+| `--body-file <value>` | report: the details (what, where, how to reproduce, impact) |
+| `--severity <value>` | report: low, medium, high or critical |

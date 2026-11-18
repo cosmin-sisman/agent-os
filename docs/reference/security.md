@@ -96,3 +96,19 @@ agent-os security pass [--base <branch>] [--report <file>…]   # exit 1 on a FA
 - `vulnerable-dependency`.
 
 The runbooks are found in `docs/runbooks/`, `runbooks/`, `docs/operations/`, `docs/incidents/` and `RUNBOOK*.md`. Each step is reported as covered by a runbook or as a gap. Gaps are proposed as one issue, filed only on confirmation through /ticket, and exit 1. An exercise is a conversation: nothing is run, and scenarios only ever target environments the project owns.
+
+## Reporting a vulnerability
+
+A real vulnerability is never filed as a public issue.
+
+```
+agent-os security report --title "SQL injection in the search endpoint" --body-file report.md [--severity high] [--dry-run]
+```
+
+- **GitHub**: a **draft repository security advisory** (private vulnerability reporting), seen only by the maintainers until they publish it with the fix. The package comes from `package.json` (npm) when there is one. Creating it needs admin or security manager rights; without them the command fails and files nothing publicly.
+- **GitLab**: a **confidential issue** labelled `security` (and `severity::<level>`). If the platform returns it as not confidential, the command says so at once.
+- `agent-os issue new` and `issue create` refuse an issue that reads as a vulnerability: injection, XSS, RCE, SSRF, CSRF, authorization bypass, privilege escalation, IDOR, path traversal, a leaked secret, "exploitable". The hint names `security report`. Advisories about dependencies, which are already public (CVE, KEV), are not refused.
+- **Hardening** that reveals nothing exploitable is a normal issue: `--hardening` files it with the `security` label.
+
+**The release gate** (#108) is part of the same rule. `release finish` refuses a release while a known-exploited (KEV) vulnerability is in a shipped dependency, unless the owners accepted the risk in writing in `security.acceptedRisks` (id, reason, by).
+

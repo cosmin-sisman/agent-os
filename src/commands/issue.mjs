@@ -5,6 +5,7 @@
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { assertNotPublicVulnerability } from '../security/report.mjs'
 import { CliError } from '../cli/errors.mjs'
 import { loadConfig } from '../config/config.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
@@ -28,6 +29,7 @@ export const options = {
   title: { type: 'string', description: 'Issue title' },
   'body-file': { type: 'string', description: 'Read the issue body from this file' },
   label: { type: 'string', multiple: true, description: 'A label (repeat for several)' },
+  hardening: { type: 'boolean', description: 'new/create: security work that reveals nothing exploitable; filed with the security label (a vulnerability goes to agent-os security report)' },
   'remove-label': { type: 'string', multiple: true, description: 'A label to remove (repeat for several)' },
   milestone: { type: 'string', description: 'Milestone title' },
   assignee: { type: 'string', multiple: true, description: 'An assignee login (repeat for several)' },
@@ -86,6 +88,8 @@ export async function run(ctx) {
       break
     }
     case 'create':
+      // A vulnerability is never a public issue (#111): it goes to agent-os security report instead.
+      assertNotPublicVulnerability({ title: v.title, body: body() }, { hardening: v.hardening })
       result = tracker.create({ title: v.title, body: body(), labels: v.label, milestone: v.milestone, assignees: v.assignee, parent: v.parent && num(v.parent, '--parent'), blockedBy: (v['blocked-by'] ?? []).map((b) => num(b, '--blocked-by')), status: v.status }, dry)
       break
     case 'update': {
@@ -128,8 +132,10 @@ async function newIssue(ctx) {
   const tracker = ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab })
   const spec = {
     title: v.title, body: v['body-file'] ? readFileSync(resolve(ctx.cwd, v['body-file']), 'utf8') : '',
-    labels: resolveLabels(v.label ?? [], merged), milestone: v.milestone, status: v.status,
+    labels: resolveLabels([...(v.label ?? []), ...(v.hardening ? ['security'] : [])], merged), milestone: v.milestone, status: v.status,
   }
+  // A vulnerability is never a public issue, not even as a comment on another one (#111).
+  assertNotPublicVulnerability(spec, { hardening: v.hardening })
   if (v.extend) {
     const n = num(v.extend, '--extend')
     const result = tracker.comment(n, spec.body, { dryRun: ctx.dryRun })

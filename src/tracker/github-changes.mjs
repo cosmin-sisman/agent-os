@@ -170,4 +170,23 @@ export class ChangeRequestMethods {
     return { threadId, url: reply?.addPullRequestReviewThreadReply?.comment?.url ?? null, resolved: resolve }
   }
 
+  /**
+   * A vulnerability, reported privately (#111): a draft repository security advisory, visible only to the
+   * maintainers until they publish it. It never falls back to a public issue: without the rights, it fails.
+   */
+  reportVulnerability({ title, body, severity, pkg }, { dryRun = false } = {}) {
+    const request = {
+      summary: title,
+      description: body || title,
+      ...(severity ? { severity } : {}),
+      vulnerabilities: [{ package: { ecosystem: pkg?.ecosystem ?? 'other', name: pkg?.name ?? this.repo }, vulnerable_version_range: null, patched_versions: null, vulnerable_functions: [] }],
+    }
+    const path = `repos/${this.repo}/security-advisories`
+    if (dryRun) return { dryRun: true, channel: 'draft security advisory', requests: [{ method: 'POST', path, body: request }] }
+    let r
+    try { r = this.gh.rest('POST', path, request) } catch (err) {
+      throw new CliError(`the draft security advisory was not created: ${err.message}`, { hint: 'it needs a maintainer with admin or security manager rights on the repository; nothing was filed publicly' })
+    }
+    return { channel: 'draft security advisory', id: r.ghsa_id ?? null, url: r.html_url ?? null, state: r.state ?? 'draft' }
+  }
 }

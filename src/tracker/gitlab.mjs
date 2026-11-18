@@ -157,6 +157,18 @@ export class GitLabTracker {
 
   // ── Writes ───────────────────────────────────────────────────────────────
 
+  /**
+   * A vulnerability, reported privately (#111): a confidential issue, visible only to project members with at least
+   * Reporter access and to its author. Labelled security; never a public issue.
+   */
+  reportVulnerability({ title, body, severity }, { dryRun = false } = {}) {
+    const request = { title, description: body || title, confidential: true, labels: ['security', ...(severity ? [`severity::${severity}`] : [])].join(',') }
+    if (dryRun) return { dryRun: true, channel: 'confidential issue', requests: [{ method: 'POST', path: this.p('issues'), body: request }] }
+    const i = this.api.rest('POST', this.p('issues'), request)
+    if (i?.confidential !== true) throw new CliError(`issue #${i?.iid ?? '?'} was created but is not confidential: make it confidential now`, { hint: 'the platform ignored confidential: true; check the project settings' })
+    return { channel: 'confidential issue', id: i.iid, url: i.web_url, state: 'confidential' }
+  }
+
   create(spec, { dryRun = false } = {}) {
     if (!spec.title) throw new CliError('an issue needs a title')
     const body = { title: spec.title, description: spec.body ?? '', labels: (spec.labels ?? []).join(',') }
