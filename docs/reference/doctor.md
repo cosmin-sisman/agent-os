@@ -23,6 +23,7 @@ It exits with 1 when any check fails and 0 otherwise. Warnings don't fail.
 | `hooks` | `.claude/settings.json` is invalid, or an agent-os hook does not run the pinned version |
 | `links` | a relative link in `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `README.md`, `.claude/` or `docs/` points at a missing file |
 | `area-map` | `AGENTS.md` is missing, or its area table does not mention a top-level directory or a stack layer in use (warn) |
+| `system` | once system.yaml exists: the system checks (spec drift, public routes without auth, exposed internal components, unsigned webhooks, cycles, deep imports, shared databases, missing timeouts); see [system](system.md) |
 | `stack` | stack.yaml disagrees with the code: a layer's technology is not what the code uses, the code uses one in a layer stack.yaml does not list, or a layer path matches nothing (warn; `agent-os stack drift`) |
 | `budgets` | a file is over its size budget (fail) or above 80% of it (warn). Defaults are `AGENTS.md` and `CLAUDE.md` at 8 KB and `.claude/rules/*.md` at 6 KB; `contextBudgets` adds to or overrides them |
 | `language` | a file of an area set to `ro` contains diacritics (PR and issue templates, `docs/`); fixable |

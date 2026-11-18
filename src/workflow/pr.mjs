@@ -5,6 +5,7 @@
 import { areaLabelName, areasFor } from '../stack/areas.mjs'
 import { readSystem } from '../system/system.mjs'
 import { contractReview } from '../system/contracts.mjs'
+import { systemChecks } from '../system/checks.mjs'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
@@ -77,6 +78,12 @@ export function preflight({ config, git, cwd, tracker }, { title, body, base = c
   if (files.length) { try { overlaps = findOverlap({ tracker, git, cwd, config }, { files, branch }).overlaps } catch { overlaps = [] } }
   // A slot that is not bound is a warning, never a stop: the change request goes ahead without that pass.
   const warnings = []
+  // The security pass on the system (#115): structural findings in the files this change touches.
+  if (files.length && readSystem(cwd)) {
+    try {
+      for (const f of systemChecks(cwd).filter((x) => x.file && files.includes(x.file.replace(/:\d+$/, '')))) warnings.push(`system ${f.check}: ${f.component ? `${f.component}: ` : ''}${f.message} (${f.file}); fix: ${f.fix}`)
+    } catch { /* the checks are advisory here; doctor reports a failure to run them */ }
+  }
   if (!slotsFor(config)['ui-design'] && files.some((f) => UI_FILE.test(f))) warnings.push('this change touches the user interface and no ui-design skill is bound (slots.ui-design): review the UI by hand, or bind one')
   return { ok: problems.length === 0, problems, branch, head, gate, suggestion: t.suggestion, lessons, overlaps, warnings, files, areas: areasFor(files, cwd) }
 }
