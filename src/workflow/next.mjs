@@ -6,7 +6,9 @@ import { has } from '../platform/capabilities.mjs'
 
 /** The stable label id ("priority:p1") for a label name in any language, or the name itself. */
 export function labelId(name) {
-  return LABELS.find((l) => l.id === name || Object.values(l.name).includes(name))?.id ?? name
+  const plain = String(name).replace('::', ':')
+  // Area labels are generated from the stack map: area:<layer> in en, zona:<layer> in ro.
+  return LABELS.find((l) => l.id === plain || Object.values(l.name).includes(plain))?.id ?? plain.replace(/^zona:/, 'area:')
 }
 
 const PRIORITY = { 'priority:p0': 0, 'priority:p1': 1, 'priority:p2': 2, 'priority:p3': 3 }

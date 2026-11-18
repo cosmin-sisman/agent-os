@@ -2,6 +2,7 @@
 // The files of a change request are cached by its head commit (immutable), so a repeated run asks the platform for
 // one list and nothing else. Design §5 (Seeing overlap).
 
+import { areasFor } from '../stack/areas.mjs'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { issueRefs } from '../conventions/conventions.mjs'
@@ -68,8 +69,10 @@ export function findOverlap({ tracker, git, cwd, config }, { files, branch, ttlM
   }
   try { writeCache(cwd, cache) } catch { /* the cache is an optimisation */ }
   found.sort((a, b) => b.files.length - a.files.length || String(a.number ?? a.branch).localeCompare(String(b.number ?? b.branch), 'en', { numeric: true }))
+  // The stack areas the shared files belong to, so "same area" reads before the file list.
+  for (const o of found) { const areas = areasFor(o.files, cwd); if (areas.length) o.areas = areas }
   return { files: mine, overlaps: found, warnings }
 }
 
 /** One line per overlap, for command output and skills. */
-export const overlapLines = (overlaps, vocab) => overlaps.map((o) => `  ${o.kind === 'branch' ? `branch ${o.branch}` : `${vocab.crRef}${o.number} ${o.title}`}${o.author ? ` by @${o.author}` : ''}${o.issues.length ? ` (${o.issues.map((n) => `#${n}`).join(', ')})` : ''}: ${o.files.slice(0, 5).join(', ')}${o.files.length > 5 ? `, +${o.files.length - 5}` : ''}`)
+export const overlapLines = (overlaps, vocab) => overlaps.map((o) => `  ${o.kind === 'branch' ? `branch ${o.branch}` : `${vocab.crRef}${o.number} ${o.title}`}${o.author ? ` by @${o.author}` : ''}${o.issues.length ? ` (${o.issues.map((n) => `#${n}`).join(', ')})` : ''}${o.areas?.length ? ` [${o.areas.join(', ')}]` : ''}: ${o.files.slice(0, 5).join(', ')}${o.files.length > 5 ? `, +${o.files.length - 5}` : ''}`)

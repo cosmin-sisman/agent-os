@@ -3,6 +3,7 @@
 // ones that recall returns, retired/ those absorbed into a rule or no longer true. Recall is read-only: the
 // recalled/followed counters have a single writer, /retro (#29). Design §10.
 
+import { areasFor } from '../stack/areas.mjs'
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { CliError } from '../cli/errors.mjs'
@@ -171,7 +172,7 @@ export function lessonsForIssue(cwd, issue, options) {
 }
 
 /** The lessons for a set of changed files and a description. */
-export const lessonsForChange = (cwd, { paths = [], text = '' }, options) => recall(readLessons(cwd), { areas: [], paths, text }, options).lessons
+export const lessonsForChange = (cwd, { paths = [], text = '' }, options) => recall(readLessons(cwd), { areas: areasFor(paths, cwd).map((a) => a.replace(/^area:/, '')), paths, text }, options).lessons
 
 /** One line per recalled lesson, for command output and skills. */
 export const lessonLines = (lessons) => lessons.map((l) => `  lesson ${l.id} (${l.why.join('; ')}): ${l.text}`)

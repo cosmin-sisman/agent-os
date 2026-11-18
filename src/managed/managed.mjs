@@ -52,24 +52,27 @@ function writeBase(cwd, key, content) {
 
 // ── Markdown blocks ────────────────────────────────────────────────────────
 
-const begin = (id) => `<!-- agent-os:begin ${id} -->`
-const end = (id) => `<!-- agent-os:end ${id} -->`
+// Markdown blocks use HTML comments; other files (CODEOWNERS, .gitignore-like formats) use # comment lines.
+const begin = (id, style = 'html') => (style === 'hash' ? `# agent-os:begin ${id}` : `<!-- agent-os:begin ${id} -->`)
+const end = (id, style = 'html') => (style === 'hash' ? `# agent-os:end ${id}` : `<!-- agent-os:end ${id} -->`)
+/** The marker style for a file: HTML comments in Markdown, # lines elsewhere. */
+export const blockStyle = (path) => (/\.(md|markdown|html?)$/i.test(path) ? 'html' : 'hash')
 
 /** The text between a block's markers (without them), or null when the block is not there. */
-export function readBlock(text, id) {
-  const a = text.indexOf(begin(id))
-  const b = text.indexOf(end(id))
+export function readBlock(text, id, style = 'html') {
+  const a = text.indexOf(begin(id, style))
+  const b = text.indexOf(end(id, style))
   if (a < 0 || b < a) return null
-  return text.slice(a + begin(id).length, b).replace(/^\r?\n/, '').replace(/\r?\n$/, '')
+  return text.slice(a + begin(id, style).length, b).replace(/^\r?\n/, '').replace(/\r?\n$/, '')
 }
 
 /** Replaces a block's content, or appends the block when it is missing. Everything outside it is kept byte for byte. */
-export function writeBlock(text, id, content) {
+export function writeBlock(text, id, content, style = 'html') {
   const nl = text.includes('\r\n') ? '\r\n' : '\n'
-  const body = `${begin(id)}${nl}${content.replace(/\r?\n/g, nl)}${nl}${end(id)}`
-  const a = text.indexOf(begin(id))
-  const b = text.indexOf(end(id))
-  if (a >= 0 && b > a) return text.slice(0, a) + body + text.slice(b + end(id).length)
+  const body = `${begin(id, style)}${nl}${content.replace(/\r?\n/g, nl)}${nl}${end(id, style)}`
+  const a = text.indexOf(begin(id, style))
+  const b = text.indexOf(end(id, style))
+  if (a >= 0 && b > a) return text.slice(0, a) + body + text.slice(b + end(id, style).length)
   if (text === '') return `${body}${nl}`
   return `${text}${text.endsWith('\n') ? '' : nl}${nl}${body}${nl}`
 }
@@ -118,7 +121,7 @@ function readItem(cwd, key) {
   if (!existsSync(file)) return null
   const text = readFileSync(file, 'utf8')
   if (kindOf(key) === 'file') return text
-  if (kindOf(key) === 'block') return readBlock(text, key.split('#')[1])
+  if (kindOf(key) === 'block') return readBlock(text, key.split('#')[1], blockStyle(pathOf(key)))
   let hooks
   try { hooks = readHooks(JSON.parse(text)) } catch { throw new CliError(`${pathOf(key)} is not valid JSON`, { hint: 'fix it before updating its hooks' }) }
   return hooks === '{}\n' ? null : hooks
@@ -130,7 +133,7 @@ function writeItem(cwd, key, content) {
   mkdirSync(dirname(file), { recursive: true })
   const existing = existsSync(file) ? readFileSync(file, 'utf8') : ''
   if (kindOf(key) === 'file') writeFileSync(file, content)
-  else if (kindOf(key) === 'block') writeFileSync(file, writeBlock(existing, key.split('#')[1], content))
+  else if (kindOf(key) === 'block') writeFileSync(file, writeBlock(existing, key.split('#')[1], content, blockStyle(pathOf(key))))
   else writeFileSync(file, `${JSON.stringify(writeHooks(existing ? JSON.parse(existing) : {}, content), null, 2)}\n`)
 }
 
