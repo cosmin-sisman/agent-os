@@ -12,6 +12,7 @@ import { languageFor, milestone } from '../i18n/i18n.mjs'
 import { addEntry } from '../journal/journal.mjs'
 import { compareVersions } from '../migrations/runner.mjs'
 import { readiness } from '../workflow/ship.mjs'
+import { readLessons } from '../lessons/lessons.mjs'
 import { changelogEntry, notesMarkdown, releaseNotes } from './notes.mjs'
 import { parse, stringify } from '../yaml/yaml.mjs'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -69,6 +70,8 @@ export function planRelease(deps, { version, hotfix = false }) {
     version, tag, tagged: Boolean(tagged), hotfix, from, head, lastTag, branch: hotfix ? null : `release/${version}`,
     title: `release-${n}: ${version}`, milestone: rolling ? { number: rolling.m.number, title: rolling.m.title, n } : null,
     notes, risks: releaseRisks(git, { from, head }), problems,
+    // /retro runs at every release: the plan says how many lessons wait (design §10).
+    inbox: readLessons(deps.cwd).filter((c) => c.state === 'inbox').length,
   }
 }
 

@@ -71,3 +71,21 @@ The skill says which lessons it follows. Recall never writes, so it never confli
 ## The Learn contract
 
 Every core skill ends its procedure with a **Learn** step: when something went wrong, was refused or took long, capture it with `agent-os lessons add`. A test checks that every core skill has one. A lesson that keeps coming back is a rule to propose (`promote`), not a lesson to repeat.
+
+## Triage: `/retro`
+
+```bash
+agent-os retro plan [--recent 10] [--offline]   # a proposal for every inbox lesson, and repeated review findings
+agent-os retro apply --accept <id> --promote <id>="<file: section>" --reject <id>="<reason>"
+agent-os retro issue [--dry-run]                # open, update or close the one Retro issue
+```
+
+- **Plan:** lessons are grouped by theme (a shared area plus a keyword or close wording), and each gets a proposal with its reason:
+  - a **rule** when several lessons point the same way, or one is high-confidence and general;
+  - an active **card** when it is specific to some paths;
+  - **reject** when it repeats an active card or cannot be read.
+
+  Review findings repeated on three or more of the last merged change requests are proposed as rules.
+- **Apply:** refuses while any inbox lesson has no decision, because every lesson ends as a rule, a card, or rejected with a reason. A promoted lesson is retired with the rule it became. Apply also updates the `recalled` and `followed` counters of active cards from the journal (mentions of the card id, and "followed <id>"); `/retro` is the only writer of those counters.
+- **Schedule:** agent-os installs `.github/workflows/agent-os-retro.yml` (weekly, `issues: write`) or `.gitlab/agent-os-retro.yml` (a scheduled pipeline). It runs `retro issue`, which keeps one "Retro: lessons to triage" issue up to date while the inbox has lessons and closes it when the inbox is empty.
+- **Releases:** `agent-os release plan` reminds you to run `/retro` when lessons are waiting.

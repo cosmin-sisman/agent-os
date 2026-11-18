@@ -1,0 +1,13 @@
+# The retro schedule (agent-os): run it from a weekly pipeline schedule (CI/CD → Schedules). When the lessons inbox is
+# not empty it opens or updates one "Retro" issue, and closes it when the inbox is empty. Include it from
+# .gitlab-ci.yml:
+#   include:
+#     - local: .gitlab/agent-os-retro.yml
+# It needs a project access token with the api scope in the GITLAB_TOKEN variable (masked).
+agent-os/retro:
+  stage: test
+  image: node:22
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  script:
+    - npx -y @cosmin-sisman/agent-os{{#if version}}@{{{version}}}{{/if}} retro issue

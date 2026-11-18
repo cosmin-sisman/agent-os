@@ -69,7 +69,7 @@ async function flow(ctx, action) {
   const deps = { git: ctx.io.git ?? systemGit(ctx.cwd), tracker: ctx.io.tracker ?? createTracker(merged, { gh: ctx.io.gh, glab: ctx.io.glab }), cwd: ctx.cwd, config: merged, vocab }
   if (action === 'plan') {
     const p = planRelease(deps, { version: v.version, hotfix: v.hotfix })
-    ctx.output(p, [`release ${p.tag}${p.hotfix ? ' (hotfix)' : ''}: ${p.lastTag ?? 'first release'} → ${p.head}${p.tagged ? ' (already tagged)' : ''}`, `title: ${p.title}`, '', notesMarkdown(p.notes, vocab), '', p.risks.length ? `Risks to accept before finishing:\n${p.risks.map((r) => `  ${r.id}: ${r.detail}`).join('\n')}` : 'No risks found.', ...(p.problems.length ? ['', 'Problems:', ...p.problems.map((x) => `  - ${x}`)] : [])].join('\n'))
+    ctx.output(p, [`release ${p.tag}${p.hotfix ? ' (hotfix)' : ''}: ${p.lastTag ?? 'first release'} → ${p.head}${p.tagged ? ' (already tagged)' : ''}`, `title: ${p.title}`, '', notesMarkdown(p.notes, vocab), '', ...(p.inbox ? [`${p.inbox} lesson(s) wait in the inbox: run /retro before finishing the release.`, ''] : []), p.risks.length ? `Risks to accept before finishing:\n${p.risks.map((r) => `  ${r.id}: ${r.detail}`).join('\n')}` : 'No risks found.', ...(p.problems.length ? ['', 'Problems:', ...p.problems.map((x) => `  - ${x}`)] : [])].join('\n'))
     return p.problems.length ? EXIT.CHECK_FAILED : EXIT.OK
   }
   if (action === 'open') {

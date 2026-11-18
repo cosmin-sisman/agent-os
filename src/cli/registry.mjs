@@ -47,6 +47,7 @@ export const COMMANDS = [
   { name: 'map', summary: 'Render a map of one area of the code, on demand', status: 'planned', issue: 26 },
   { name: 'journal', summary: 'Add to or read the project journal', status: 'new', issue: 22, load: () => import('../commands/journal.mjs') },
   { name: 'lessons', summary: 'Capture, recall, search and triage lessons learned', status: 'new', issue: 24, load: () => import('../commands/lessons.mjs') },
+  { name: 'retro', summary: 'Triage the lessons inbox and repeated review findings; keep the Retro issue up to date', status: 'new', issue: 29, load: () => import('../commands/retro.mjs') },
   { name: 'decision', summary: 'Create, list and check decision records with date-based ids', status: 'new', issue: 23, load: () => import('../commands/decision.mjs') },
   { name: 'chronicle', summary: 'One timeline from the platform and the journal, rendered into the cache', status: 'new', issue: 25, load: () => import('../commands/chronicle.mjs') },
   { name: 'stack', summary: 'Show, change, detect or import the stack map', status: 'planned', issue: 74 },

@@ -51,6 +51,6 @@ test('given a new local skill, it appears under Local immediately, with no edit 
 test('the SessionStart line lists the groups in one line', () => {
   const cwd = project()
   try {
-    assert.match(indexLine(skillIndex(cwd)), /^Skills: core \/doctor \/env \/lessons \/next \/pr \/release \/ship \/start \/ticket \(agent-os skills for what each does\)\.$/)
+    assert.match(indexLine(skillIndex(cwd)), /^Skills: core \/doctor \/env \/lessons \/next \/pr \/release \/retro \/ship \/start \/ticket \(agent-os skills for what each does\)\.$/)
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
