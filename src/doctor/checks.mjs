@@ -11,6 +11,7 @@ import { checkTitle } from '../conventions/conventions.mjs'
 import { findDiacritics, languageFor, labelSet, toAscii } from '../i18n/i18n.mjs'
 import { readJournal, validate as validateEntry } from '../journal/journal.mjs'
 import { readLessons, validateCard } from '../lessons/lessons.mjs'
+import { checkDecisions } from '../decisions/decisions.mjs'
 import { readLock } from '../managed/managed.mjs'
 import { matches } from '../util/glob.mjs'
 import { legacyFeatures, lifecycleOf, noticeFor } from '../lifecycle/legacy.mjs'
@@ -257,6 +258,13 @@ function lessons({ cwd, config }) {
   return out.length ? out : [ok(`${cards.length} lesson card(s), all valid${inbox ? `, ${inbox} in the inbox` : ''}`)]
 }
 
+/** Decision records have a date-based name, a status and their sections; a superseded one links its successor. */
+function decisions({ cwd }) {
+  const r = checkDecisions(cwd)
+  const out = r.problems.map((p) => ({ level: 'fail', path: p.path, message: `${p.path}: ${p.message}`, fix: p.fix }))
+  return out.length ? out : [ok(`${r.records} decision record(s), all valid`)]
+}
+
 /** AGENTS.md has an area map that covers every top-level source directory. */
 function areaMap({ cwd }) {
   const text = read(cwd, 'AGENTS.md')
@@ -314,6 +322,7 @@ export const CHECKS = [
   { id: 'language', area: 'language', run: language },
   { id: 'journal', area: 'history', run: journal },
   { id: 'lessons', area: 'history', run: lessons },
+  { id: 'decisions', area: 'history', run: decisions },
   { id: 'conflicts', area: 'updates', run: conflicts },
   { id: 'version', area: 'updates', run: version },
   { id: 'lifecycle', area: 'updates', run: lifecycle },

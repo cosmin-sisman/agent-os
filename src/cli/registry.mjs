@@ -46,7 +46,7 @@ export const COMMANDS = [
   { name: 'map', summary: 'Render a map of one area of the code, on demand', status: 'planned', issue: 26 },
   { name: 'journal', summary: 'Add to or read the project journal', status: 'new', issue: 22, load: () => import('../commands/journal.mjs') },
   { name: 'lessons', summary: 'Capture, recall, search and triage lessons learned', status: 'new', issue: 24, load: () => import('../commands/lessons.mjs') },
-  { name: 'decision', summary: 'Create a decision record', status: 'planned', issue: 23 },
+  { name: 'decision', summary: 'Create, list and check decision records with date-based ids', status: 'new', issue: 23, load: () => import('../commands/decision.mjs') },
   { name: 'chronicle', summary: 'One timeline from git, the platform and the journal', status: 'planned', issue: 25 },
   { name: 'stack', summary: 'Show, change, detect or import the stack map', status: 'planned', issue: 74 },
   { name: 'system', summary: 'Map components, interfaces, exposure and contracts', status: 'planned', issue: 113 },
