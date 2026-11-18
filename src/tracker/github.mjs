@@ -173,7 +173,7 @@ export class GitHubTracker {
     const out = []
     for (let page = 1; out.length < max; page++) {
       const batch = this.gh.rest('GET', `repos/${this.repo}/pulls?state=all&sort=created&direction=desc&per_page=100&page=${page}`) ?? []
-      out.push(...batch.map((p) => ({ number: p.number, title: p.title, body: p.body ?? '', state: p.state, merged: Boolean(p.merged_at), mergedAt: p.merged_at ?? null, createdAt: p.created_at ?? null, labels: (p.labels ?? []).map((l) => l.name), author: p.user?.login ?? null, url: p.html_url })))
+      out.push(...batch.map((p) => ({ number: p.number, title: p.title, body: p.body ?? '', state: p.state, merged: Boolean(p.merged_at), mergedAt: p.merged_at ?? null, createdAt: p.created_at ?? null, labels: (p.labels ?? []).map((l) => l.name), author: p.user?.login ?? null, url: p.html_url, head: p.head?.ref ?? null })))
       if (batch.length < 100) break
     }
     return out.slice(0, max)
