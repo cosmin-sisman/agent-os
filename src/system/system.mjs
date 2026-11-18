@@ -11,7 +11,7 @@ export const FILE = 'system.yaml'
 export const KINDS = ['app', 'service', 'worker', 'package', 'external']
 export const EXPOSURES = ['public', 'internal', 'private']
 export const INTERFACES = ['http', 'graphql', 'grpc', 'events', 'webhook', 'queue', 'db']
-const KEYS = ['kind', 'path', 'repo', 'layer', 'exposure', 'provides', 'consumes', 'owners', 'note']
+const KEYS = ['kind', 'path', 'repo', 'ref', 'layer', 'exposure', 'provides', 'consumes', 'owners', 'note']
 
 /** system.yaml, or null when there is none. */
 export function readSystem(cwd) {
