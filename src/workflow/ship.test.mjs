@@ -38,7 +38,8 @@ function fakeGit({ current = 'development', local = true, worktree = null } = {}
   git.calls = calls
   return git
 }
-const run = (t, opts = {}, git = fakeGit()) => ship({ config: CONFIG, tracker: t, caps: CAPS, git, vocab: vocabularyFor('github') }, { number: 160, ...opts })
+const sleeps = []
+const run = (t, opts = {}, git = fakeGit()) => ship({ config: CONFIG, tracker: t, caps: CAPS, git, vocab: vocabularyFor('github'), sleep: (ms) => sleeps.push(ms) }, { number: 160, ...opts })
 
 test('given a PR with Refs #5, when shipped, #4 is closed and set to Done, and #5 stays open with a comment', () => {
   const t = fakeTracker()
@@ -60,6 +61,26 @@ test('an issue closed by mistake through a Refs PR is reopened, with a comment i
   const r = run(t, { issuesLang: 'ro' })
   assert.deepEqual(t.calls.filter((c) => c[1] === 5), [['update', 5, { state: 'open' }], ['comment', 5, 'Redeschis: PR #160 doar face referire la acest issue (Refs), deci nu e gata inca.']])
   assert.deepEqual(r.issues[1], { number: 5, action: 'reopened' })
+})
+
+test('given a referenced issue the platform closes a moment after the merge, ship reopens it and says so', () => {
+  const t = fakeTracker()
+  let reads = 0
+  const get = t.get
+  // The linked branch closes #5 on the platform's side, after ship's first look.
+  t.get = (n) => { const i = get(n); if (n === 5 && t.calls.some((c) => c[0] === 'merge') && ++reads >= 3) return { ...i, state: 'closed' }; return i }
+  sleeps.length = 0
+  const r = run(t)
+  assert.deepEqual(r.issues[1], { number: 5, action: 'reopened' })
+  assert.ok(t.calls.some((c) => c[0] === 'update' && c[1] === 5 && c[2].state === 'open'))
+  assert.equal(t.calls.some((c) => c[0] === 'comment' && c[1] === 5 && /stays open/.test(c[2])), false, 'no "stays open" before it was closed')
+  assert.ok(sleeps.length >= 1 && sleeps.length <= 3, 'a bounded wait')
+  sleeps.length = 0
+  run(fakeTracker())
+  assert.equal(sleeps.length, 3, 'an issue that stays open is watched at most 4 times')
+  sleeps.length = 0
+  run(fakeTracker({ s: status({ body: 'Closes #4\n\n## Lessons\n\nNone: x.\n' }) }))
+  assert.equal(sleeps.length, 0, 'no wait without referenced issues')
 })
 
 test('an issue the platform already closed is not closed twice, but still gets the comment', () => {

@@ -62,12 +62,16 @@ const TEXT = {
 }
 
 const ok = (r) => r.status === 0
+/** A synchronous pause: ship is synchronous, and the wait is short and bounded. */
+const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+/** How long to watch referenced issues after the merge: a branch linked to an issue closes it a moment later (#232). */
+export const SETTLE = { tries: 4, waitMs: 1500 }
 
 /**
  * @param {{ config: object, tracker: object, caps: object, git: Function, vocab: object }} deps
  * @param {{ number: number, issuesLang?: string, prsLang?: string, notify?: boolean, keepBranch?: boolean, dryRun?: boolean }} options
  */
-export function ship({ config, tracker, caps, git, vocab }, { number, issuesLang = 'en', prsLang = 'en', notify = true, keepBranch = false, dryRun = false }) {
+export function ship({ config, tracker, caps, git, vocab, sleep = pause }, { number, issuesLang = 'en', prsLang = 'en', notify = true, keepBranch = false, dryRun = false, settle = SETTLE }) {
   const s = tracker.pullRequestStatus(number)
   const cr = `${vocab.cr} ${vocab.crRef}${number}`
   const problems = readiness(s, config, { lang: prsLang })
@@ -101,8 +105,16 @@ export function ship({ config, tracker, caps, git, vocab }, { number, issuesLang
     if (has(caps, 'board')) tracker.setStatus(n, 'Done')
     issues.push({ number: n, action: i.state === 'open' ? 'closed' : 'already closed' })
   }
+  // The platform may close a referenced issue a moment after the merge (a branch created from the issue is linked to
+  // it, and GitHub closes linked issues on merge into the default branch). Watch them briefly before deciding.
+  const watched = refs.filter((n) => before.get(n) === 'open')
+  const states = new Map(refs.map((n) => [n, tracker.get(n).state]))
+  for (let i = 1; i < settle.tries && watched.some((n) => states.get(n) === 'open'); i++) {
+    sleep(settle.waitMs)
+    for (const n of watched) if (states.get(n) === 'open') states.set(n, tracker.get(n).state)
+  }
   for (const n of refs) {
-    const now = tracker.get(n).state
+    const now = states.get(n)
     if (now === 'closed' && before.get(n) === 'open') { tracker.update(n, { state: 'open' }); tracker.comment(n, t.reopened(cr)); issues.push({ number: n, action: 'reopened' }) }
     else if (now === 'closed') { tracker.comment(n, t.related(cr)); issues.push({ number: n, action: 'commented, already closed' }) }
     else { tracker.comment(n, t.stays(cr)); issues.push({ number: n, action: 'commented, stays open' }) }
