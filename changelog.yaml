@@ -9,4 +9,431 @@
 #       text: "gate suites moved under gatePaths"
 #       refs: ["#43"]
 #       migration: 0.2.0
-releases: []
+releases:
+  - version: 0.1.0
+    date: 2026-11-18
+    changes:
+      - group: new
+        text: "feat(cli): command runner, registry, help and version"
+        refs:
+          - "#130"
+      - group: new
+        text: "feat(config): team and personal configuration with schema"
+        refs:
+          - "#131"
+      - group: new
+        text: "feat(yaml): strict yaml subset parser and emitter"
+        refs:
+          - "#132"
+      - group: new
+        text: "feat(i18n): language per area, dictionaries and the ascii rule"
+        refs:
+          - "#133"
+      - group: new
+        text: "feat(templates): template engine with language variants"
+        refs:
+          - "#134"
+      - group: new
+        text: "feat(init): personal setup with init --me"
+        refs:
+          - "#135"
+      - group: new
+        text: "feat(hooks): cross-platform hooks runner and guards"
+        refs:
+          - "#136"
+      - group: new
+        text: "feat(env): environment and mcp check"
+        refs:
+          - "#137"
+      - group: new
+        text: "feat(managed): lock, three-way merge, managed blocks and eject"
+        refs:
+          - "#138"
+      - group: new
+        text: "feat(platform): platform detection and login delegation"
+        refs:
+          - "#139"
+      - group: new
+        text: "feat(tracker): tracker interface and github adapter"
+        refs:
+          - "#140"
+      - group: new
+        text: "feat(platform): capability probing and fallbacks"
+        refs:
+          - "#142"
+      - group: new
+        text: "feat(platform): platform routes, vocabulary and the /pr alias"
+        refs:
+          - "#143"
+      - group: new
+        text: "feat(setup): platform setup on github and lang set"
+        refs:
+          - "#144"
+      - group: new
+        text: "feat(version): pinned version for hooks and mismatch warnings"
+        refs:
+          - "#145"
+      - group: new
+        text: "feat(lifecycle): lifecycle manifest with release rules"
+        refs:
+          - "#146"
+      - group: new
+        text: "feat(migrations): versioned idempotent migrations"
+        refs:
+          - "#147"
+      - group: new
+        text: "feat(check): title and commit conventions"
+        refs:
+          - "#148"
+      - group: new
+        text: "feat(ticket): /ticket skill and complete issue creation"
+        refs:
+          - "#149"
+      - group: new
+        text: "feat(start): /start claims an issue, branches from the right base"
+        refs:
+          - "#150"
+      - group: new
+        text: "feat(next): /next ranks what to work on, with reasons"
+        refs:
+          - "#151"
+      - group: new
+        text: "feat(journal): one file per entry with add, list, show, check"
+        refs:
+          - "#152"
+      - group: new
+        text: "feat(pr): open change requests only when ready; gate by path"
+        refs:
+          - "#153"
+      - group: new
+        text: "feat(ship): merge green, reviewed PRs; Closes vs Refs; clean up"
+        refs:
+          - "#154"
+      - group: new
+        text: "feat(tracker): GitLab adapter with the same interface as GitHub"
+        refs:
+          - "#155"
+      - group: new
+        text: "feat(update): update --plan and the update as a change request"
+        refs:
+          - "#156"
+      - group: new
+        text: "feat(doctor): checks with fixes, --fix, --ci and a readiness score"
+        refs:
+          - "#157"
+      - group: new
+        text: "feat(loop): the agent-os/loop check in CI for GitHub and GitLab"
+        refs:
+          - "#158"
+      - group: new
+        text: "feat(lessons): lessons store, recall in /start and /pr, Learn step"
+        refs:
+          - "#161"
+      - group: new
+        text: "feat(overlap): who else changes your files, in /start and /pr"
+        refs:
+          - "#162"
+      - group: new
+        text: "feat(collab): team rule; doctor flags tracked personal files"
+        refs:
+          - "#163"
+      - group: new
+        text: "feat(lifecycle): legacy opt-in and deprecation reporting"
+        refs:
+          - "#164"
+      - group: new
+        text: "feat(release): release notes grouped by labels, with migrations"
+        refs:
+          - "#165"
+      - group: new
+        text: "feat(release): plan, open and finish a release, safe to rerun"
+        refs:
+          - "#166"
+      - group: new
+        text: "feat(setup): GitLab setup that completes, never replaces"
+        refs:
+          - "#167"
+      - group: new
+        text: "feat(decisions): date-based records; supersede with a new one"
+        refs:
+          - "#168"
+      - group: new
+        text: "feat(hooks): SessionStart context within a budget, local first"
+        refs:
+          - "#169"
+      - group: new
+        text: "feat(chronicle): one timeline from the platform and the journal"
+        refs:
+          - "#170"
+      - group: new
+        text: "feat(board): sync the optional board by difference; one warning"
+        refs:
+          - "#171"
+      - group: new
+        text: "feat(gate): the same suite selection in CI, from the event"
+        refs:
+          - "#172"
+      - group: new
+        text: "feat(init): detect the repository state and suggest a profile"
+        refs:
+          - "#173"
+      - group: new
+        text: "feat(init): the init interview, the plan, then write and check"
+        refs:
+          - "#174"
+      - group: new
+        text: "feat(init): forward-only adoption with a cutoff and a baseline"
+        refs:
+          - "#175"
+      - group: new
+        text: "feat(registry): one JSON per skill, core entries, doctor checks"
+        refs:
+          - "#176"
+      - group: new
+        text: "feat(skills): the skill index, rendered from the registry"
+        refs:
+          - "#177"
+      - group: new
+        text: "feat(retro): triage the inbox into rules, cards or rejections"
+        refs:
+          - "#178"
+      - group: new
+        text: "feat(standards): core rule and language rules scoped by stack"
+        refs:
+          - "#179"
+      - group: new
+        text: "feat(test): plan scenarios, run suites, find gaps, report results"
+        refs:
+          - "#180"
+      - group: new
+        text: "feat(map): one area of the code on demand, within a budget"
+        refs:
+          - "#181"
+      - group: new
+        text: "feat(upstream): private-by-default drafts for agent-os issues"
+        refs:
+          - "#182"
+      - group: new
+        text: "feat(handoff): status comments on held issues and a journal entry"
+        refs:
+          - "#183"
+      - group: new
+        text: "feat(standards): the /standards skill and a checkable choice"
+        refs:
+          - "#184"
+      - group: new
+        text: "feat(standards): remind on edit and check in doctor, never block"
+        refs:
+          - "#185"
+      - group: new
+        text: "feat(slots): core calls capability slots; built-ins by default"
+        refs:
+          - "#186"
+      - group: new
+        text: "feat(skill): vendor, update with a diff, remove, scaffold skills"
+        refs:
+          - "#187"
+      - group: new
+        text: "feat(testing): configurable test gaps, gate input, Stop reminder"
+        refs:
+          - "#188"
+      - group: new
+        text: "feat(stack): check stack.yaml, show a summary, new from blueprint"
+        refs:
+          - "#189"
+      - group: new
+        text: "feat(stack): catalog loader with project overlays, checked in CI"
+        refs:
+          - "#190"
+      - group: new
+        text: "feat(artifacts): artifact.yaml schema; artifact new, list, log"
+        refs:
+          - "#191"
+      - group: new
+        text: "feat(collab): read threads, quote decisions, reply in kind"
+        refs:
+          - "#192"
+      - group: new
+        text: "feat(platform): private CA, proxy, internal registry, runner image"
+        refs:
+          - "#193"
+      - group: new
+        text: "feat(ci): review CI by best practice; YAML block scalars"
+        refs:
+          - "#194"
+      - group: new
+        text: "feat(stack): stack set and stack status write decisions"
+        refs:
+          - "#196"
+      - group: new
+        text: "feat(artifacts): artifact build and verify, hashes and staleness"
+        refs:
+          - "#197"
+      - group: new
+        text: "feat(doctor): check artifacts are valid, self-contained and fresh"
+        refs:
+          - "#198"
+      - group: new
+        text: "feat(stack): areas from layers: labels, PR labels, recall, owners"
+        refs:
+          - "#199"
+      - group: new
+        text: "feat(env): propose MCP servers and CLIs from the stack"
+        refs:
+          - "#200"
+      - group: new
+        text: "feat(artifacts): installable Pages workflow and site index"
+        refs:
+          - "#201"
+      - group: new
+        text: "feat(stack): stack detect and drift, with evidence; gate by layer"
+        refs:
+          - "#202"
+      - group: new
+        text: "feat(stack): stack import from csv and xlsx, with a bounded reader"
+        refs:
+          - "#203"
+      - group: new
+        text: "feat(system): system.yaml schema, system detect from workspaces"
+        refs:
+          - "#204"
+      - group: new
+        text: "feat(system): contract diffs, contract:breaking, consumer reviews"
+        refs:
+          - "#205"
+      - group: new
+        text: "feat(system): affected components for the gate and overlap"
+        refs:
+          - "#206"
+      - group: new
+        text: "feat(system): endpoint inventory from code and specs"
+        refs:
+          - "#208"
+      - group: new
+        text: "feat(system): system checks in doctor and the security pass"
+        refs:
+          - "#209"
+      - group: new
+        text: "feat(system): API docs and system map pages in the artifact site"
+        refs:
+          - "#210"
+      - group: new
+        text: "feat(stack): /stack and /kickoff, blueprints by level with scores"
+        refs:
+          - "#211"
+      - group: new
+        text: "feat(artifacts): /artifact skill and artifact link"
+        refs:
+          - "#212"
+      - group: new
+        text: "feat(artifacts): artifact templates per type and release reports"
+        refs:
+          - "#213"
+      - group: new
+        text: "feat(ci): labels workflow, preview without secrets, apply on push"
+        refs:
+          - "#214"
+      - group: new
+        text: "feat(packs): pack format, agent-os add, stack-postgres pack"
+        refs:
+          - "#215"
+      - group: new
+        text: "feat(init): retrofit plan and apply; closed PRs never rewritten"
+        refs:
+          - "#216"
+      - group: new
+        text: "feat(security): advisory watch, SBOM, KEV release gate"
+        refs:
+          - "#218"
+      - group: new
+        text: "feat(security): layer-based security pass with scanner reports"
+        refs:
+          - "#219"
+      - group: new
+        text: "feat(audit): lenses in subagents, findings with evidence"
+        refs:
+          - "#220"
+      - group: new
+        text: "feat(audit): artifact, comparison with the last audit, issues"
+        refs:
+          - "#223"
+      - group: new
+        text: "feat(security): threat model, abuse cases, tabletop exercises"
+        refs:
+          - "#224"
+      - group: new
+        text: "feat(init): /discover infers conventions from history"
+        refs:
+          - "#225"
+      - group: new
+        text: "feat(init): /ingest-docs and the product step of /kickoff"
+        refs:
+          - "#227"
+      - group: new
+        text: "feat(init): /runbook and the read-only upkeep audit"
+        refs:
+          - "#228"
+      - group: new
+        text: "feat(platform): plan a switch between GitHub and GitLab"
+        refs:
+          - "#231"
+      - group: fix
+        text: "fix(setup): complete an existing ruleset, never replace rules"
+        refs:
+          - "#159"
+      - group: fix
+        text: "fix(setup): complete existing labels and milestones, never replace"
+        refs:
+          - "#160"
+      - group: fix
+        text: "fix(gate): refuse unsafe component values in gateAffected"
+        refs:
+          - "#207"
+      - group: fix
+        text: "fix(hooks): guard pushes to the integration and production branch"
+        refs:
+          - "#217"
+      - group: fix
+        text: "fix(loop): reopen a referenced issue the merge closes late"
+        refs:
+          - "#234"
+      - group: chore
+        text: "docs: stack catalog, artifacts and update design"
+        refs:
+          - "#88"
+      - group: chore
+        text: "docs: platforms, audit, standards, security, system map"
+        refs:
+          - "#124"
+      - group: chore
+        text: "docs(readme): update the how it works diagram"
+        refs:
+          - "#126"
+      - group: chore
+        text: "chore(github): project board script and links"
+        refs:
+          - "#128"
+      - group: chore
+        text: "chore(ci): tests and ci workflow for the repository"
+        refs:
+          - "#129"
+      - group: chore
+        text: "docs(design): align the foundations sections with what was built"
+        refs:
+          - "#141"
+      - group: chore
+        text: "chore(lessons): triage the inbox into rules and cards"
+        refs:
+          - "#222"
+      - group: chore
+        text: "docs(distribution): profile guides, generated command reference"
+        refs:
+          - "#229"
+      - group: chore
+        text: "docs(distribution): other agents, AGENTS.md first (proposed)"
+        refs:
+          - "#230"
+      - group: chore
+        text: "chore(distribution): install agent-os on its own repository"
+        refs:
+          - "#235"
