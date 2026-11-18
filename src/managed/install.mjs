@@ -2,6 +2,7 @@
 // the project's configuration. The lock records the platform, so an update only ever writes the active route.
 
 import { codeownersLines, codeownersPath } from '../stack/areas.mjs'
+import { availablePacks, packItems } from '../packs/packs.mjs'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -43,6 +44,8 @@ export function planInstall(config, { templatesRoot = TEMPLATES, cwd } = {}) {
   }
   // Language rules for the stack in use, scoped to the layers' paths (#101).
   if (cwd) for (const r of stackRules(config, { templatesRoot, cwd })) items.push(r)
+  // Packs the project added (#55): their rules and subagents are managed files like the rest.
+  for (const id of config.packs ?? []) if (availablePacks().includes(id)) items.push(...packItems(id, config))
   // One registry entry per core skill (#38): the registry describes every skill on disk.
   for (const it of [...items]) {
     const m = it.key.match(/^\.claude\/skills\/([^/]+)\/SKILL\.md$/)
