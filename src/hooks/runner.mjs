@@ -11,6 +11,7 @@ import { versionStatus } from '../version/pin.mjs'
 import { budgetBytes, fitBudget, localContext, remoteContext } from './session.mjs'
 import { editReminders } from './edit.mjs'
 import { gapsReminder } from './gaps.mjs'
+import { sessionWarning } from '../security/digest.mjs'
 import { createTracker } from '../tracker/tracker.mjs'
 import { systemGit } from '../workflow/start.mjs'
 
@@ -89,6 +90,17 @@ export const CORE_HANDLERS = [
     timeoutMs: 3000,
     run(input, { config, cwd }) {
       const text = gapsReminder(input, { config, cwd, git: systemGit(cwd) })
+      return text ? { message: text } : null
+    },
+  },
+  {
+    name: 'security',
+    events: ['SessionStart'],
+    kind: 'reminder',
+    timeoutMs: 500,
+    run(input, { cwd }) {
+      // The last advisory watch, from the cache: no network at session start.
+      const text = sessionWarning(cwd)
       return text ? { message: text } : null
     },
   },

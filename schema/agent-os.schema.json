@@ -483,6 +483,70 @@
       },
       "additionalProperties": false
     },
+    "security": {
+      "type": "object",
+      "description": "Security: the advisory watch and accepted risks",
+      "default": {},
+      "properties": {
+        "advisories": {
+          "type": "object",
+          "description": "The advisory watch",
+          "default": {},
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Let the advisory watch ask OSV.dev and CISA KEV about package names and versions (default: on, off on a self-managed host)"
+            },
+            "osvUrl": {
+              "type": "string",
+              "description": "An OSV-compatible querybatch endpoint, e.g. an internal mirror",
+              "pattern": "^https?://"
+            },
+            "kevUrl": {
+              "type": "string",
+              "description": "Where the CISA KEV catalog (JSON) is read from, e.g. an internal mirror",
+              "pattern": "^https?://"
+            }
+          },
+          "additionalProperties": false
+        },
+        "acceptedRisks": {
+          "type": "array",
+          "description": "Advisories the owners accepted in writing; the release gate lets them through",
+          "default": [],
+          "items": {
+            "type": "object",
+            "description": "An accepted risk",
+            "required": [
+              "id",
+              "reason",
+              "by"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The advisory id (GHSA-…, CVE-…, OSV id)"
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why the risk is accepted"
+              },
+              "by": {
+                "type": "string",
+                "description": "Who accepted it"
+              },
+              "until": {
+                "type": "string",
+                "description": "Review again by this date (YYYY-MM-DD)",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "compliance": {
       "type": "object",
       "description": "Compliance constraints",
@@ -636,6 +700,16 @@
           "type": "boolean",
           "description": "Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels)",
           "default": false
+        },
+        "securityWatch": {
+          "type": "string",
+          "enum": [
+            "off",
+            "daily",
+            "weekly"
+          ],
+          "description": "Install the scheduled job that keeps the Security digest issue current",
+          "default": "off"
         },
         "labelsEnvironment": {
           "type": "string",

@@ -11,7 +11,8 @@ import { installRoutes } from '../managed/install.mjs'
 import { report, runDoctor } from './doctor.mjs'
 import { COMMANDS } from '../cli/registry.mjs'
 
-const PLANNED = COMMANDS.find((c) => c.status === 'planned')
+// A planned command for the "calls a planned command" check: a real one while any is left, else one for this process.
+const PLANNED = COMMANDS.find((c) => c.status === 'planned') ?? (COMMANDS.push({ name: 'planned-fixture', summary: 'A planned command (test fixture)', status: 'planned', issue: 999 }), COMMANDS.at(-1))
 
 const write = (root, files) => { for (const [p, c] of Object.entries(files)) { mkdirSync(join(root, p, '..'), { recursive: true }); writeFileSync(join(root, p), c) } }
 

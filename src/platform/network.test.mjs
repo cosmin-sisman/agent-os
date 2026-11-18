@@ -110,6 +110,9 @@ test('nothing in the package reaches the network by itself: every request goes t
   const files = []
   const walk = (d) => { for (const n of readdirSync(d)) { const f = join(d, n); if (statSync(f).isDirectory()) walk(f); else if (n.endsWith('.mjs') && !n.endsWith('.test.mjs')) files.push(f) } }
   walk(root)
-  const offenders = files.filter((f) => /from 'node:(https?|net|tls|dgram|http2)'|globalThis\.fetch|\bawait fetch\(|new WebSocket\(/.test(readFileSync(f, 'utf8')))
+  // The one exception: the advisory watch (#108) asks OSV.dev and CISA KEV for package names and versions, in a child
+  // process that carries the project's CA and proxy. It is off on self-managed hosts and shows its requests with --dry-run.
+  const EXCEPTIONS = [join('security', 'advisories.mjs')]
+  const offenders = files.filter((f) => !EXCEPTIONS.some((e) => f.endsWith(e))).filter((f) => /from 'node:(https?|net|tls|dgram|http2)'|globalThis\.fetch|\bawait fetch\(|new WebSocket\(/.test(readFileSync(f, 'utf8')))
   assert.deepEqual(offenders, [])
 })

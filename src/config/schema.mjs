@@ -85,6 +85,19 @@ export const SCHEMA = obj({
   upstream: obj({
     enabled: bool('Allow /upstream to file issues on the public agent-os repository (default: on, off on a self-managed host)'),
   }, 'Feedback to the agent-os project', { default: {} }),
+  security: obj({
+    advisories: obj({
+      enabled: bool('Let the advisory watch ask OSV.dev and CISA KEV about package names and versions (default: on, off on a self-managed host)'),
+      osvUrl: str('An OSV-compatible querybatch endpoint, e.g. an internal mirror', { pattern: '^https?://' }),
+      kevUrl: str('Where the CISA KEV catalog (JSON) is read from, e.g. an internal mirror', { pattern: '^https?://' }),
+    }, 'The advisory watch', { default: {} }),
+    acceptedRisks: list(obj({
+      id: str('The advisory id (GHSA-…, CVE-…, OSV id)'),
+      reason: str('Why the risk is accepted'),
+      by: str('Who accepted it'),
+      until: str('Review again by this date (YYYY-MM-DD)', { pattern: '^\\d{4}-\\d{2}-\\d{2}$' }),
+    }, 'An accepted risk', { required: ['id', 'reason', 'by'] }), 'Advisories the owners accepted in writing; the release gate lets them through', { default: [] }),
+  }, 'Security: the advisory watch and accepted risks', { default: {} }),
   compliance: obj({
     euOnly: bool('Flag providers without confirmed EU regions', { default: false }),
   }, 'Compliance constraints', { default: {} }),
@@ -111,6 +124,7 @@ export const SCHEMA = obj({
     image: str('The container image generated CI jobs run in, e.g. from the internal registry (default node:22)'),
     tags: list(str('A runner tag'), 'Runner tags for generated CI jobs (GitLab tags; GitHub runs-on labels)', { default: [] }),
     labels: bool('Install the workflow that keeps labels in step with agent-os.json and stack.yaml (needs a token that may write labels)', { default: false }),
+    securityWatch: oneOf(['off', 'daily', 'weekly'], 'Install the scheduled job that keeps the Security digest issue current', { default: 'off' }),
     labelsEnvironment: str('GitHub: the deployment environment the labels apply job runs in (to require approval or scope its secret)'),
   }, 'How generated CI jobs run: image and runners', { default: {} }),
   adoption: obj({

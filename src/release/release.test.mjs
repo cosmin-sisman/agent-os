@@ -146,3 +146,22 @@ test('open: the release branch carries the changelog and a release journal entry
     assert.equal(again.updated, true)
   } finally { rmSync(cwd, { recursive: true, force: true }) }
 })
+
+test('given a KEV entry for a direct dependency, /release refuses to ship it until it is updated or accepted in writing', async () => {
+  const { saveCache } = await import('../security/digest.mjs')
+  const cwd = mkdtempSync(join(tmpdir(), 'aos-release-kev-'))
+  try {
+    saveCache(cwd, { at: '2026-11-18T00:00:00Z', packages: 2, items: [
+      { id: 'GHSA-xxxx-1111', aliases: ['CVE-2026-1111'], severity: 'critical', kev: true, shipped: true, direct: true, accepted: false, fixed: '4.19.2', touched: [{ ecosystem: 'npm', name: 'express', version: '4.19.1', direct: true, dev: false }] },
+      { id: 'GHSA-dev-only', aliases: [], severity: 'high', kev: true, shipped: false, direct: true, accepted: false, fixed: null, touched: [{ ecosystem: 'npm', name: 'vitest', version: '1.0.0', direct: true, dev: true }] },
+    ] })
+    const t = fakeTracker({ pr: { number: 70, url: 'u/70' } })
+    const r = finishRelease(deps(fakeGit(), t, cwd), { version: '0.2.0', accept: ['env'] })
+    assert.equal(r.released, false)
+    assert.ok(r.problems.some((p) => /^known exploited: GHSA-xxxx-1111 \(CVE-2026-1111\) in express@4\.19\.1; fixed in 4\.19\.2/.test(p)), r.problems.join('\n'))
+    assert.equal(r.problems.some((p) => /vitest/.test(p)), false, 'a development-only dependency does not ship')
+    assert.deepEqual(t.calls, [], 'nothing merged or tagged')
+    saveCache(cwd, { at: '2026-11-18T00:00:00Z', packages: 2, items: [{ id: 'GHSA-xxxx-1111', aliases: ['CVE-2026-1111'], severity: 'critical', kev: true, shipped: true, direct: true, accepted: true, fixed: '4.19.2', touched: [{ ecosystem: 'npm', name: 'express', version: '4.19.1', direct: true, dev: false }] }] })
+    assert.equal(finishRelease(deps(fakeGit(), fakeTracker({ pr: { number: 70, url: 'u/70' } }), cwd), { version: '0.2.0', accept: ['env'] }).released, true, 'accepted in writing')
+  } finally { rmSync(cwd, { recursive: true, force: true }) }
+})

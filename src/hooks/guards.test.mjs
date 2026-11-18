@@ -63,3 +63,15 @@ test('a push to the integration or production branch is refused, explicit or fro
   assert.deepEqual(pushTargets('git push origin a:b c', 'x'), ['b', 'c'])
   assert.deepEqual(rulesFor({ branches: { integration: 'development' }, guards: { disable: ['push-protected'] } }).some((r) => r.id === 'push-protected'), false, 'a project can turn it off')
 })
+
+test('the release flow is not stopped by push-protected: it pushes release/<v> and tags; production is merged and tagged through the API', async () => {
+  const { readFileSync } = await import('node:fs')
+  const rules = rulesFor({ branches: { integration: 'development', production: 'main' } })
+  assert.deepEqual(checkCommand('git push -u origin release/0.5.0', { rules, currentBranch: 'release/0.5.0' }).map((b) => b.id), [])
+  assert.deepEqual(checkCommand('git push origin v0.5.0', { rules, currentBranch: 'development' }).map((b) => b.id), [], 'a tag push is not a branch push')
+  const src = readFileSync(new URL('../release/release.mjs', import.meta.url), 'utf8')
+  const pushes = [...src.matchAll(/\['push'[^\]]*\]/g)].map((m) => m[0])
+  assert.deepEqual(pushes, ["['push', '-u', 'origin', plan.branch]"], 'the only push in the release flow is the release branch')
+  assert.match(src, /tracker\.mergePullRequest\(/)
+  assert.match(src, /tracker\.createTag\(/)
+})

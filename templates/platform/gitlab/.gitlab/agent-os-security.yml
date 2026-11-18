@@ -1,0 +1,28 @@
+{{#if ci.securityWatch != "off"}}
+# The advisory watch (agent-os, design §23): it asks OSV.dev (GitHub and GitLab advisories included) and CISA KEV about
+# the lockfiles' packages and keeps the one "Security digest" issue current. Only package names and versions leave the
+# project. Include it from .gitlab-ci.yml and add a {{{ci.securityWatch}}} pipeline schedule on {{{branches.integration}}} (CI/CD > Schedules).
+# Writing the issue needs AGENT_OS_SECURITY_TOKEN, a project access token with the api scope in a protected, masked
+# variable; without it the job still reports and writes nothing.
+agent-os/security:
+  stage: test
+  image: "{{{runner.gitlabImage}}}"
+{{#if runner.tags}}
+  tags: {{{runner.tags}}}
+{{/if}}
+  timeout: 15m
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_REF_PROTECTED == "true"
+{{#if runner.npmRegistry}}
+  variables:
+    npm_config_registry: "{{{runner.npmRegistry}}}"
+{{/if}}
+  script:
+    - |
+      if [ -z "$AGENT_OS_SECURITY_TOKEN" ]; then
+        echo "agent-os security: AGENT_OS_SECURITY_TOKEN is not set; reporting only, the Security digest issue is not updated"
+        {{{runner.npx}}} security watch
+      else
+        GITLAB_TOKEN="$AGENT_OS_SECURITY_TOKEN" {{{runner.npx}}} security watch --issue
+      fi
+{{/if}}
