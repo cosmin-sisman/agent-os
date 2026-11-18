@@ -4,6 +4,8 @@ name: ci
 
 on:
   pull_request:
+    # edited: a corrected PR title or body is checked again without a new commit
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [development, main]
   workflow_dispatch:
