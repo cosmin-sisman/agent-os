@@ -41,6 +41,21 @@ agent-os stack new --from b2b-saas [--project <name>] [--force] [--dry-run]
 - **EU check.** With `compliance.euOnly`, `show` flags every layer that isn't rejected whose provider's `euRegions` is `verify` or unknown, so you can confirm it before strict GDPR work.
 - **new --from** writes `stack.yaml` from a blueprint, one layer per row. Interactively it asks whether each layer is chosen now (otherwise `optional`). It refuses to replace an existing file without `--force`. `--dry-run` prints the file.
 
+## Recommendations: `stack propose` and `stack compare`
+
+```sh
+agent-os stack propose --level 2 [--family typescript|polyglot]   # the blueprints for a product's level
+agent-os stack compare drizzle-supabase-postgres prisma-neon-postgres
+```
+
+Every recommendation cites the catalog scores it rests on:
+- **propose** lists the blueprints for the level, or the nearest level when there is none. Each comes with its description and takeaway, plus its computed scores: layers, average complexity, AI-friendliness and provider cost, languages, steepest learning curve. They are ordered by AI-friendliness, then simplicity.
+- **compare** shows two technologies side by side (complexity, AI-friendliness, language and learning curve, provider and cost, EU regions) and says which scores separate them.
+
+The `/kickoff` skill uses `propose` for a greenfield product, then `stack new --from`, layer by layer. The `/stack` skill explains, compares and changes the stack.
+
+**Read the docs first.** Layers agents know poorly (aiFriendly 2 or less) get a rule telling agents to read the official documentation before writing code. When the layer's language has a rule template (TypeScript, JavaScript, Python, SQL, YAML), it is a line in that rule. Otherwise it goes in `.claude/rules/stack/read-the-docs.md`, scoped to the layer's paths.
+
 ## Changing a layer: decisions, not edits
 
 ```sh
