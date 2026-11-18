@@ -241,7 +241,7 @@ export class GitHubTracker {
   /** The state of a pull request: review decision and every check on its last commit. */
   pullRequestStatus(number) {
     const [owner, name] = this.repo.split('/')
-    const q = 'query($o:String!,$n:String!,$p:Int!){ repository(owner:$o,name:$n){ pullRequest(number:$p){ number url state isDraft mergeable reviewDecision commits(last:1){ nodes{ commit{ oid statusCheckRollup{ state contexts(first:100){ nodes{ __typename ... on CheckRun { name status conclusion detailsUrl } ... on StatusContext { context state targetUrl } } } } } } } } } }'
+    const q = 'query($o:String!,$n:String!,$p:Int!){ repository(owner:$o,name:$n){ pullRequest(number:$p){ number title body url state isDraft mergeable mergeStateStatus reviewDecision baseRefName headRefName isCrossRepository author{ login } commits(last:1){ nodes{ commit{ oid statusCheckRollup{ state contexts(first:100){ nodes{ __typename ... on CheckRun { name status conclusion detailsUrl } ... on StatusContext { context state targetUrl } } } } } } } } } }'
     const pr = this.gh.graphql(q, { o: owner, n: name, p: number })?.repository?.pullRequest
     if (!pr) throw new CliError(`pull request #${number} not found`)
     const commit = pr.commits?.nodes?.[0]?.commit
@@ -249,7 +249,26 @@ export class GitHubTracker {
       ? { name: c.context, state: c.state === 'SUCCESS' ? 'success' : c.state === 'PENDING' || c.state === 'EXPECTED' ? 'pending' : 'failure', url: c.targetUrl ?? null }
       : { name: c.name, state: c.status !== 'COMPLETED' ? 'pending' : ['SUCCESS', 'NEUTRAL', 'SKIPPED'].includes(c.conclusion) ? 'success' : 'failure', url: c.detailsUrl ?? null }))
     const overall = !checks.length ? 'none' : checks.some((c) => c.state === 'failure') ? 'failure' : checks.some((c) => c.state === 'pending') ? 'pending' : 'success'
-    return { number: pr.number, url: pr.url, state: pr.state.toLowerCase(), draft: Boolean(pr.isDraft), mergeable: pr.mergeable ?? null, review: pr.reviewDecision ?? null, head: commit?.oid ?? null, checks: overall, failing: checks.filter((c) => c.state === 'failure'), pending: checks.filter((c) => c.state === 'pending').map((c) => c.name), all: checks }
+    return { number: pr.number, title: pr.title ?? null, body: pr.body ?? '', author: pr.author?.login ?? null, base: pr.baseRefName ?? null, branch: pr.headRefName ?? null, fork: Boolean(pr.isCrossRepository), mergeState: pr.mergeStateStatus ?? null, url: pr.url, state: pr.state.toLowerCase(), draft: Boolean(pr.isDraft), mergeable: pr.mergeable ?? null, review: pr.reviewDecision ?? null, head: commit?.oid ?? null, checks: overall, failing: checks.filter((c) => c.state === 'failure'), pending: checks.filter((c) => c.state === 'pending').map((c) => c.name), all: checks }
+  }
+
+  /** Merges a pull request, only if its head is still `sha` (so what was checked is what is merged). */
+  mergePullRequest(number, { method = 'squash', sha, title }, { dryRun = false } = {}) {
+    const request = { method: 'PUT', path: `repos/${this.repo}/pulls/${number}/merge`, body: { merge_method: method, ...(sha ? { sha } : {}), ...(title && method === 'squash' ? { commit_title: `${title} (#${number})` } : {}) } }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    const r = this.gh.rest(request.method, request.path, request.body)
+    return { number, merged: Boolean(r?.merged), sha: r?.sha ?? null }
+  }
+
+  /** Deletes a branch on the remote. */
+  deleteBranch(branch, { dryRun = false } = {}) {
+    const request = { method: 'DELETE', path: `repos/${this.repo}/git/refs/heads/${branch.split('/').map(encodeURIComponent).join('/')}` }
+    if (dryRun) return { dryRun: true, requests: [request] }
+    try { this.gh.rest(request.method, request.path) } catch (err) {
+      if (/HTTP 422|Reference does not exist/i.test(err.output ?? err.message)) return { branch, deleted: false, already: true }
+      throw err
+    }
+    return { branch, deleted: true }
   }
 
   /** Review threads of a pull request, with every comment. */

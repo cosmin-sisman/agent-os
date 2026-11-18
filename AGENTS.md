@@ -39,7 +39,7 @@ agent-os is a CLI plus a set of skills, rules and hooks that it installs into ot
 | `src/managed/install.mjs` | the install plan: core plus the active platform route, rendered; the lock records the platform |
 | `src/managed/` | managed files: three-way merge (`merge3.mjs`), the lock, merge bases, Markdown blocks, settings.json hooks, eject and relock (`managed.mjs`) |
 | `src/tracker/` | the tracker interface (`tracker.mjs`), the GitHub adapter (`github.mjs`) and the gh client with retries (`gh.mjs`); a fake gh for tests in `__fixtures__/` |
-| `src/workflow/` | the work loop: `/next` (`next.mjs`: deterministic ranking, design §9), `/start` (`start.mjs`: claim, branch name and base, link, In Progress, check out), `/pr` (`pr.mjs`: body rules, preflight, open) |
+| `src/workflow/` | the work loop: `/next` (`next.mjs`: deterministic ranking, design §9), `/start` (`start.mjs`: claim, branch name and base, link, In Progress, check out), `/pr` (`pr.mjs`: body rules, preflight, open), `/ship` (`ship.mjs`: readiness, merge, Closes vs Refs, clean-up) |
 | `src/gate/` | the gate: suites selected from `gatePaths` globs, run, results table, the saved result `/pr` requires (`gate.mjs`) |
 | `src/journal/` | the journal: one file per entry, its schema and validation, list filters, unique names (`journal.mjs`) |
 | `src/env/` | environment checks (`checks.mjs`), version ranges (`semver.mjs`) and the probe that looks at the machine (`probe.mjs`); a fake probe for tests in `__fixtures__/` |

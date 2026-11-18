@@ -18,3 +18,7 @@ Closes #
 ## Note pentru revieweri
 
 <!-- Optional. -->
+
+## Inainte de merge
+
+<!-- Optional. Pasi care trebuie facuti inainte de merge, ca elemente "- [ ] ..."; /ship refuza cat timp unul nu e bifat. -->

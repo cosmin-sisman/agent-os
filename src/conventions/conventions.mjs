@@ -18,6 +18,21 @@ export function referencedIssues(body = '') {
   return [...out].sort((a, b) => a - b)
 }
 
+/** The issues a description closes (Closes, Fixes, Resolves) and the ones it only references (Refs, Part of). */
+export function issueRefs(body = '') {
+  const closes = new Set()
+  const refs = new Set()
+  const text = String(body).replace(/<!--[\s\S]*?-->/g, '').replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '')
+  for (const m of text.matchAll(CLOSING)) {
+    if (m[1].includes('/')) continue
+    const into = /^(?:refs?|references?|part of)/i.test(m[0]) ? refs : closes
+    for (const n of m[1].matchAll(/#(\d+)/g)) into.add(Number(n[1]))
+  }
+  for (const n of closes) refs.delete(n)
+  const sorted = (xs) => [...xs].sort((a, b) => a - b)
+  return { closes: sorted(closes), refs: sorted(refs) }
+}
+
 const suffixOf = (title) => {
   const m = title.match(/\s\[((?:#\d+)(?:,\s*#\d+)*)\]$/)
   return m ? { text: m[0], issues: [...m[1].matchAll(/#(\d+)/g)].map((x) => Number(x[1])) } : { text: '', issues: [] }
