@@ -8,6 +8,7 @@ import { CliError } from '../cli/errors.mjs'
 import { matches } from '../util/glob.mjs'
 import { testGaps } from '../testing/test.mjs'
 import { areaLayers, areasFor, layersOf } from '../stack/areas.mjs'
+import { affectedBy, componentGraph, ownerOf } from '../system/affected.mjs'
 
 export const RESULT_FILE = '.agent-os/cache/gate.json'
 
@@ -98,16 +99,33 @@ export function runGate({ config, git, cwd, exec }, { base = config.branches.int
     const layers = areaLayers(cwd)
     sel.unmatched = sel.unmatched.filter((f) => !layersOf(f, layers).some((l) => (config.gateLayers[l] ?? []).length))
   }
+  // Affected components (#117): with gateAffected.command, each affected component gets its own suite, named
+  // affected:<id>, with {id}, {path} and {name} filled in. The graph is system.yaml's, else the workspaces'.
+  let affected = null
+  const effective = { ...config, gate: { ...config.gate } }
+  if (config.gateAffected?.command && !only.length) {
+    const graph = componentGraph(cwd)
+    if (Object.keys(graph.components).length > 1) {
+      affected = { source: graph.source, ...(all ? { changed: [], affected: Object.keys(graph.components).sort(), via: {}, outside: [] } : affectedBy(files, graph)) }
+      for (const id of affected.affected) {
+        const name = `affected:${id}`
+        effective.gate[name] = config.gateAffected.command.replace(/\{id\}/g, id).replace(/\{path\}/g, graph.components[id].path).replace(/\{name\}/g, id)
+        if (!sel.suites.includes(name)) sel.suites.push(name)
+        sel.reasons[name] = [affected.changed.includes(id) ? 'changed' : `depends on ${affected.via[id]}`]
+      }
+      sel.unmatched = sel.unmatched.filter((f) => !ownerOf(f, graph.components))
+    }
+  }
   const head = lines(git(['rev-parse', 'HEAD']))?.[0] ?? null
   const clean = isClean(git)
   const warnings = []
-  if (!Object.keys(config.gate ?? {}).length) warnings.push('no gate suites are configured: add them under "gate" (and "gatePaths") in agent-os.json')
+  if (!Object.keys(effective.gate ?? {}).length) warnings.push('no gate suites are configured: add them under "gate" (and "gatePaths") in agent-os.json')
   if (sel.unmatched.length) warnings.push(`no suite covers ${sel.unmatched.length} changed file(s): ${sel.unmatched.slice(0, 5).join(', ')}${sel.unmatched.length > 5 ? ', …' : ''}`)
   const gaps = files.length ? testGaps(files, { exclude: config.testing?.exclude ?? [], map: config.testing?.map ?? {} }) : []
   if (gaps.length) warnings.push(`${gaps.length} changed file(s) with no changed test: ${gaps.slice(0, 5).join(', ')}${gaps.length > 5 ? ', …' : ''} (agent-os test gaps)`)
-  if (dryRun) return { dryRun: true, base, head, clean, files, ...sel, gaps, warnings }
-  const suites = runSuites(config, sel.suites, { cwd, exec })
-  const result = { base, head, clean, at: new Date().toISOString(), files, mode: sel.mode, reasons: sel.reasons, unmatched: sel.unmatched, gaps, suites, ok: suites.every((s) => s.passed), warnings }
+  if (dryRun) return { dryRun: true, base, head, clean, files, ...sel, ...(affected ? { affected } : {}), gaps, warnings }
+  const suites = runSuites(effective, sel.suites, { cwd, exec })
+  const result = { base, head, clean, at: new Date().toISOString(), files, mode: sel.mode, reasons: sel.reasons, unmatched: sel.unmatched, ...(affected ? { affected } : {}), gaps, suites, ok: suites.every((s) => s.passed), warnings }
   saveResult(cwd, result)
   return result
 }

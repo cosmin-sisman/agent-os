@@ -76,4 +76,20 @@ Additions are listed but are not breaking.
 
 A consumer in another repository (`repo: owner/name`, pinned with `ref:`) that lists no owners here has them read from that repository's system.yaml at the pinned ref, through the platform.
 
+## Affected components: a gate for monorepos
+
+```json
+"gateAffected": { "command": "pnpm --filter ./{path} test" }
+```
+
+With `gateAffected.command`, the gate tests only what a change can break:
+1. The components that contain a changed file (the longest component path wins).
+2. Every component that depends on one of them, transitively.
+
+Each one gets a suite named `affected:<id>`, with `{id}`, `{path}` and `{name}` filled in. Its reason in the results is "changed" or "depends on <component>". `--all` runs every component. The static `gate` and `gatePaths` suites run as before, next to these.
+
+The graph is system.yaml's components and `consumes` edges when the file exists, else the workspaces `system detect` reads. It depends only on the files and the diff, and the set is sorted, so the laptop and CI compute the same affected set. In CI, `gate --from-ci` takes the base from the change request event.
+
+`agent-os overlap` (and `pr preflight`) also name the components two changes share, a finer unit than layers.
+
 Endpoint inventory (#114), system checks (#115) and the system map artifact (#118) build on this file.
