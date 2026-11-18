@@ -26,10 +26,10 @@ const eq = (a, b) => a.replace(/\r\n/g, '\n') === b.replace(/\r\n/g, '\n')
 
 export function readLock(cwd) {
   const path = join(cwd, LOCK_FILE)
-  if (!existsSync(path)) return { lockVersion: LOCK_VERSION, platform: null, migrations: [], items: {}, vendored: {} }
+  if (!existsSync(path)) return { lockVersion: LOCK_VERSION, platform: null, migrations: [], items: {}, vendored: {}, packs: {} }
   try {
     const lock = JSON.parse(readFileSync(path, 'utf8'))
-    return { lockVersion: lock.lockVersion ?? LOCK_VERSION, platform: lock.platform ?? null, migrations: lock.migrations ?? [], items: lock.items ?? {}, vendored: lock.vendored ?? {} }
+    return { lockVersion: lock.lockVersion ?? LOCK_VERSION, platform: lock.platform ?? null, migrations: lock.migrations ?? [], items: lock.items ?? {}, vendored: lock.vendored ?? {}, packs: lock.packs ?? {} }
   } catch {
     throw new CliError(`${LOCK_FILE} is not valid JSON`, { hint: 'run "agent-os update --relock" to rebuild it from .agent-os/base/' })
   }
@@ -39,7 +39,8 @@ export function writeLock(cwd, lock) {
   const items = Object.fromEntries(Object.entries(lock.items).sort(([a], [b]) => a.localeCompare(b)))
   mkdirSync(join(cwd, '.agent-os'), { recursive: true })
   const vendored = Object.fromEntries(Object.entries(lock.vendored ?? {}).sort(([a], [b]) => a.localeCompare(b)))
-  writeFileSync(join(cwd, LOCK_FILE), `${JSON.stringify({ lockVersion: LOCK_VERSION, ...(lock.platform ? { platform: lock.platform } : {}), ...(lock.migrations?.length ? { migrations: lock.migrations } : {}), items, ...(Object.keys(vendored).length ? { vendored } : {}) }, null, 2)}\n`)
+  const packs = Object.fromEntries(Object.entries(lock.packs ?? {}).sort(([a], [b]) => a.localeCompare(b)))
+  writeFileSync(join(cwd, LOCK_FILE), `${JSON.stringify({ lockVersion: LOCK_VERSION, ...(lock.platform ? { platform: lock.platform } : {}), ...(lock.migrations?.length ? { migrations: lock.migrations } : {}), items, ...(Object.keys(vendored).length ? { vendored } : {}), ...(Object.keys(packs).length ? { packs } : {}) }, null, 2)}\n`)
 }
 
 const baseFile = (cwd, key) => join(cwd, BASE_DIR, key.replace('#', '.__'))
@@ -233,7 +234,8 @@ export function relock(cwd, { version }) {
   let oldPlatform = null
   let oldMigrations = []
   let oldVendored = {}
-  const old = (() => { try { const l = readLock(cwd); oldPlatform = l.platform; oldMigrations = l.migrations; oldVendored = l.vendored; return l.items } catch { return {} } })()
+  let oldPacks = {}
+  const old = (() => { try { const l = readLock(cwd); oldPlatform = l.platform; oldMigrations = l.migrations; oldVendored = l.vendored; oldPacks = l.packs; return l.items } catch { return {} } })()
   const dir = join(cwd, BASE_DIR)
   const items = {}
   const walk = (d) => {
@@ -245,6 +247,33 @@ export function relock(cwd, { version }) {
     }
   }
   walk(dir)
-  writeLock(cwd, { platform: oldPlatform, migrations: oldMigrations, items, vendored: oldVendored })
+  writeLock(cwd, { platform: oldPlatform, migrations: oldMigrations, items, vendored: oldVendored, packs: oldPacks })
   return Object.keys(items).sort()
+}
+
+/**
+ * Removes managed files (whole-file items only) that are exactly as agent-os installed them: the file, its merge
+ * base and its lock entry. A file edited by hand is never deleted: it is listed in `modified` and nothing at all is
+ * removed, so the caller can refuse with the list. Missing files only lose their lock entry.
+ */
+export function removeManaged(cwd, keys, { dryRun = false } = {}) {
+  const lock = readLock(cwd)
+  const modified = []
+  const plan = []
+  for (const key of keys) {
+    const entry = lock.items[key]
+    if (!entry) continue
+    const local = readItem(cwd, key)
+    if (local === null) { plan.push({ key, file: false }); continue }
+    if (hash(local) !== entry.sha256) { modified.push(key); continue }
+    plan.push({ key, file: true })
+  }
+  if (modified.length || dryRun) return { removed: plan.map((p) => p.key), modified, dryRun: dryRun || Boolean(modified.length) }
+  for (const p of plan) {
+    if (p.file) rmSync(join(cwd, pathOf(p.key)), { force: true })
+    rmSync(baseFile(cwd, p.key), { force: true })
+    delete lock.items[p.key]
+  }
+  writeLock(cwd, lock)
+  return { removed: plan.map((p) => p.key), modified, dryRun: false }
 }
